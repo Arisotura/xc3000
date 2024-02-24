@@ -225,97 +225,114 @@ function parseBitstream(type, contents)
     return;
   }
 
-  var hdr = readbits(12);
-  if (hdr != 0xFF2)
+  while (pos < length)
   {
-    alert('Bad header');
-    return;
-  }
+    var hdrpos = pos;
 
-  var hdrlen = readbits(24);
-  if (length < (hdrlen-4))
-  {
-    alert('Bad data length');
-    return;
-  }
-
-  pos += 4;
-  while (readbits(1) != 0);
-  pos--;
-
-  for (;;)
-  {
-    var startpos = pos;
-    var family = -1;
-
-    for (var i = 0; i < chipFamilies.length; i++)
+    var hdr = readbits(12);
+    if (hdr != 0xFF2)
     {
-      pos = startpos;
-
-      var flen = chipFamilies[i].frameLen;
-      var fnum = chipFamilies[i].frameNum;
-
-      if ((pos + (flen*fnum) + 4) > length)
-        break;
-
-      pos++;
-      pos += (flen-4); var chk1 = readbits(4);
-      pos += (flen-4); var chk2 = readbits(4);
-      pos += (flen-4); var chk3 = readbits(4);
-      pos += (flen-4); var chk4 = readbits(4);
-
-      pos = startpos;
-      pos += (flen * (fnum-1));
-      pos -= 3; var chk5 = readbits(4);
-      pos += (flen-4); var chk6 = readbits(4);
-
-      if (chk1 == 0xE &&
-        chk2 == 0xE &&
-        chk3 == 0xE &&
-        chk4 == 0xE &&
-        chk5 == 0xE &&
-        chk6 == 0xF)
-      {
-        family = i;
-        break;
-      }
+      pos -= 11;
+      continue;
     }
 
-    if (family == -1)
+    var hdrlen = readbits(24);
+    if (length < (hdrpos+hdrlen-4))
     {
-      console.log('could not identify bitstream at '+pos+', stopping parser');
-      break;
+      pos -= 24;
+      continue;
     }
 
-    pos = startpos;
-    let fam = chipFamilies[family];
-
-    console.log('id: '+family);
-    console.log(fam.name+' at '+pos);
-
-    var bs = {
-      family: fam,
-      data: new Array(fam.frameLen),
-    };
-
-    for (var i = 0; i < fam.frameLen; i++)
-      bs.data[i] = new Array(fam.frameNum);
-
-    for (var i = 0; i < fam.frameNum; i++)
+    var chk = readbits(4);
+    if (chk != 0xF)
     {
-      for (var j = 0; j < fam.frameLen; j++)
-      {
-        var idx_in = (i * fam.frameLen) + j;
-        bs.data[(fam.frameLen-1) - j][(fam.frameNum-1) - i] = readbits(1);
-      }
+      pos -= 28;
+      continue;
     }
 
-    bitstreams.push(bs);
-
-    pos += 4;
-    while (pos < length && readbits(1) != 0);
-    if (pos >= length) break;
+    while (readbits(1) != 0);
     pos--;
+
+    for (;;)
+    {
+      var startpos = pos;
+      var family = -1;
+
+      for (var i = 0; i < chipFamilies.length; i++)
+      {
+        pos = startpos;
+
+        var flen = chipFamilies[i].frameLen;
+        var fnum = chipFamilies[i].frameNum;
+
+        if ((pos + (flen * fnum) + 4) > length)
+          break;
+
+        pos++;
+        pos += (flen - 4);
+        var chk1 = readbits(4);
+        pos += (flen - 4);
+        var chk2 = readbits(4);
+        pos += (flen - 4);
+        var chk3 = readbits(4);
+        pos += (flen - 4);
+        var chk4 = readbits(4);
+
+        pos = startpos;
+        pos += (flen * (fnum - 1));
+        pos -= 3;
+        var chk5 = readbits(4);
+        pos += (flen - 4);
+        var chk6 = readbits(4);
+
+        if (chk1 == 0xE &&
+            chk2 == 0xE &&
+            chk3 == 0xE &&
+            chk4 == 0xE &&
+            chk5 == 0xE &&
+            chk6 == 0xF)
+        {
+          family = i;
+          break;
+        }
+      }
+
+      if (family == -1)
+      {
+        console.log('could not identify bitstream at ' + pos + ', stopping parser');
+        break;
+      }
+
+      pos = startpos;
+      let fam = chipFamilies[family];
+
+      console.log('id: ' + family);
+      console.log(fam.name + ' at ' + pos);
+
+      var bs = {
+        family: fam,
+        data: new Array(fam.frameLen),
+      };
+
+      for (var i = 0; i < fam.frameLen; i++)
+        bs.data[i] = new Array(fam.frameNum);
+
+      for (var i = 0; i < fam.frameNum; i++)
+      {
+        for (var j = 0; j < fam.frameLen; j++)
+        {
+          var idx_in = (i * fam.frameLen) + j;
+          bs.data[(fam.frameLen - 1) - j][(fam.frameNum - 1) - i] = readbits(1);
+        }
+      }
+
+      bitstreams.push(bs);
+
+      pos += 4;
+      while (pos < (hdrpos+hdrlen) && pos < length && readbits(1) != 0) ;
+      if (pos >= (hdrpos+hdrlen) || pos >= length) break;
+      pos--;
+    }
   }
 
   console.log(bitstreams);
