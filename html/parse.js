@@ -1,158 +1,20 @@
 
-
-// Configuration data
-const config = new Array(196*87);
-// Raw bitstream, sequence of 160*71 0/1 values
-let rawBitstream = new Array(196*87);
-// Bitstream in table format, matching die layout
-var bitstreamTable = null;
-
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 var bitstreams = [];
+var curBitstream = null;
+var curPackage = null;
 
-/**
- * Parse configuration file
- * Store in array config, where config[n] = type and n = bit position
- */
-function loadConfig(callback) {
-  let defs = new Array(196);
-  window.defs = defs;
-  for (let x = 0; x < 196; x++) {
-    defs[x] = new Array(87);
-  }
-  $.get('XC2018-def.txt', function(data) {
-    const lines = data.match(/[^\r\n]+/g);
-    lines.forEach(function(l) {
-      const m = l.match(/Bit:\s+(\S+)\s+(.*)/);
-      if (m) {
-        const addr = parseInt(m[1], 16);
-        const val = m[2];
-        config[addr] =val;
-      }
-    });
-    // Done, call callback to continue initialization
-    callback();
-  }, 'text');
-}
-
-
-/**
- * Handles the upload of a .RBT file, storing it into the variable rawBitstream, which has 160 lines of 71 '0'/'1' characters,
- * the contents of the .RBT file.
- */
-function rbtParse(contents) {
-  rawBitstream = parseRbtFile(contents);
-  bitstreamTable = makeBitstreamTable(rawBitstream);
-}
-
-function binParse(contents) {
-  rawBitstream = parseBinFile(contents);
-  bitstreamTable = makeBitstreamTable(rawBitstream);
-}
-
-/**
- * Splits the RBT file into lines, removing headers.
- * erturns rawBitstream
- */
-function parseRbtFile(contents) {
-  let lines = contents.split(/[\r\n]+/);
-  let mode = 'header';
-  let idx = 0; // Index into rawBitstream
-  for (let i = 0; i < lines.length; i++) {
-    var line = lines[i]
-    if (mode == 'header') {
-      if (line.startsWith('0') && line.endsWith('111')) {
-        mode = 'data';
-      }
-    }
-    if (mode == 'data') {
-      if (line.startsWith('1111')) {
-        mode = 'done';
-      } else if (line.startsWith('0') && line.endsWith('111')) {
-        mode = 'data';
-        var data = line.slice(1, -3);
-        if (data.length != 87) {
-          alert('Bad line length ' + data.length + ' in .RBT file');
-          return;
-        }
-        for (let i = 0; i < 87; i++) {
-          rawBitstream[idx++] = data[i] == '1' ? 1 : 0;
-        }
-      } else {
-        alert('Bad data line in .RBT file');
-        return;
-      }
-    }
-  }
-  if (idx != 196 * 87) {
-    alert('Wrong number of bits ' + idx + ' in .RBT file');
-    return;
-  }
-  return rawBitstream;
-}
-
-function parseBinFile(contents)
-{
-  const view = new Uint8Array(contents);
-  var pos = 0;
-  var idx = 0;
-
-  function readbits(n)
-  {
-    var ret = 0;
-    for (var i = 0; i < n; i++)
-    {
-      ret <<= 1;
-      ret |= ((view[pos>>3] >> (pos&7)) & 1);
-      pos++;
-    }
-    return ret;
-  }
-
-  var hdr = readbits(12);
-  if (hdr != 0xFF2)
-  {
-    alert('Bad header');
-    return;
-  }
-
-  var len = readbits(24);
-  /*if (len != 0x45DD)
-  {
-    alert('Bad data length');
-    return;
-  }*/
-  if ((contents.byteLength*8) < len)
-  {
-    alert('Bad data length');
-    return;
-  }
-
-  pos += 4;
-  while (readbits(1) != 0);
-  pos--;
-
-  while (readbits(1) == 0)
-  {
-    for (let i = 0; i < 87; i++) {
-      rawBitstream[idx++] = readbits(1);
-    }
-    pos += 3;
-  }
-
-  if (idx != 196 * 87) {
-    alert('Wrong number of bits ' + idx + ' in .BIN file');
-    return;
-  }
-  return rawBitstream;
-}
 
 function parseBitstream(type, contents)
 {
   var view = null;
   var length = 0;
+  var startoffset = 0;
   var pos = 0;
   var idx = 0;
+
+  bitstreams = [];
 
   if (type == 'rbt')
   {
@@ -166,6 +28,7 @@ function parseBitstream(type, contents)
 
     view = view.substring(start);
     length = view.length;
+    startoffset = start;
 
     function readbits(n)
     {
@@ -182,7 +45,22 @@ function parseBitstream(type, contents)
   else if (type == 'bin')
   {
     view = new Uint8Array(contents);
+
+    let start = 0;
+    while (start < view.byteLength)
+    {
+      let chk = (view[start] << 8) | view[start+1];
+      let chk2 = view[start+4];
+      if ((((chk & 0xFF0F) == 0xFF04 && (chk2 & 0xF0) == 0xF0)) ||
+          (((chk & 0xFFF0) == 0xFF20) && (chk2 & 0x0F) == 0x0F))
+        break;
+
+      start++;
+    }
+
+    view = view.slice(start);
     length = view.byteLength * 8;
+    startoffset = start * 8;
 
     let chk = (view[0] << 8) | view[1];
     if ((chk & 0xFF0F) == 0xFF04)
@@ -311,6 +189,7 @@ function parseBitstream(type, contents)
 
       var bs = {
         family: fam,
+        offset: startoffset+startpos,
         data: new Array(fam.frameLen),
       };
 
@@ -334,35 +213,12 @@ function parseBitstream(type, contents)
       pos--;
     }
   }
-
-  console.log(bitstreams);
 }
 
-/**
- * The RBT file is organized:
- * HH ... AH
- * .       .
- * HA ... AA
- * stored as rbtLines[line][char] of '0' and '1'.
- *
- * The die is organized:
- * AA ... AH
- * .       .
- * HA ... HH
- * This function flips the rbtLines to match the die, stored as bitstreamTable[x][y].
- * I'm using the term "bitstreamTable" to describe the bitstreamTable with the die's layout and "rbtLines" to describe the bitstreamTable
- * with the .RBT file's layout.
- * Note: this bitstream is inverted with respect to the RBT file: a 0 entry is converted to active 1.
- */
-function makeBitstreamTable(rawBitstream) {
-  var bitstreamTable = new Array(196);
-  for (var x = 0; x < 196; x++) {
-    bitstreamTable[x] = new Array(87);
-    for (var y = 0; y < 87; y++) {
-      bitstreamTable[x][y] = rawBitstream[(195 - x) * 87 + (86 - y)] ? 0 : 1;
-    }
-  }
-  return bitstreamTable;
+function selectBitstream(bsid, pkgid)
+{
+  curBitstream = bitstreams[bsid];
+  curPackage = chipPackages[curBitstream.family.name][pkgid];
 }
 
 /*
@@ -373,10 +229,10 @@ function makeBitstreamTable(rawBitstream) {
  */
 
 let bitTypes;
-function decode(rawBitstream, config) {
-  bitTypes = new Array(196 * 87);
-  decoders.forEach(d => d.startDecode());
-  for (let i = 0; i < 196 * 87; i++) {
+function decode() {
+  //bitTypes = new Array(196 * 87);
+  //decoders.forEach(d => d.startDecode());
+  /*for (let i = 0; i < 196 * 87; i++) {
     let entry = config[i];
     if (entry == undefined || entry == "----- NOT USED -----") {
       bitTypes[i] = BITTYPE.unused;
@@ -441,7 +297,7 @@ function decode(rawBitstream, config) {
   iobDecoders.routeFromInput();
   clbDecoders.routeFromOutputs();
   //switchDecoders.doConnect();
-  //console.log(clbDecoders);
+  //console.log(clbDecoders);*/
 }
 
 var iobDecoders;

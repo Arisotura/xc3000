@@ -1,0 +1,75 @@
+
+bit 0 0 : corner PIP P4
+bit 0 1 :
+bit 0 2 : corner PIP P3
+bit 0 3 : corner PIP P2
+bit 0 4 :
+bit 0 5 :
+bit 0 6 :
+bit 0 7 : xxxxxx G4
+bit 0 8 : xxxxxx G6
+bit 0 9 : xxxxxx G5
+bit 0 10 : xxxxxx G4 G5 G6
+bit 0 11 : corner PIP P0
+bit 0 12 : xxxxxx G1 G4 G5 G6 G7
+bit 0 13 : xxxxxx G0 G1 G4 G5 G6 G7
+
+bit 1 0 :
+bit 1 1 :
+bit 1 2 :
+bit 1 3 : PIP P5 H->V
+bit 1 4 : PIP P6 H->V
+bit 1 5 :
+bit 1 6 :
+bit 1 7 :
+bit 1 8 : corner PIP P1
+bit 1 9 : PIP X0
+bit 1 10 : PIP X1
+bit 1 11 : OTHER crystal osc enable
+bit 1 12 :
+bit 1 13 : xxxxxx G1 G2 G3 G4 G5 G6 G7 G8 G9 G10 G11
+
+bit 2 0 :
+bit 2 1 :
+bit 2 2 :
+bit 2 3 : PIP P5 V->H
+bit 2 4 : PIP P6 V->H
+bit 2 5 :
+bit 2 6 :
+bit 2 7 :
+bit 2 8 :
+bit 2 9 :
+bit 2 10 :
+bit 2 11 :
+bit 2 12 : OTHER crystal osc enable
+bit 2 13 : OTHER crystal osc enable
+
+bit 3 0 :
+bit 3 1 :
+bit 3 2 :
+bit 3 3 :
+bit 3 4 : xxxxxx G3 G8 G9 G10 G11
+bit 3 5 : xxxxxx G9
+bit 3 6 : xxxxxx G10
+bit 3 7 : xxxxxx G8
+bit 3 8 : xxxxxx G8 G9 G10
+bit 3 9 :
+bit 3 10 :
+bit 3 11 :
+bit 3 12 :
+bit 3 13 : OTHER crystal osc div2 enable (if crystal osc enabled)
+
+bit 4 0 :
+bit 4 1 :
+bit 4 2 : xxxxxx G3 G8 G9 G10 G11
+bit 4 3 :
+bit 4 4 : ??
+bit 4 5 :
+bit 4 6 : ??
+bit 4 7 :
+bit 4 8 :
+bit 4 9 : OTHER DONE time (0=after 1=before)
+bit 4 10 : OTHER RESET time (0=after 1=before)
+bit 4 11 :
+bit 4 12 :
+bit 4 13 : OTHER DONE PULLUP (0=pullup 1=no pullup)

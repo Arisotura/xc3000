@@ -572,6 +572,74 @@ function __calcCoord(info, coord, num)
   return (info[coord[n1]][1] + info[coord[n2]][1]) / 2;
 }
 
+function drawTextBox(ctx, text, x, y, w, h)
+{
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x+w, y);
+    ctx.lineTo(x+w, y+h);
+    ctx.lineTo(x, y+h);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    let lines = text.split('\n');
+    let ty = y+7;
+    lines.forEach((l) =>
+    {
+        ctx.fillText(l, x+1, ty, w-2);
+        ty += 10;
+    });
+}
+
+function drawBackground(ctx)
+{
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset
+
+    var fam = curBitstream.family;
+
+    var w = 272 + ((fam.cols-1) * 104);
+    var h = 265 + ((fam.rows-1) * 120);
+    var cx = 188 + (((fam.cols/2)-1) * 104);
+    var cy = 168 + (((fam.rows/2)-1) * 120);
+
+    var HEIGHT = h * SCALE;
+    var WIDTH = w * SCALE;
+
+    ctx.canvas.height = HEIGHT;
+    ctx.canvas.width = WIDTH;
+    $("#container").css('height', HEIGHT + 'px');
+    $("#container").css('width', WIDTH + 'px');
+    $("#info").css('margin-left', WIDTH + 'px');
+    $("#info3").css('margin-left', WIDTH + 'px');
+    $("#info3").css('clear', 'none');
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.translate(0.5, 0.5); // Prevent antialiasing
+    ctx.scale(SCALE, SCALE);
+    ctx.lineWidth = 1;
+    ctx.lineCap = 'butt';
+
+    // draw fixed elements
+
+    ctx.strokeStyle = '#aaa';
+    ctx.fillStyle = '#aaa';
+    ctx.font = '8px Arial';
+
+    drawTextBox(ctx, 'PWR\nDN', 12, 12, 20, 20);
+    drawTextBox(ctx, 'VCC', 12, cy, 20, 20);
+    drawTextBox(ctx, 'M1R\nD', 12, h-69, 20, 20);
+    drawTextBox(ctx, 'M0R', 12, h-25, 20, 12);
+
+    drawTextBox(ctx, 'GND', cx, 12, 20, 12);
+    drawTextBox(ctx, 'GND', cx, h-25, 20, 12);
+
+    drawTextBox(ctx, 'CCL\nK', w-33, 12, 20, 20);
+    drawTextBox(ctx, 'VCC', w-33, cy, 20, 20);
+    drawTextBox(ctx, 'DPG\nM', w-33, h-69, 20, 20);
+    drawTextBox(ctx, 'RST', w-53, h-25, 20, 12);
+}
+
   function drawLayout(ctx) {
     $("#img").css('opacity', 1);
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset

@@ -6,6 +6,7 @@
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src="chipfamily.js"></script>
+<script src="chippackage.js"></script>
 <script src="draw.js"></script>
 <script src="parse.js"></script>
 <script src="iob.js"></script>
@@ -31,6 +32,7 @@ $(document).ready(function() {
   }
 
 
+  var bgctx = $("#bgcanvas")[0].getContext("2d");
   var ctx = $("#canvas")[0].getContext("2d");
   var ctx2 = $("#canvas2")[0].getContext("2d");
 
@@ -38,13 +40,13 @@ $(document).ready(function() {
   {
     var ucname = file.name.toUpperCase();
     if (ucname.endsWith('.LCA')) {
-      file.text().then(lcaUpload);
-    } else if (ucname.endsWith('.RBT')) {
-      file.text().then(rbtUpload);
+      file.text().then((contents) => uploadBitstream('lca', contents));
+    } else if (ucname.endsWith('.RBT') || ucname.endsWith('.TXT')) {
+      file.text().then((contents) => uploadBitstream('rbt', contents));
     } else if (ucname.endsWith('.BIN') || ucname.endsWith('.DAT')) {
-      file.arrayBuffer().then(binUpload);
+      file.arrayBuffer().then((contents) => uploadBitstream('bin', contents));
     } else {
-      alert('Need to upload a .RBT or .LCA file.');
+      alert('Unsupported file type.');
     }
   }
 
@@ -81,6 +83,33 @@ $(document).ready(function() {
       doUploadFile(files[0]);
     });
 
+    $('#bs_sel').on('change', function()
+    {
+      var bs = bitstreams[this.value];
+      var family = bs.family.name;
+      var pkglist = chipPackages[family];
+      var opts = '';
+      var first = null;
+      Object.entries(pkglist).forEach(([k, v]) =>
+      {
+        if (!first) first = k;
+        opts += '<option value="'+k+'">';
+        opts += k;
+        opts += '</option>';
+      });
+
+      $('#pkg_sel').html(opts).val(first).trigger('change');
+    });
+
+    $('#pkg_sel').on('change', function()
+    {
+      var bsid = $('#bs_sel').val();
+      var pkgid = $('#pkg_sel').val();
+
+      selectBitstream(bsid, pkgid);
+      drawBackground(bgctx);
+    });
+
     $('#mode').on('change', function() {
       redraw(ctx);
     });
@@ -102,11 +131,11 @@ $(document).ready(function() {
       var offset = $(this).offset();
       var x = e.pageX - offset.left;
       var y = e.pageY - offset.top;
-      if (canvasMode() == 'bitstream') {
+      /*if (canvasMode() == 'bitstream') {
         bitstreamMouse(x, y);
       } else {
         layoutMouse(x, y);
-      }
+      }*/
     });
 
     $("#canvas").click(function(e) {
@@ -143,28 +172,38 @@ $(document).ready(function() {
     });*/
   }
 
-  function lcaUpload(contents) {
-    $("#info").html('Not implemented');
-  }
 
+  function uploadBitstream(type, contents)
+  {
+    if (type == 'lca')
+    {
+      $("#info").html('Not implemented');
+      return;
+    }
 
-  /**
-   * Handles the upload of a .RBT file, storing it into the variable bitstream, which has 160 lines of 71 '0'/'1' characters,
-   * the contents of the .RBT file.
-   */
-  function rbtUpload(contents) {
-    //rbtParse(contents); // Sets rawBitstream and bitstreamTable
-    parseBitstream('rbt', contents);
-    $('#modetext').css('display', 'block'); // Show the dropdown
-    decode(rawBitstream, config);
-    redraw(ctx);
-  }
+    parseBitstream(type, contents);
+    if (bitstreams.length == 0)
+    {
+      alert('No valid bitstreams found.');
+    }
+    else
+    {
+      let opts = '';
+      for (let i = 0; i < bitstreams.length; i++)
+      {
+        let bs = bitstreams[i];
 
-  function binUpload(contents) {
-    //binParse(contents); // Sets rawBitstream and bitstreamTable
-    parseBitstream('bin', contents);
-    $('#modetext').css('display', 'block'); // Show the dropdown
-    decode(rawBitstream, config);
+        opts += '<option value="'+i+'">';
+        opts += (i+1)+'. ';
+        opts += bs.family.name + ' at ' + bs.offset;
+        opts += '</option>';
+      }
+      $('#bs_sel').html(opts).val(0).trigger('change');
+
+      $('#modetext').css('display', 'block'); // Show the dropdown
+      decode();
+    }
+
     redraw(ctx);
   }
 
@@ -189,13 +228,17 @@ $(document).ready(function() {
   }
 
 
-  loadConfig(initStuff);
+  /*loadConfig(initStuff);
 
   function initStuff() {
     initParser();
     initHandlers();
     drawLayout(ctx);
-  }
+  }*/
+
+  initParser();
+  initHandlers();
+  //drawLayout(ctx);
 
 
 });
@@ -213,6 +256,10 @@ This program decodes an XC3000 bitmap file.
 To use, drag-and-drop an .RBT file onto this page, or load a file by clicking: <input type="file" id="fileupload">
 <div id="header">
 <div id="modetext" style="display:none">
+  <div id="chip_sel">
+    Bitstream: <select id="bs_sel"></select>
+    Chip package: <select id="pkg_sel"></select>
+  </div>
 Select either the graphical layout display or the raw bitstream:
 <select id="mode"><option value="layout" selected>Layout</option><option value="bitstream">Bitstream</option></select>
 <br/>
@@ -232,7 +279,8 @@ Color code: red=LUT, green=CLB, blue=PIP, purple=switch, yellow=IOB, orange=BIDI
 <div id="info2"> </div>
 <div id="container" style="position: relative; float: left;">
   <canvas style="position:absolute; z-index: 1" id="canvas"></canvas>
-  <img style="display:xnone" id="img" style="position:absolute" src="pips.png" width=824 height=824></img>
+  <!--<img id="img" style="position:absolute" src="pips.png" width=824 height=824></img>-->
+  <canvas style="position:absolute" id="bgcanvas"></canvas>
 </div>
 <div id="info3"> </div>
 <div id="routeinfo" style="background:black; color:white; font-family:Verdana,Tahoma,sans-serif; border:1px solid white; padding:1em;"></div>

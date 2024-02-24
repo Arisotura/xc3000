@@ -1,0 +1,230 @@
+
+bit 0 0 : left O bit0 -- 01101=O0 01011=O1 01010=O2 00111=O3 01100=O4 11110=O5 00110=O6 11111=O7
+bit 0 1 : left O bit1
+bit 0 2 : IOB A output NOT
+bit 0 3 : IOB A output latch
+bit 0 4 : PIP H3 H->V
+bit 0 5 : left OK -- 0=OK0 1=OK1
+bit 0 6 : IOB A output slew rate (0=slow 1=fast)
+bit 0 7 : left IK -- 1=IK0 0=IK1
+bit 0 8 : IOB A output enable && left T bit0 -- 11=T0 10=T1 01=T2 00=T3
+bit 0 9 : IOB A input LATCH/FF (1=LATCH 0=FF)
+bit 0 10 :
+bit 0 11 : IOB B output enable && right T bit0 -- 11=T0 10=T1 01=T2 00=T3
+bit 0 12 : IOB B input LATCH/FF (1=LATCH 0=FF)
+bit 0 13 : PIP H4 V->H
+bit 0 14 : right IK -- 1=IK0 0=IK1
+bit 0 15 : IOB B output slew rate (0=slow 1=fast)
+bit 0 16 : right OK -- 0=OK0 1=OK1
+bit 0 17 : PIP H5 V->H
+bit 0 18 : IOB B output latch
+bit 0 19 : IOB B output NOT
+bit 0 20 : right O bit0 -- 01100=O0 11101=O1 01001=O2 01011=O3 01110=O4 00111=O5 11111=O6 00101=O7
+bit 0 21 : right O bit1
+
+bit 1 0 : left O bit2
+bit 1 1 : left O bit3
+bit 1 2 : left O bit4
+bit 1 3 : PIP H3 V->H
+bit 1 4 : PIP G0
+bit 1 5 : PIP BI5 (inverted)
+bit 1 6 :
+bit 1 7 :
+bit 1 8 : IOB A input pullup && left T bit1
+bit 1 9 : IOB A output TRI NOT (1=NOT)
+bit 1 10 : IOB A output TRI (1=enable)
+bit 1 11 :
+bit 1 12 : IOB B input pullup && right T bit1
+bit 1 13 : IOB B output TRI NOT (1=NOT)
+bit 1 14 : IOB B output TRI (1=enable)
+bit 1 15 :
+bit 1 16 : PIP H4 H->V
+bit 1 17 : PIP V5 H->V
+bit 1 18 : right O bit2
+bit 1 19 : switch 9->16
+bit 1 20 : right O bit3
+bit 1 21 : right O bit4
+
+bit 0 0 : switch 6->19
+bit 0 1 : switch 14->19
+bit 0 2 : right PIP Q2 (from left)
+bit 0 3 : switch 15->20
+bit 0 4 : switch 6->14
+bit 0 5 : switch 14->20
+bit 0 6 : left PIP I0
+bit 0 7 : right PIP Q0
+bit 0 8 : PIP V4 V->H
+bit 0 9 : PIP V4 H->V
+bit 0 10 : right PIP I2 (from left)
+bit 0 11 : right PIP I3 (from left)
+bit 0 12 : switch 8->18
+bit 0 13 : PIP H5 H->V
+bit 0 14 : switch 13->18
+bit 0 15 : PIP V5 V->H
+bit 0 16 : switch 9->13
+bit 0 17 : switch 9->18
+bit 0 18 : PIP H2 V->H
+bit 0 19 : PIP H2 H->V
+bit 0 20 : switch 11->16
+bit 0 21 : switch 10->16
+
+bit 1 0 : switch 15->19
+bit 1 1 : switch 6->15
+bit 1 2 : switch 7->19
+bit 1 3 : switch 7->14
+bit 1 4 : switch 7->20
+bit 1 5 : switch 6->20
+bit 1 6 : left PIP I3
+bit 1 7 : switch 6->11
+bit 1 8 : switch 11->20
+bit 1 9 : switch 7->18
+bit 1 10 : left PIP Q3
+bit 1 11 : right PIP Q3 (from left)
+bit 1 12 : left PIP I2
+bit 1 13 : switch 12->18
+bit 1 14 : switch 8->13
+bit 1 15 : switch 12->17
+bit 1 16 : switch 8->17
+bit 1 17 : switch 9->17
+bit 1 18 : right PIP Q1
+bit 1 19 : left PIP I1
+bit 1 20 : switch 10->11
+bit 1 21 : switch 10->17
+
+bit 2 0 : switch 7->15
+bit 2 1 : TBUF2 enable
+bit 2 2 :
+bit 2 3 :
+bit 2 4 : TBUF2 input T -- 0=T1 1=T0 && PIP V3 V->H
+bit 2 5 : input K bit0 -- 1011=K0 0110=K1 0101=K2 1111=K3
+bit 2 6 : input EC bit0 -- 1010=EC0 1001=EC1 1111=EC2 0011=EC3
+bit 2 7 : PIP H0 V->H
+bit 2 8 : TBUF1 input T -- 0=T0 1=T1 && PIP V1 V->H
+bit 2 9 : switch 8->19
+bit 2 10 : left PIP Q2
+bit 2 11 : TBUF1 enable
+bit 2 12 : PIP H1 V->H
+bit 2 13 :
+bit 2 14 :
+bit 2 15 : switch 13->17
+bit 2 16 : switch 8->12
+bit 2 17 : switch 9->12
+bit 2 18 : left PIP Q1
+bit 2 19 : right PIP I1
+bit 2 20 : right PIP I0
+bit 2 21 : left PIP Q0
+
+bit 3 0 : PIP X0 (from CLB left)
+bit 3 1 : PIP BI0 bottom->top
+bit 3 2 : PIP BI0 top->bottom
+bit 3 3 : PIP BI2 left->right
+bit 3 4 : PIP BI2 right->left
+bit 3 5 : input K bit1
+bit 3 6 : input EC bit1
+bit 3 7 : input EC bit2
+bit 3 8 : input K bit2
+bit 3 9 : input K bit3
+bit 3 10 : input DI bit0 -- 1010=DI0 1111=DI1 1001=DI2 0011=DI3
+bit 3 11 : input DI bit1
+bit 3 12 : PIP BI1 top->bottom
+bit 3 13 : PIP BI1 bottom->top
+bit 3 14 : input DI bit2
+bit 3 15 :
+bit 3 16 : PIP X1 (from CLB left)
+bit 3 17 :
+bit 3 18 :
+bit 3 19 : PIP Y2 (from CLB left)
+bit 3 20 : PIP BI3/BI4 right->left
+bit 3 21 : PIP BI3/BI4 left->right
+
+bit 4 0 : PIP V2 H->V
+bit 4 1 : input B bit0 -- 11011=B0 01101=B1 01110=B2 00011=B3 00111=B4 01001=B5 11111=B6 01010=B7
+bit 4 2 : X mux bit0 -- 00=F 11=QX
+bit 4 3 : PIP Y0 (from CLB left)
+bit 4 4 : input B bit1
+bit 4 5 : X mux bit1
+bit 4 6 : input EC bit3
+bit 4 7 : input A bit0 -- 0010=A0 0101=A1 1011=A2 0001=A3 0110=A4 1111=A5
+bit 4 8 : PIP H0 H->V
+bit 4 9 : EC enable
+bit 4 10 : PIP V0 H->V
+bit 4 11 : CLB storage clock -- 0=K 1=NOT K
+bit 4 12 : PIP Y1 (from CLB left)
+bit 4 13 : PIP H1 H->V
+bit 4 14 : input DI bit3
+bit 4 15 : input C bit0 -- 11111=C0 01110=C1 01101=C2 01001=C3 00011=C4 01010=C5 00111=C6 11011=C7
+bit 4 16 : Y mux bit0 -- 00=G 11=QY
+bit 4 17 : RD enable
+bit 4 18 : PIP Y3 (from CLB left)
+bit 4 19 : Y mux bit1
+bit 4 20 : input D bit0 -- 0110=D0 0101=D1 0001=D2 0010=D3 1111=D4 1011=D5
+bit 4 21 : input D bit1
+
+bit 5 0 : input E bit0 -- 10=E0 11=E1 00=E2 01=E3
+bit 5 1 : input E bit1
+bit 5 2 : input B bit2
+bit 5 3 : input B bit3
+bit 5 4 : input B bit4
+bit 5 5 : input A bit1
+bit 5 6 : input A bit2
+bit 5 7 : input A bit3
+bit 5 8 : F C/QX/QY mux bit0 -- 01=C 10=QX 11=QY
+bit 5 9 : DX mux bit0 -- 10=DI 11=F 00=G
+bit 5 10 : DX mux bit1
+bit 5 11 : DY mux bit0 -- 10=DI 00=F 11=G
+bit 5 12 : DY mux bit1
+bit 5 13 : G C/QX/QY mux bit0 -- 01=C 10=QX 11=QY
+bit 5 14 : input C bit1
+bit 5 15 : input C bit2
+bit 5 16 : input C bit3
+bit 5 17 : input C bit4
+bit 5 18 : input RD bit0 -- 10=RD0 01=RD1 11=RD2 00=RD3
+bit 5 19 : input RD bit1
+bit 5 20 : input D bit2
+bit 5 21 : input D bit3
+
+bit 6 0 : LUT F bit3
+bit 6 1 : LUT F bit2
+bit 6 2 : LUT F bit0
+bit 6 3 : LUT F bit1
+bit 6 4 : LUT F bit5
+bit 6 5 : LUT F bit4
+bit 6 6 : LUT F bit6
+bit 6 7 : LUT F bit7
+bit 6 8 : F C/QX/QY mux bit1
+bit 6 9 : F B/QX/QY mux bit0 -- 10=B 01=QX 11=QY
+bit 6 10 :
+bit 6 11 :
+bit 6 12 : G B/QX/QY mux bit0 - 10=B 01=QX 11=QY
+bit 6 13 : G C/QX/QY mux bit1
+bit 6 14 : LUT G bit7
+bit 6 15 : LUT G bit6
+bit 6 16 : LUT G bit4
+bit 6 17 : LUT G bit5
+bit 6 18 : LUT G bit1
+bit 6 19 : LUT G bit0
+bit 6 20 : LUT G bit2
+bit 6 21 : LUT G bit3
+
+bit 7 0 : LUT F bit10
+bit 7 1 : LUT F bit11
+bit 7 2 : LUT F bit9
+bit 7 3 : LUT F bit8
+bit 7 4 : LUT F bit12
+bit 7 5 : LUT F bit13
+bit 7 6 : LUT F bit15
+bit 7 7 : LUT F bit14
+bit 7 8 : F D/E mux -- 0=D 1=E
+bit 7 9 : F B/QX/QY mux bit1
+bit 7 10 :
+bit 7 11 : Base type -- 0=FG 1=F/FGM (F if E=0, G if E=1)
+bit 7 12 : G B/QX/QY mux bit1
+bit 7 13 : G D/E mux -- 0=D 1=E
+bit 7 14 : LUT G bit14
+bit 7 15 : LUT G bit15
+bit 7 16 : LUT G bit13
+bit 7 17 : LUT G bit12
+bit 7 18 : LUT G bit8
+bit 7 19 : LUT G bit9
+bit 7 20 : LUT G bit11
+bit 7 21 : LUT G bit10

@@ -1,0 +1,150 @@
+
+bit 0 0 :
+bit 0 1 :
+bit 0 2 : ??
+bit 0 3 :
+bit 0 4 :
+bit 0 5 :
+bit 0 6 :
+bit 0 7 :
+bit 0 8 :
+bit 0 9 :
+bit 0 10 :
+bit 0 11 :
+bit 0 12 :
+bit 0 13 :
+
+bit 1 0 :
+bit 1 1 :
+bit 1 2 :
+bit 1 3 :
+bit 1 4 :
+bit 1 5 :
+bit 1 6 :
+bit 1 7 :
+bit 1 8 :
+bit 1 9 :
+bit 1 10 :
+bit 1 11 :
+bit 1 12 :
+bit 1 13 :
+
+bit 0 0 :
+bit 0 1 :
+bit 0 2 :
+bit 0 3 :
+bit 0 4 :
+bit 0 5 :
+bit 0 6 :
+bit 0 7 :
+bit 0 8 :
+bit 0 9 :
+bit 0 10 :
+bit 0 11 :
+bit 0 12 :
+bit 0 13 :
+
+bit 1 0 :
+bit 1 1 : PIP H1 H->V
+bit 1 2 : PIP H1 V->H
+bit 1 3 : right PIP I2 (from left)
+bit 1 4 : xxxxxx G7 G8 G9 G10 G11
+bit 1 5 : xxxxxx G6 G7 G8 G9 G10 G11
+bit 1 6 : xxxxxx G10
+bit 1 7 : xxxxxx G4
+bit 1 8 : xxxxxx G3
+bit 1 9 : xxxxxx G8 G9 G10
+bit 1 10 : xxxxxx G3 G4 G5
+bit 1 11 : xxxxxx G1 G2 G3 G4 G5
+bit 1 12 : xxxxxx G0 G1 G2 G3 G4 G5 G7 G8 G9 G10
+bit 1 13 :
+
+bit 2 0 :
+bit 2 1 : TBUF2 enable
+bit 2 2 : TBUF2 input T -- 0=T0 1=T1 && PIP V3 V->H
+bit 2 3 :
+bit 2 4 : corner PIP P3
+bit 2 5 : corner PIP P4
+bit 2 6 : xxxxxx G9
+bit 2 7 : corner PIP P0
+bit 2 8 :
+bit 2 9 : corner PIP P1
+bit 2 10 : xxxxxx G5
+bit 2 11 : upper O bit0 -- 11001=O0 01111=O1 00101=O2 10101=O3 01001=O4
+bit 2 12 : upper O bit1
+bit 2 13 :
+
+bit 3 0 :
+bit 3 1 : PIP H3 H->V
+bit 3 2 : PIP H3 V->H
+bit 3 3 : PIP H2 H->V
+bit 3 4 : PIP H2 V->H
+bit 3 5 :
+bit 3 6 : PIP PU0 (between P73 and P72)
+bit 3 7 : upper PIP I1
+bit 3 8 : corner PIP P2
+bit 3 9 :
+bit 3 10 :
+bit 3 11 : upper O bit2
+bit 3 12 : upper O bit3
+bit 3 13 : upper O bit4
+
+bit 4 0 : PIP X0 (from CLB left)
+bit 4 1 : upper PIP I2
+bit 4 2 : PIP V2 H->V
+bit 4 3 : PIP PU1 (under P72)
+bit 4 4 : PIP Y0 (from CLB left)
+bit 4 5 : IOB A input pullup && upper T bit1
+bit 4 6 : PIP Y1 (from CLB left)
+bit 4 7 : upper PIP I0
+bit 4 8 : PIP X1 (from CLB left)
+bit 4 9 : PIP X2 (from CLB left)
+bit 4 10 : PIP Y2 (from CLB left)
+bit 4 11 : upper OK -- 0=OK0 1=OK1
+bit 4 12 : IOB A output latch
+bit 4 13 : IOB A output NOT
+
+bit 5 0 :
+bit 5 1 : PIP H0 H->V
+bit 5 2 : TBUF1 input T -- 0=T1 1=T0 && PIP V1 V->H
+bit 5 3 : TBUF1 enable
+bit 5 4 : upper PIP Q1
+bit 5 5 : IOB A output enable && upper T bit0 -- 10=T0 11=T1 00=T2 01=T3
+bit 5 6 : IOB A output TRI NOT (1=NOT)
+bit 5 7 : IOB A output TRI (1=enable)
+bit 5 8 : PIP V0 H->V
+bit 5 9 : upper PIP Q0
+bit 5 10 : IOB A input LATCH/FF (1=LATCH 0=FF)
+bit 5 11 : IOB A output slew rate (0=slow 1=fast)
+bit 5 12 : upper IK -- 1=IK0 0=IK1
+bit 5 13 : IOB B input LATCH/FF (1=LATCH 0=FF)
+
+bit 6 0 : PIP H0 V->H
+bit 6 1 : IOB B input pullup && lower T bit1
+bit 6 2 : IOB B output enable && lower T bit0 -- 10=T0 11=T1 00=T2 01=T3
+bit 6 3 : IOB B output TRI (1=enable)
+bit 6 4 : lower PIP Q1
+bit 6 5 : lower O bit0 -- 01010=O0 11110=O1 00110=O2 01100=O3 01011=O4 00111=O5 11111=O6 01101=O7
+bit 6 6 : lower PIP I1
+bit 6 7 :
+bit 6 8 :
+bit 6 9 : lower PIP Q0
+bit 6 10 : lower PIP I0
+bit 6 11 : lower OK -- 0=OK0 1=OK1
+bit 6 12 : IOB B output slew rate (0=slow 1=fast)
+bit 6 13 : lower IK -- 1=IK0 0=IK1
+
+bit 7 0 :
+bit 7 1 :
+bit 7 2 :
+bit 7 3 : IOB B output TRI NOT (1=NOT)
+bit 7 4 : lower O bit1
+bit 7 5 : PIP BI0/BI1 bottom->top
+bit 7 6 : PIP BI0/BI1 top->bottom
+bit 7 7 : lower O bit2
+bit 7 8 : lower O bit3
+bit 7 9 : lower O bit4
+bit 7 10 :
+bit 7 11 : IOB B output latch
+bit 7 12 : IOB B output NOT
+bit 7 13 :
