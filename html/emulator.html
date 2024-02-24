@@ -1,0 +1,213 @@
+<html>
+  <!--
+
+  View coordinate data.
+  -->
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="draw.js"></script>
+<script src="parse.js"></script>
+<script src="iob.js"></script>
+<script src="clb.js"></script>
+<script src="karnaugh.js"></script>
+<script src="bitstreamDisplay.js"></script>
+<script src="emulator.js"></script>
+
+<script>
+debug = false; // Enable/disable debug stuff
+
+function assert(cond, message) {
+  if (!cond) {
+    console.log(message);
+    throw new Error('assertion failed: ' + message);
+  }
+}
+$(document).ready(function() {
+  window.onerror = function errorHandler(msg, url, line) {
+    alert('Exception ' + msg + ' ' + url + ' ' + line);
+    error('Exception ' + msg + ' ' + url + ' ' + line);
+    return false;
+  }
+
+
+  var inputsel = "";
+  Object.entries(emuInputs).forEach(function([k, v])
+  {
+    inputsel += k+': ';
+    var elemid = 'ctrl_'+k.replaceAll('.','_');
+
+    if (typeof v.pins == 'number')
+    {
+      // single pin
+      inputsel += '<input type="checkbox" id="'+elemid+'" checked>';
+    }
+    else
+    {
+      if (typeof v.select != 'undefined')
+      {
+        // select
+        inputsel += '<select id="'+elemid+'">';
+        for (var i = 0; i < v.select.length; i++)
+        {
+          inputsel += '<option value="'+i+'">'+v.select[i]+'</option>';
+        }
+        inputsel += '</select>';
+      }
+      else
+      {
+        // textbox
+        inputsel += '<input type="text" id="'+elemid+'">';
+      }
+    }
+
+    inputsel += ' &nbsp; &nbsp; ';
+  });
+  $('#emuinputs').html(inputsel);
+
+
+  var ctx = $("#emucanvas")[0].getContext("2d");
+
+  function doUploadFile(file)
+  {
+    var ucname = file.name.toUpperCase();
+    if (ucname.endsWith('.LCA')) {
+      file.text().then(lcaUpload);
+    } else if (ucname.endsWith('.RBT')) {
+      file.text().then(rbtUpload);
+    } else if (ucname.endsWith('.BIN') || ucname.endsWith('.DAT')) {
+      file.arrayBuffer().then(binUpload);
+    } else {
+      alert('Need to upload a .RBT or .LCA file.');
+    }
+  }
+
+  // https://makitweb.com/drag-and-drop-file-upload-with-jquery-and-ajax/
+
+  function initHandlers() {
+    $("html").on("dragover", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    $("html").on("drop", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      removePopups();
+      var files = e.originalEvent.dataTransfer.files;
+
+      if (files.length != 1) {
+        alert('Unexpected upload length ' + files.length);
+        return;
+      }
+      doUploadFile(files[0]);
+    });
+
+    $('#fileupload').on('change', function(e)
+    {
+      removePopups();
+      var files = this.files;
+
+      if (files.length != 1) {
+        //alert('Unexpected upload length ' + files.length);
+        return;
+      }
+      doUploadFile(files[0]);
+    });
+
+    /*$("#demo").click(function() {
+      rawBitstream = makeDemoBitstream();
+      $('#modetext').css('display', 'block'); // Show the dropdown
+      decode(rawBitstream, config);
+      $("#modetext").val("layout");
+      emuReset();
+      redraw(ctx);
+    });*/
+
+    $('#reset').click(function()
+    {
+      if (!bitstreamTable) return;
+      emuReset();
+      redraw(ctx);
+    });
+
+    $('#run').click(function()
+    {
+      if (!bitstreamTable) return;
+      emuReset();
+      emuRun();
+      redraw(ctx);
+    });
+  }
+
+  function lcaUpload(contents) {
+    $("#info").html('Not implemented');
+  }
+
+
+  /**
+   * Handles the upload of a .RBT file, storing it into the variable bitstream, which has 160 lines of 71 '0'/'1' characters,
+   * the contents of the .RBT file.
+   */
+  function rbtUpload(contents) {
+    rbtParse(contents); // Sets rawBitstream and bitstreamTable
+    $('#modetext').css('display', 'block'); // Show the dropdown
+    decode(rawBitstream, config);
+    $("#modetext").val("layout");
+    emuReset();
+    redraw(ctx);
+  }
+
+  function binUpload(contents) {
+    binParse(contents); // Sets rawBitstream and bitstreamTable
+    $('#modetext').css('display', 'block'); // Show the dropdown
+    decode(rawBitstream, config);
+    $("#modetext").val("layout");
+    emuReset();
+    redraw(ctx);
+  }
+
+  function redraw(ctx) {
+    emuDraw(ctx);
+  }
+
+
+
+
+
+  // Returns bitstream or layout
+  function canvasMode() {
+    return null;
+  }
+
+
+  loadConfig(initStuff);
+
+  function initStuff() {
+    initParser();
+    initHandlers();
+  }
+
+
+});
+</script>
+
+<style type="text/css">
+  .popup {border: 2px solid #ccc; position: absolute; z-index: 2; top: 100px; left: 100px;}
+  * { image-rendering:crisp-edges; }
+</style>
+
+<title>XC2018 emulator</title>
+</head>
+<body>
+This program emulates an XC2018 bitmap file.
+To use, drag-and-drop an .RBT file onto this page, or load a file by clicking: <input type="file" id="fileupload">
+<div id="header">
+<div id="modetext" style="display:none">
+<div id="emuinputs"></div>
+<button id="reset">Reset</button> <button id="run">Run</button>
+</div>
+<div id="container" style="position: relative; float: left;">
+  <canvas style="position:absolute; z-index: 1" id="emucanvas"></canvas>
+</div>
+</body>
+</html>
