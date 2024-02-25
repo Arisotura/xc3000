@@ -1,166 +1,330 @@
 
-// SIZE
-// 1208x1345
-// X: 9x104+272
-// Y: 9x120+265
+// coord lists
+
+// from G coords to screen coords
+var rowGtoS = [];
+var colGtoS = [];
 
 // From row name to [internal Y coordinate (G), screen Y coordinate]
-var rowInfo = {
-
- // "row.A.io2": [188, 60], // My invention, I/O above CLB
- "row.A.local.0": [211, 2],
- "CLK.AA.O": [208, 22],
- "row.A.long.2": [207, 26],
- "row.A.local.1": [205, 30],
- "row.A.local.2": [204, 34],
- "row.A.local.3": [202, 38],
- "row.A.local.4": [201, 42],
- "row.A.long.3": [199, 48],
- "row.A.local.5": [198, 52], // Also I/O lines, would be io1
- "row.A.io2": [197, 56], // My invention, I/O above CLB
- "row.A.io3": [196, 60], // My invention, row near top of CLB
- "row.A.io4": [195, 64], // My invention, I/O above CLB
- "row.A.io5": [194, 68], // My invention, I/O aligned with top of CLB
- "row.A.io6": [193, 72], // My invention, I/O just below top of CLB
- "row.A.b": [192, 80], // My invention, input b to CLB
- "row.A.c": [191, 86], // My invention, input c to CLB
- "row.A.k": [190, 92], // My invention, input k to CLB
- "row.A.y": [189, 96], // My invention, input d to CLB
-
- "row.K.local.0": [17, 604+144],
- "row.K.io1": [16, 608+144], // My invention
- "row.K.io2": [15, 612+144], // My invention
- "row.K.io3": [14, 616+144], // My invention
- "row.K.io4": [13, 620+144], // My invention
- "row.K.long.1": [12, 624+144],
- "row.K.local.1": [10, 630+144],
- "row.K.local.2": [9, 634+144],
- "row.K.local.3": [7, 638+144],
- "row.K.local.4": [6, 642+144],
- "row.K.local.6": [5, 644+144],
- "row.K.long.2": [4, 646+144],
- "row.K.clk": [3, 652+144], // My invention
- "row.K.local.5": [0, 672+144],
-}
+var rowInfo = {};
 
 // From column name to [internal X coordinate, screen X coordinate]
-var colInfo = {
- "col.A.local.0": [0, 2],
- "col.A.long.2": [3, 22],
- "col.A.local.1": [5, 26],
- "col.A.local.2": [6, 30],
- "col.A.local.3": [8, 34],
- "col.A.local.4": [9, 38],
- "col.A.long.3": [11, 44],
- "col.A.long.4": [12, 48],
- "col.A.clk": [13, 52], // My invention
- "col.A.local.5": [14, 56],
- "col.A.io1": [15, 62], // My invention, three I/O verticals feeding to matrices
- "col.A.io2": [16, 66], // My invention
- "col.A.io3": [17, 70], // My invention
- "col.A.x": [18, 74], // My invention, x input to CLB
- "col.A.clbl1": [19, 78], // My invention, one column left of center of CLB.
- "col.A.clb": [21, 88], // My invention, through center of CLB.
- "col.A.clbr1": [22, 94], // My invention, one column right of center of CLB.
- "col.A.clbr2": [23, 98], // My invention, two columns right of center of CLB.
- "col.A.clbr3": [24, 102], // My invention, three columns right of center of CLB.
+var colInfo = {};
 
-// Note: clbw1-3 are wrapped around clbr1-3 from the neighboring tile.
-// E.g. AB.clbl3 is above AA
-// This makes assigning iobs to columns easier.
- "col.K.clbw1": [202, 598+144],
- "col.K.clbw2": [203, 602+144],
- "col.K.clbw3": [204, 606+144],
- "col.K.io1": [205, 610+144], // My invention, the column used just for I/O pins
- "col.K.io2": [206, 614+144], // My invention, the column used just for I/O pins
- "col.K.local.0": [207, 618+144],
- "col.K.io3": [208, 622+144], // My invention, the column used just for I/O pins
- "col.K.long.1": [209, 626+144],
- "col.K.long.2": [210, 630+144],
- "col.K.local.1": [212, 636+144],
- "col.K.local.2": [213, 640+144],
- "col.K.local.3": [215, 644+144],
- "col.K.local.4": [216, 648+144],
- "col.K.long.3": [218, 652+144],
- "col.K.local.5": [221, 672+144],
- "col.K.clb": [999, 999], // My invention
-}
+var rowFromG = {}; // Look up the row name from the G coordinate
+var colFromG = {}; // Look up the column name from the G coordinate
 
-const rowFromG = {}; // Look up the row name from the G coordinate
-const colFromG = {}; // Look up the column name from the G coordinate
+var rowFromS = {}; // Look up the row name from the Screen coordinate
+var colFromS = {}; // Look up the column name from the Screen coordinate
 
-const rowFromS = {}; // Look up the row name from the Screen coordinate
-const colFromS = {}; // Look up the column name from the Screen coordinate
+function initNames()
+{
+    var fam = curBitstream.family;
 
-function initNames() {
-  // Generate formulaic row and column names (B through H)
-  for (var i = 1; i < 10; i++) {
-    var cstart = 27 + 20 * (i-1);
-    var name = "ABCDEFGHIJK"[i];
+    var cmaxG = 66 + (26 * (fam.cols-1));
+    var rmaxG = 61 + (30 * (fam.rows-1));
 
-    // Note: clbw1-3 are wrapped around clbr1-3 from the neighboring tile.
-    // E.g. AB.clbl3 is above AA
-    // This makes assigning iobs to columns easier.
-    colInfo['col.' + name + '.clbw1'] = [cstart - 5, 94 + 72 * (i-1)]; // My invention, one column right of center of CLB.
-    colInfo['col.' + name + '.clbw2'] = [cstart - 4, 98 + 72 * (i-1)]; // My invention, two columns right of center of CLB.
-    colInfo['col.' + name + '.clbw3'] = [cstart - 3, 102 + 72 * (i-1)]; // My invention, three columns right of center of CLB.
-    colInfo['col.' + name + '.local.1'] = [cstart, 108 + 72 * (i-1)];
-    colInfo['col.' + name + '.local.2'] = [cstart + 1, 112 + 72 * (i-1)];
-    colInfo['col.' + name + '.local.3'] = [cstart + 3, 116 + 72 * (i-1)];
-    colInfo['col.' + name + '.local.4'] = [cstart + 4, 120 + 72 * (i-1)];
-    colInfo['col.' + name + '.local.5'] = [cstart + 6, 126 + 72 * (i-1)];
-    colInfo['col.' + name + '.local.6'] = [cstart + 7, 130 + 72 * (i-1)]; // y connection
-    colInfo['col.' + name + '.long.1'] = [cstart + 8, 134 + 72 * (i-1)];
-    colInfo['col.' + name + '.long.2'] = [cstart + 9, 138 + 72 * (i-1)];
-    colInfo['col.' + name + '.clk'] = [cstart + 10, 142 + 72 * (i-1)]; // my invention
-    colInfo['col.' + name + '.x'] = [cstart + 11, 146 + 72 * (i-1)]; // my invention
-    colInfo['col.' + name + '.clbl2'] = [cstart + 12, 150 + 72 * (i-1)]; // My invention, two columns left of center of CLB.
-    colInfo['col.' + name + '.clbl1'] = [cstart + 13, 154 + 72 * (i-1)]; // My invention, one column left of center of CLB.
-    // col.X.clb is my name for the column running through the middle of the CLB
-    colInfo['col.' + name + '.clb'] = [cstart + 14, 160 + 72 * (i-1)];
-    colInfo['col.' + name + '.clbr1'] = [cstart + 15, 166 + 72 * (i-1)]; // My invention, one column right of center of CLB.
-    colInfo['col.' + name + '.clbr2'] = [cstart + 16, 170 + 72 * (i-1)]; // My invention, two columns right of center of CLB.
-    colInfo['col.' + name + '.clbr3'] = [cstart + 17, 174 + 72 * (i-1)]; // My invention, three columns right of center of CLB.
+    rowGtoS = [];
+    colGtoS = [];
 
-    // Interpreting die file: row.B.local.1 = die file Y 28 = G 145, i.e. sum=173
-    var rstart = 25 + 19 * (9 - i);
-    // row.X.io1 is my name for the I/O row below the CLB
-    rowInfo['row.' + name + '.io1'] = [rstart + 11, 100 + 72 * (i-1)];
-    rowInfo['row.' + name + '.io2'] = [rstart + 10, 104 + 72 * (i-1)];
-    rowInfo['row.' + name + '.io3'] = [rstart + 9, 108 + 72 * (i-1)];
-    rowInfo['row.' + name + '.local.0'] = [rstart + 7, 112 + 72 * (i-1)];
-    rowInfo['row.' + name + '.local.1'] = [rstart + 6, 114 + 72 * (i-1)];
-    //console.log("INIT: "+i+" - "+(rstart+6));
-    rowInfo['row.' + name + '.local.3'] = [rstart + 5, 118 + 72 * (i-1)];
-    rowInfo['row.' + name + '.local.4'] = [rstart + 3, 122 + 72 * (i-1)];
-    rowInfo['row.' + name + '.local.5'] = [rstart + 2, 126 + 72 * (i-1)];
-    rowInfo['row.' + name + '.long.1'] = [rstart, 132 + 72 * (i-1)];
-    // row.X.io6 is my name for the row near the top of the clb
-    // row.X.b is my name for the row through input b
-    // row.X.c is my name for the row running through the middle of the CLB, through input c, output y
-    // row.X.k is my name for the row through input k
-    // row.X.y is my name for the row through input y
-    rowInfo['row.' + name + '.io4'] = [rstart - 1, 136 + 72 * (i-1)];
-    rowInfo['row.' + name + '.io5'] = [rstart - 2, 140 + 72 * (i-1)];
-    rowInfo['row.' + name + '.io6'] = [rstart - 3, 144 + 72 * (i-1)];
-    rowInfo['row.' + name + '.b'] = [rstart - 4, 152 + 72 * (i-1)];
-    rowInfo['row.' + name + '.c'] = [rstart - 5, 158 + 72 * (i-1)];
-    rowInfo['row.' + name + '.k'] = [rstart - 6, 164 + 72 * (i-1)];
-    rowInfo['row.' + name + '.y'] = [rstart - 7, 168 + 72 * (i-1)];
-  }
+    var s = 4;
+    for (var g = 0; g <= cmaxG; g++)
+    {
+        colGtoS[g] = s;
+        s += 4;
+    }
+
+    s = 264 + ((fam.rows-1) * 120);
+    for (var g = 0; g <= rmaxG; g++)
+    {
+        rowGtoS[g] = s;
+        if (g == 2 || g == (rmaxG-3))
+            s -= 12;
+        else
+            s -= 4;
+    }
+
+    colInfo = {};
+    rowInfo = {};
+    rowFromG = {};
+    colFromG = {};
+    rowFromS = {};
+    colFromS = {};
+
+    {
+        var name = letters[0];
+        var g = 0;
+
+        colInfo['col.' + name + '.local.12'] = g++;
+        colInfo['col.' + name + '.local.13'] = g+=11;
+        colInfo['col.' + name + '.local.1'] = g++;
+        colInfo['col.' + name + '.local.2'] = g++;
+        colInfo['col.' + name + '.local.3'] = g++;
+        colInfo['col.' + name + '.local.4'] = g++;
+        colInfo['col.' + name + '.local.5'] = g++;
+        colInfo['col.' + name + '.local.6'] = g++;
+        colInfo['col.' + name + '.local.7'] = g++;
+        colInfo['col.' + name + '.long.1'] = g++;
+        colInfo['col.' + name + '.long.2'] = g++;
+        colInfo['col.' + name + '.local.9'] = g++;
+        colInfo['col.' + name + '.local.10'] = g++;
+        colInfo['col.' + name + '.local.11'] = g+=2;
+        colInfo['col.' + name + '.long.3'] = g++;
+        colInfo['col.' + name + '.long.4'] = g++;
+        colInfo['col.' + name + '.long.5'] = g++;
+        colInfo['col.' + name + '.long.6'] = g;
+    }
+
+    for (var i = 1; i < fam.cols; i++)
+    {
+        var name = letters[i];
+        var g = 43 + ((i-1) * 26);
+
+        if (i != 1 && i != (fam.cols-1))
+            colInfo['col.' + name + '.local.6'] = g;
+        g++;
+        colInfo['col.' + name + '.local.1'] = g++;
+        colInfo['col.' + name + '.local.2'] = g++;
+        colInfo['col.' + name + '.local.3'] = g++;
+        colInfo['col.' + name + '.local.4'] = g++;
+        colInfo['col.' + name + '.local.5'] = g+=2;
+        colInfo['col.' + name + '.local.8'] = g+=3;
+        colInfo['col.' + name + '.long.0'] = g+=2;
+        colInfo['col.' + name + '.long.1'] = g++;
+        colInfo['col.' + name + '.long.2'] = g++;
+        colInfo['col.' + name + '.long.3'] = g++;
+        colInfo['col.' + name + '.long.4'] = g;
+    }
+
+    {
+        var name = letters[fam.cols];
+        var g = 45 + ((fam.cols-1) * 26);
+
+        colInfo['col.' + name + '.local.10'] = g+=3;
+        colInfo['col.' + name + '.local.9'] = g++;
+        colInfo['col.' + name + '.long.1'] = g++;
+        colInfo['col.' + name + '.long.2'] = g++;
+        colInfo['col.' + name + '.local.8'] = g++;
+        colInfo['col.' + name + '.local.1'] = g++;
+        colInfo['col.' + name + '.local.2'] = g++;
+        colInfo['col.' + name + '.local.3'] = g++;
+        colInfo['col.' + name + '.local.4'] = g++;
+        colInfo['col.' + name + '.local.5'] = g+=9;
+        colInfo['col.' + name + '.local.6'] = g++;
+        colInfo['col.' + name + '.local.7'] = g;
+    }
+
+    {
+        var name = letters[0];
+        var g = rmaxG;
+
+        rowInfo['row.' + name + '.local.11'] = g--;
+        rowInfo['row.' + name + '.local.10'] = g-=4;
+        rowInfo['row.' + name + '.local.1'] = g--;
+        rowInfo['row.' + name + '.local.2'] = g--;
+        rowInfo['row.' + name + '.local.3'] = g--;
+        rowInfo['row.' + name + '.local.4'] = g--;
+        rowInfo['row.' + name + '.local.5'] = g--;
+        rowInfo['row.' + name + '.local.6'] = g--;
+        rowInfo['row.' + name + '.long.1'] = g--;
+        rowInfo['row.' + name + '.long.2'] = g--;
+        rowInfo['row.' + name + '.local.7'] = g-=8;
+        rowInfo['row.' + name + '.local.9'] = g-=2;
+        rowInfo['row.' + name + '.local.8'] = g-=3;
+        rowInfo['row.' + name + '.long.3'] = g;
+    }
+
+    for (var i = 1; i < fam.rows; i++)
+    {
+        var name = letters[i];
+        var g = 53 + ((fam.rows-1-i) * 30);
+
+        rowInfo['row.' + name + '.long.1'] = g--;
+        rowInfo['row.' + name + '.local.0'] = g--;
+        rowInfo['row.' + name + '.local.6'] = g--;
+        rowInfo['row.' + name + '.local.1'] = g--;
+        rowInfo['row.' + name + '.local.2'] = g--;
+        rowInfo['row.' + name + '.local.3'] = g--;
+        rowInfo['row.' + name + '.local.4'] = g--;
+        rowInfo['row.' + name + '.local.5'] = g-=2;
+        rowInfo['row.' + name + '.long.2'] = g;
+    }
+
+    {
+        var name = letters[fam.rows];
+        var g = 27;
+
+        rowInfo['row.' + name + '.local.10'] = g-=3;
+        rowInfo['row.' + name + '.long.1'] = g-=4;
+        rowInfo['row.' + name + '.local.11'] = g-=3;
+        rowInfo['row.' + name + '.local.9'] = g-=3;
+        rowInfo['row.' + name + '.long.2'] = g--;
+        rowInfo['row.' + name + '.long.3'] = g--;
+        rowInfo['row.' + name + '.local.0'] = g--;
+        rowInfo['row.' + name + '.local.8'] = g--;
+        rowInfo['row.' + name + '.local.1'] = g--;
+        rowInfo['row.' + name + '.local.2'] = g--;
+        rowInfo['row.' + name + '.local.3'] = g--;
+        rowInfo['row.' + name + '.local.4'] = g--;
+        rowInfo['row.' + name + '.local.5'] = g-=5;
+        rowInfo['row.' + name + '.local.6'] = g--;
+        rowInfo['row.' + name + '.local.7'] = g;
+    }
 
   // The e.g. DE.B entries
-  for (let col = 0; col < 10; col++) {
-    for (let row = 0; row < 10; row++) {
-      const fullname = "ABCDEFGHIJ"[row] + "ABCDEFGHIJ"[col];
-      rowInfo[fullname + '.B'] = rowInfo['row.' + "ABCDEFGHIJ"[row] + ".b"];
-      rowInfo[fullname + '.C'] = rowInfo['row.' + "ABCDEFGHIJ"[row] + ".c"];
-      rowInfo[fullname + '.K'] = rowInfo['row.' + "ABCDEFGHIJ"[row] + ".k"];
-      rowInfo[fullname + '.X'] = rowInfo['row.' + "ABCDEFGHIJ"[row] + ".c"];
-      rowInfo[fullname + '.Y'] = rowInfo['row.' + "ABCDEFGHIJ"[row] + ".y"];
-      colInfo[fullname + '.D'] = colInfo['col.' + "ABCDEFGHIJ"[col] + ".clb"];
-      colInfo[fullname + '.A'] = colInfo['col.' + "ABCDEFGHIJ"[col] + ".clbr1"];
-      // colInfo[fullname + '.A'] = colInfo['col.' + "ABCDEFGHIJ"[col] + ".clb"];
+  for (let col = 0; col < fam.cols; col++)
+  {
+    for (let row = 0; row < fam.rows; row++)
+    {
+      const fullname = letters[row] + letters[col];
+
+      const coloff = col * 26;
+
+      if (col == 0)
+      {
+          colInfo[fullname] = 35;
+          if (row == 0)
+          {
+              colInfo[fullname + '.A'] = 29;
+              colInfo[fullname + '.EC'] = 28;
+          }
+          else
+          {
+              colInfo[fullname + '.A'] = 38;
+              colInfo[fullname + '.EC'] = 35;
+          }
+          colInfo[fullname + '.DI'] = 21;
+          colInfo[fullname + '.B'] = 22;
+          colInfo[fullname + '.C'] = 23;
+          colInfo[fullname + '.K'] = 24;
+          if (row == fam.rows-1)
+          {
+              colInfo[fullname + '.E'] = 29;
+              colInfo[fullname + '.D'] = 34;
+              colInfo[fullname + '.RD'] = 21;
+              colInfo[fullname + '.X'] = 62;
+              colInfo[fullname + '.Y'] = 51;
+          }
+          else
+          {
+              colInfo[fullname + '.E'] = 32;
+              colInfo[fullname + '.D'] = 36;
+              colInfo[fullname + '.RD'] = 37;
+              colInfo[fullname + '.X'] = 58;
+              colInfo[fullname + '.Y'] = 51;
+          }
+      }
+      else
+      {
+          colInfo[fullname] = coloff + 34;
+          if (row == 0)
+          {
+              colInfo[fullname + '.EC'] = coloff + 27;
+              colInfo[fullname + '.B'] = coloff + 28;
+          }
+          else
+          {
+              colInfo[fullname + '.EC'] = coloff;
+              colInfo[fullname + '.B'] = coloff + 39;
+          }
+          colInfo[fullname + '.A'] = coloff + 37;
+          colInfo[fullname + '.DI'] = coloff + 26;
+          if (row == fam.rows-1)
+          {
+              colInfo[fullname + '.C'] = coloff + 25;
+              colInfo[fullname + '.K'] = coloff + 28;
+              colInfo[fullname + '.E'] = coloff + 27;
+              colInfo[fullname + '.D'] = coloff + 26;
+              colInfo[fullname + '.RD'] = coloff + 37;
+              if (col != fam.cols-1)
+              {
+                  colInfo[fullname + '.X'] = coloff + 62;
+                  colInfo[fullname + '.Y'] = coloff + 51;
+              }
+          }
+          else
+          {
+              colInfo[fullname + '.C'] = coloff + 28;
+              colInfo[fullname + '.K'] = coloff + 33;
+              colInfo[fullname + '.E'] = coloff + 25;
+              colInfo[fullname + '.D'] = coloff + 35;
+              colInfo[fullname + '.RD'] = coloff + 36;
+              if (col != fam.cols-1)
+              {
+                  colInfo[fullname + '.X'] = coloff + 58;
+                  colInfo[fullname + '.Y'] = coloff + 51;
+              }
+          }
+      }
+
+      if (col == 0)
+      {
+          //colInfo[fullname + '.X_C'] = 33;
+          colInfo[fullname + '.X_B'] = 58;
+      }
+      else if (col == fam.cols-1)
+      {
+          colInfo[fullname + '.X_C'] = coloff + 6;
+      }
+      else
+      {
+          if (row == fam.rows-1)
+              colInfo[fullname + '.X_B'] = coloff + 50;
+          else
+              colInfo[fullname + '.X_B'] = coloff + 58;
+          colInfo[fullname + '.X_C'] = coloff + 6;
+      }
+
+      const rowoff = (fam.rows-1-row) * 30;
+
+      rowInfo[fullname] = rowoff + 35;
+      if (col == 0)
+      {
+          rowInfo[fullname + '.A'] = rowoff + 43;
+      }
+      else if (row == 0)
+      {
+          rowInfo[fullname + '.A'] = rowoff + 42;
+      }
+      else
+      {
+          rowInfo[fullname + '.A'] = rowoff + 40;
+      }
+      if (row == 0)
+      {
+          rowInfo[fullname + '.EC'] = rowoff + 40;
+      }
+      else
+      {
+          rowInfo[fullname + '.EC'] = rowoff + 41;
+      }
+        rowInfo[fullname + '.DI'] = rowoff + 34;
+        rowInfo[fullname + '.B'] = rowoff + 32;
+        rowInfo[fullname + '.C'] = rowoff + 31;
+        rowInfo[fullname + '.K'] = rowoff + 29;
+        rowInfo[fullname + '.E'] = rowoff + 28;
+        rowInfo[fullname + '.X'] = rowoff + 33;
+        rowInfo[fullname + '.Y'] = rowoff + 30;
+        if (row == fam.rows-1)
+        {
+            rowInfo[fullname + '.D'] = rowoff + 25;
+            rowInfo[fullname + '.EC'] = rowoff + 26;
+        }
+        else if (col == 0)
+        {
+            rowInfo[fullname + '.D'] = rowoff + 24;
+            rowInfo[fullname + '.EC'] = rowoff + 26;
+        }
+        else
+        {
+            rowInfo[fullname + '.D'] = rowoff + 27;
+            rowInfo[fullname + '.EC'] = rowoff + 24;
+        }
+
+        if (row != 0)
+            rowInfo[fullname + '.Y_D'] = rowoff + 51;
+        if (row != fam.rows-1)
+            rowInfo[fullname + '.Y_A'] = rowoff + 22;
     }
   }
 
@@ -169,6 +333,46 @@ function initNames() {
   Object.entries(colInfo).forEach(([key, val]) => colFromG[val[0]] = key);
   Object.entries(rowInfo).forEach(([key, val]) => rowFromS[val[1]] = key);
   Object.entries(colInfo).forEach(([key, val]) => colFromS[val[1]] = key);
+}
+
+function getGCoords(name)
+{
+    name = name.split(':');
+    var cname, rname;
+
+    if (name.length == 1)
+    {
+        cname = name[0];
+        rname = name[0];
+    }
+    else if (name[0].substring(0,4) == 'col.')
+    {
+        cname = name[0];
+        rname = name[1];
+    }
+    else if (name[0].substring(0,4) == 'row.')
+    {
+        cname = name[1];
+        rname = name[0];
+    }
+    else
+        return undefined;
+
+    return {x: colInfo[cname], y: rowInfo[rname]};
+}
+
+function getSCoords(name)
+{
+    var gc;
+    if (typeof name == 'string')
+        gc = getGCoords(name);
+    else
+        gc = name;
+
+    if (typeof gc == 'undefined')
+        return undefined;
+
+    return {x: colGtoS[gc.x], y: rowGtoS[gc.y]};
 }
 
   // Bit position starts for the tiles A through I. Note there is I/O before A and buffers between C-D and F-G.
@@ -638,6 +842,10 @@ function drawBackground(ctx)
     drawTextBox(ctx, 'VCC', w-33, cy, 20, 20);
     drawTextBox(ctx, 'DPG\nM', w-33, h-69, 20, 20);
     drawTextBox(ctx, 'RST', w-53, h-25, 20, 12);
+
+    // draw background for programmable elements
+
+    decoders.forEach(d => d.renderBackground(ctx));
 }
 
   function drawLayout(ctx) {

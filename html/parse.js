@@ -219,6 +219,8 @@ function selectBitstream(bsid, pkgid)
 {
   curBitstream = bitstreams[bsid];
   curPackage = chipPackages[curBitstream.family.name][pkgid];
+
+  initParser();
 }
 
 /*
@@ -308,13 +310,14 @@ var switchDecoders;
 var bidiDecoder;
 let decoders = [];
 function initDecoders() {
-  iobDecoders = new IobDecoders();
-  pipDecoder = new PipDecoder();
-  bidiDecoder = new BidiDecoder();
-  otherDecoder = new OtherDecoder();
+  //iobDecoders = new IobDecoders();
+  //pipDecoder = new PipDecoder();
+  //bidiDecoder = new BidiDecoder();
+  //otherDecoder = new OtherDecoder();
   clbDecoders = new ClbDecoders;
-  switchDecoders = new SwitchDecoders();
-  decoders = [iobDecoders, pipDecoder, bidiDecoder, otherDecoder, clbDecoders, switchDecoders];
+  //switchDecoders = new SwitchDecoders();
+  //decoders = [iobDecoders, pipDecoder, bidiDecoder, otherDecoder, clbDecoders, switchDecoders];
+  decoders = [clbDecoders];
   decoders.forEach(d => d.startDecode());
 }
 

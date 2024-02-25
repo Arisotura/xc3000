@@ -1,15 +1,23 @@
 class ClbDecoder {
-  constructor(tile) { // tile is e.g. AB
+  constructor(col, row, tile) { // tile is e.g. AB
     this.tile = tile;
-    let xCenter = colInfo['col.' + this.tile[1] + '.clb'][1];
-    let yCenter = rowInfo['row.' + this.tile[0] + '.c'][1];
+
+    this.gPt = getGCoords(tile);
+    this.screenPt = getSCoords(this.gPt);
+    this.W = 20;
+    this.H = 32;
+    /*let xCenter = colInfo[this.tile[1]];
+    let yCenter = rowInfo[this.tile[0]];
     this.W = 20;
     this.H = 32;
     this.screenPt = [xCenter - this.W / 2, yCenter - this.H / 2 - 1];
     this.clbInternal = new ClbInternal(tile);
 
     this.levels = {A:0, B:0, C:0, D:0, Q:0, K:0, F:0, G:0, X:0, Y:0};
-    //this.dirty = {A:false, B:false, C:false, D:false, K:false};
+    //this.dirty = {A:false, B:false, C:false, D:false, K:false};*/
+    var test = getSCoords(this.tile);
+    console.log(tile);
+    console.log(test);
   }
 
   reset()
@@ -286,6 +294,42 @@ class ClbDecoder {
     this.generateClbPips(this.tile);
   }
 
+  renderBackground(ctx)
+  {
+    // TODO: select different color if CLB is used
+    ctx.strokeStyle = '#aaa';
+    ctx.fillStyle = '#aaa';
+    ctx.font = '8px Arial';
+
+    drawTextBox(ctx, this.tile, this.screenPt.x, this.screenPt.y, this.W, this.H);
+
+    // draw connect lines for the CLB inputs/outputs
+    ctx.beginPath();
+    ctx.moveTo(this.screenPt.x+4, this.screenPt.y);
+    ctx.lineTo(this.screenPt.x+4, this.screenPt.y-2);
+    ctx.moveTo(this.screenPt.x+12, this.screenPt.y);
+    ctx.lineTo(this.screenPt.x+12, this.screenPt.y-2);
+    ctx.moveTo(this.screenPt.x+20, this.screenPt.y+8);
+    ctx.lineTo(this.screenPt.x+22, this.screenPt.y+8);
+    ctx.moveTo(this.screenPt.x+20, this.screenPt.y+20);
+    ctx.lineTo(this.screenPt.x+22, this.screenPt.y+20);
+    ctx.moveTo(this.screenPt.x+8, this.screenPt.y+32);
+    ctx.lineTo(this.screenPt.x+8, this.screenPt.y+34);
+    ctx.moveTo(this.screenPt.x+4, this.screenPt.y+32);
+    ctx.lineTo(this.screenPt.x+4, this.screenPt.y+34);
+    ctx.moveTo(this.screenPt.x, this.screenPt.y+28);
+    ctx.lineTo(this.screenPt.x-2, this.screenPt.y+28);
+    ctx.moveTo(this.screenPt.x, this.screenPt.y+24);
+    ctx.lineTo(this.screenPt.x-2, this.screenPt.y+24);
+    ctx.moveTo(this.screenPt.x, this.screenPt.y+16);
+    ctx.lineTo(this.screenPt.x-2, this.screenPt.y+16);
+    ctx.moveTo(this.screenPt.x, this.screenPt.y+12);
+    ctx.lineTo(this.screenPt.x-2, this.screenPt.y+12);
+    ctx.moveTo(this.screenPt.x, this.screenPt.y+4);
+    ctx.lineTo(this.screenPt.x-2, this.screenPt.y+4);
+    ctx.stroke();
+  }
+
   render(ctx) {
     if (debug) {
       ctx.font = "6px arial";
@@ -306,10 +350,7 @@ class ClbDecoder {
   }
 
   isInside(x, y) {
-    if (this.tile[0] == "K" || this.tile[1] == "K") {
-      return false;
-    }
-    return x >= this.screenPt[0] && x < this.screenPt[0] + this.W && y >= this.screenPt[1] && y < this.screenPt[1] + this.H;
+    return x >= this.screenPt.x && x < this.screenPt.x + this.W && y >= this.screenPt.y && y < this.screenPt.y + this.H;
   }
 
   // route from output X
@@ -740,15 +781,16 @@ class ClbDecoder {
 class ClbDecoders {
   constructor() {
     this.clbDecoders = {};
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < 10; j++) {
-        let tile = "ABCDEFGHIJ"[i] + "ABCDEFGHIJ"[j];
-        this.clbDecoders[tile] = new ClbDecoder(tile);
+    var fam = curBitstream.family;
+    for (let i = 0; i < fam.cols; i++) {
+      for (let j = 0; j < fam.rows; j++) {
+        let tile = letters[i] + letters[j];
+        this.clbDecoders[tile] = new ClbDecoder(i, j, tile);
       }
     }
     // These are in the config as CLBs.
-    this.clbDecoders["CLK.AA.I"] = new ClkDecoder("CLK.AA.I");
-    this.clbDecoders["CLK.KK.I"] = new ClkDecoder("CLK.KK.I");
+    //this.clbDecoders["CLK.AA.I"] = new ClkDecoder("CLK.AA.I");
+    //this.clbDecoders["CLK.KK.I"] = new ClkDecoder("CLK.KK.I");
   }
 
   reset() {
@@ -769,6 +811,10 @@ class ClbDecoders {
 
   routeFromOutputs() {
     Object.entries(this.clbDecoders).forEach(([k, c]) => c.routeFromOutputs());
+  }
+
+  renderBackground(ctx) {
+    Object.entries(this.clbDecoders).forEach(([tile, obj]) => obj.renderBackground(ctx));
   }
 
   render(ctx) {
