@@ -56,7 +56,7 @@ function initNames()
         var g = 0;
 
         colInfo['col.' + name + '.local.12'] = g++;
-        colInfo['col.' + name + '.local.13'] = g+=11;
+        colInfo['col.' + name + '.local.13'] = g; g+=11;
         colInfo['col.' + name + '.local.1'] = g++;
         colInfo['col.' + name + '.local.2'] = g++;
         colInfo['col.' + name + '.local.3'] = g++;
@@ -68,7 +68,7 @@ function initNames()
         colInfo['col.' + name + '.long.2'] = g++;
         colInfo['col.' + name + '.local.9'] = g++;
         colInfo['col.' + name + '.local.10'] = g++;
-        colInfo['col.' + name + '.local.11'] = g+=2;
+        colInfo['col.' + name + '.local.11'] = g; g+=2;
         colInfo['col.' + name + '.long.3'] = g++;
         colInfo['col.' + name + '.long.4'] = g++;
         colInfo['col.' + name + '.long.5'] = g++;
@@ -87,9 +87,9 @@ function initNames()
         colInfo['col.' + name + '.local.2'] = g++;
         colInfo['col.' + name + '.local.3'] = g++;
         colInfo['col.' + name + '.local.4'] = g++;
-        colInfo['col.' + name + '.local.5'] = g+=2;
-        colInfo['col.' + name + '.local.8'] = g+=3;
-        colInfo['col.' + name + '.long.0'] = g+=2;
+        colInfo['col.' + name + '.local.5'] = g; g+=2;
+        colInfo['col.' + name + '.local.8'] = g; g+=3;
+        colInfo['col.' + name + '.long.0'] = g; g+=2;
         colInfo['col.' + name + '.long.1'] = g++;
         colInfo['col.' + name + '.long.2'] = g++;
         colInfo['col.' + name + '.long.3'] = g++;
@@ -100,7 +100,7 @@ function initNames()
         var name = letters[fam.cols];
         var g = 45 + ((fam.cols-1) * 26);
 
-        colInfo['col.' + name + '.local.10'] = g+=3;
+        colInfo['col.' + name + '.local.10'] = g; g+=3;
         colInfo['col.' + name + '.local.9'] = g++;
         colInfo['col.' + name + '.long.1'] = g++;
         colInfo['col.' + name + '.long.2'] = g++;
@@ -109,7 +109,7 @@ function initNames()
         colInfo['col.' + name + '.local.2'] = g++;
         colInfo['col.' + name + '.local.3'] = g++;
         colInfo['col.' + name + '.local.4'] = g++;
-        colInfo['col.' + name + '.local.5'] = g+=9;
+        colInfo['col.' + name + '.local.5'] = g; g+=9;
         colInfo['col.' + name + '.local.6'] = g++;
         colInfo['col.' + name + '.local.7'] = g;
     }
@@ -119,7 +119,7 @@ function initNames()
         var g = rmaxG;
 
         rowInfo['row.' + name + '.local.11'] = g--;
-        rowInfo['row.' + name + '.local.10'] = g-=4;
+        rowInfo['row.' + name + '.local.10'] = g; g-=4;
         rowInfo['row.' + name + '.local.1'] = g--;
         rowInfo['row.' + name + '.local.2'] = g--;
         rowInfo['row.' + name + '.local.3'] = g--;
@@ -128,9 +128,9 @@ function initNames()
         rowInfo['row.' + name + '.local.6'] = g--;
         rowInfo['row.' + name + '.long.1'] = g--;
         rowInfo['row.' + name + '.long.2'] = g--;
-        rowInfo['row.' + name + '.local.7'] = g-=8;
-        rowInfo['row.' + name + '.local.9'] = g-=2;
-        rowInfo['row.' + name + '.local.8'] = g-=3;
+        rowInfo['row.' + name + '.local.7'] = g; g-=8;
+        rowInfo['row.' + name + '.local.9'] = g; g-=2;
+        rowInfo['row.' + name + '.local.8'] = g; g-=3;
         rowInfo['row.' + name + '.long.3'] = g;
     }
 
@@ -146,7 +146,7 @@ function initNames()
         rowInfo['row.' + name + '.local.2'] = g--;
         rowInfo['row.' + name + '.local.3'] = g--;
         rowInfo['row.' + name + '.local.4'] = g--;
-        rowInfo['row.' + name + '.local.5'] = g-=2;
+        rowInfo['row.' + name + '.local.5'] = g; g-=2;
         rowInfo['row.' + name + '.long.2'] = g;
     }
 
@@ -154,10 +154,10 @@ function initNames()
         var name = letters[fam.rows];
         var g = 27;
 
-        rowInfo['row.' + name + '.local.10'] = g-=3;
-        rowInfo['row.' + name + '.long.1'] = g-=4;
-        rowInfo['row.' + name + '.local.11'] = g-=3;
-        rowInfo['row.' + name + '.local.9'] = g-=3;
+        rowInfo['row.' + name + '.local.10'] = g; g-=3;
+        rowInfo['row.' + name + '.long.1'] = g; g-=4;
+        rowInfo['row.' + name + '.local.11'] = g; g-=3;
+        rowInfo['row.' + name + '.local.9'] = g; g-=3;
         rowInfo['row.' + name + '.long.2'] = g--;
         rowInfo['row.' + name + '.long.3'] = g--;
         rowInfo['row.' + name + '.local.0'] = g--;
@@ -166,7 +166,7 @@ function initNames()
         rowInfo['row.' + name + '.local.2'] = g--;
         rowInfo['row.' + name + '.local.3'] = g--;
         rowInfo['row.' + name + '.local.4'] = g--;
-        rowInfo['row.' + name + '.local.5'] = g-=5;
+        rowInfo['row.' + name + '.local.5'] = g; g-=5;
         rowInfo['row.' + name + '.local.6'] = g--;
         rowInfo['row.' + name + '.local.7'] = g;
     }
@@ -328,6 +328,197 @@ function initNames()
     }
   }
 
+    // IOB entries
+    // the pads are assigned clockwise from the leftmost top pad
+    var pad = 1;
+
+    for (var i = 0; i < fam.cols*2; i++)
+    {
+        var col = i>>1;
+        var side = i&1;
+        var fullname = 'PAD'+pad;
+
+        var base;
+        if (col == 0)
+          base = 30 + (5*side);
+        else if (col == (fam.cols-1))
+          base = 33 + (11*side);
+        else
+          base = 32 + (7*side);
+        base += (26 * col);
+
+        colInfo[fullname] = base;
+        rowInfo[fullname] = rmaxG - 2;
+
+        colInfo[fullname + '.OK'] = base + 1;
+        colInfo[fullname + '.IK'] = base + 3;
+        colInfo[fullname + '.O'] = base + 1;
+        colInfo[fullname + '.Q'] = base + 2;
+        colInfo[fullname + '.I'] = base + 3;
+        colInfo[fullname + '.T'] = base + 4;
+
+        if (i == 0)
+        {
+          rowInfo[fullname+'.O'] = rmaxG - 10;
+        }
+        else if (i == (fam.cols*2 - 1))
+        {
+          // nothing on a row
+        }
+        else
+        {
+          rowInfo[fullname+'.O'] = rmaxG - 16 + (1*side);
+          rowInfo[fullname+'.Q'] = rmaxG - 17 + (3*side);
+          rowInfo[fullname+'.I'] = rmaxG - 18 + (5*side);
+        }
+
+        pad++;
+    }
+
+    for (var i = 0; i < fam.rows*2; i++)
+    {
+        var row = i>>1;
+        var side = i&1;
+        var fullname = 'PAD'+pad;
+
+        var base;
+        if (row == 0)
+            base = 49 - (15*side);
+        else if (row == (fam.rows-1))
+            base = 43 - (21*side);
+        else
+            base = 43 - (9*side);
+        base += (30 * (fam.rows-1-row));
+
+        colInfo[fullname] = cmaxG - 7;
+        rowInfo[fullname] = base;
+
+        if (!side) base += 3;
+        rowInfo[fullname + '.IK'] = base + 1;
+        rowInfo[fullname + '.OK'] = base + 3;
+        rowInfo[fullname + '.T'] = base + 1;
+        rowInfo[fullname + '.I'] = base + 2;
+        rowInfo[fullname + '.Q'] = base + 3;
+        rowInfo[fullname + '.O'] = base + 4;
+
+        if (i == 0)
+        {
+            colInfo[fullname+'.O'] = cmaxG - 20;
+        }
+        else if (i == (fam.rows*2 - 1))
+        {
+            colInfo[fullname+'.O'] = cmaxG - 19;
+        }
+        else
+        {
+            colInfo[fullname+'.O'] = cmaxG - 23 + (3*side);
+            colInfo[fullname+'.Q'] = cmaxG - 22 + (3*side);
+            colInfo[fullname+'.I'] = cmaxG - 21 + (3*side);
+        }
+
+        pad++;
+    }
+
+    for (var i = fam.cols*2-1; i >= 0; i--)
+    {
+        var col = i>>1;
+        var side = i&1;
+        var fullname = 'PAD'+pad;
+
+        var base;
+        if (col == 0)
+            base = 30 + (5*side);
+        else if (col == (fam.cols-1))
+            base = 33 + (6*side);
+        else
+            base = 32 + (7*side);
+        base += (26 * col);
+
+        colInfo[fullname] = base;
+        rowInfo[fullname] = 3;
+
+        colInfo[fullname + '.OK'] = base + 1;
+        colInfo[fullname + '.IK'] = base + 3;
+        colInfo[fullname + '.O'] = base + 1;
+        colInfo[fullname + '.Q'] = base + 2;
+        colInfo[fullname + '.I'] = base + 3;
+        colInfo[fullname + '.T'] = base + 4;
+
+        if (i == 0)
+        {
+            rowInfo[fullname+'.O'] = 20;
+        }
+        else if (i == (fam.cols*2 - 1))
+        {
+            rowInfo[fullname+'.O'] = 17;
+        }
+        else
+        {
+            rowInfo[fullname+'.O'] = 19 - (7*side);
+            rowInfo[fullname+'.Q'] = 18 - (3*side);
+            rowInfo[fullname+'.I'] = 17 - (1*side);
+        }
+
+        pad++;
+    }
+
+    for (var i = fam.rows*2-1; i >= 0; i--)
+    {
+        var row = i>>1;
+        var side = i&1;
+        var fullname = 'PAD'+pad;
+
+        var base;
+        if (row == 0)
+            base = 50 - (15*side);
+        else if (row == (fam.rows-1))
+            base = 43 - (21*side);
+        else
+            base = 43 - (9*side);
+        base += (30 * (fam.rows-1-row));
+
+        colInfo[fullname] = 2;
+        rowInfo[fullname] = base;
+
+        if (!side) base += 3;
+        rowInfo[fullname + '.IK'] = base + 1;
+        rowInfo[fullname + '.OK'] = base + 3;
+        rowInfo[fullname + '.T'] = base + 1;
+        rowInfo[fullname + '.I'] = base + 2;
+        rowInfo[fullname + '.Q'] = base + 3;
+        rowInfo[fullname + '.O'] = base + 4;
+
+        if (i == 0)
+        {
+            colInfo[fullname+'.O'] = 17;
+        }
+        else if (i == (fam.rows*2 - 1))
+        {
+            colInfo[fullname+'.O'] = 29;
+        }
+        else
+        {
+            colInfo[fullname+'.O'] = 34 - (5*side);
+            colInfo[fullname+'.Q'] = 33 - (3*side);
+            colInfo[fullname+'.I'] = 32 - (1*side);
+        }
+
+        pad++;
+    }
+
+    console.log((pad-1)+' pads assigned');
+
+    // TODO: pullups, TRI buffers, CLK inputs, ...
+    // BCLKIN.I
+
+    // 293G24 PU.KK.1.O
+    // 293G44 PU.JK.2.O
+    // 293G53 PU.JK.1.O
+    // ..
+    // 293G284 PU.BK.2.O
+    // 293G293 PU.BK.1.O
+    // 293G307 PU.AK.1.O
+
   // Make reverse tables
   Object.entries(rowInfo).forEach(([key, val]) => rowFromG[val[0]] = key);
   Object.entries(colInfo).forEach(([key, val]) => colFromG[val[0]] = key);
@@ -345,12 +536,12 @@ function getGCoords(name)
         cname = name[0];
         rname = name[0];
     }
-    else if (name[0].substring(0,4) == 'col.')
+    else if (typeof colInfo[name[0]] != 'undefined' && typeof rowInfo[name[1]] != 'undefined')
     {
         cname = name[0];
         rname = name[1];
     }
-    else if (name[0].substring(0,4) == 'row.')
+    else if (typeof colInfo[name[1]] != 'undefined' && typeof rowInfo[name[0]] != 'undefined')
     {
         cname = name[1];
         rname = name[0];
@@ -778,13 +969,7 @@ function __calcCoord(info, coord, num)
 
 function drawTextBox(ctx, text, x, y, w, h)
 {
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x+w, y);
-    ctx.lineTo(x+w, y+h);
-    ctx.lineTo(x, y+h);
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    ctx.strokeRect(x, y, w, h);
 
     let lines = text.split('\n');
     let ty = y+7;
@@ -838,10 +1023,10 @@ function drawBackground(ctx)
     drawTextBox(ctx, 'GND', cx, 12, 20, 12);
     drawTextBox(ctx, 'GND', cx, h-25, 20, 12);
 
-    drawTextBox(ctx, 'CCL\nK', w-33, 12, 20, 20);
-    drawTextBox(ctx, 'VCC', w-33, cy, 20, 20);
-    drawTextBox(ctx, 'DPG\nM', w-33, h-69, 20, 20);
-    drawTextBox(ctx, 'RST', w-53, h-25, 20, 12);
+    drawTextBox(ctx, 'CCL\nK', w-32, 12, 20, 20);
+    drawTextBox(ctx, 'VCC', w-32, cy, 20, 20);
+    drawTextBox(ctx, 'DPG\nM', w-32, h-69, 20, 20);
+    drawTextBox(ctx, 'RST', w-52, h-25, 20, 12);
 
     // draw background for programmable elements
 
@@ -849,6 +1034,7 @@ function drawBackground(ctx)
 }
 
   function drawLayout(ctx) {
+    return;
     $("#img").css('opacity', 1);
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset
     const HEIGHT = 824 * SCALE;

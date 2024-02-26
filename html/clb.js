@@ -1,11 +1,21 @@
 class ClbDecoder {
   constructor(col, row, tile) { // tile is e.g. AB
+    this.col = col;
+    this.row = row;
     this.tile = tile;
 
     this.gPt = getGCoords(tile);
     this.screenPt = getSCoords(this.gPt);
     this.W = 20;
     this.H = 32;
+
+    // determine neighboring tiles
+    this.tileLeft = (col == 0) ? null : letters[row]+letters[col-1];
+    this.tileRight = (col == curBitstream.family.cols-1) ? null : letters[row]+letters[col+1];
+    this.tileTop = (row == 0) ? null : letters[row-1]+letters[col];
+    this.tileBottom = (row == curBitstream.family.rows-1) ? null : letters[row+1]+letters[col];
+
+    this.generateClbPips();
     /*let xCenter = colInfo[this.tile[1]];
     let yCenter = rowInfo[this.tile[0]];
     this.W = 20;
@@ -15,9 +25,6 @@ class ClbDecoder {
 
     this.levels = {A:0, B:0, C:0, D:0, Q:0, K:0, F:0, G:0, X:0, Y:0};
     //this.dirty = {A:false, B:false, C:false, D:false, K:false};*/
-    var test = getSCoords(this.tile);
-    console.log(tile);
-    console.log(test);
   }
 
   reset()
@@ -58,223 +65,85 @@ class ClbDecoder {
     });
   }
 
-  /**
-   * Create the specified pip.
-   * The tile row and column are substituted into the pip.
-   * Returns [G coordinate, screen X coordinate, screen Y, false]. (false is modified later to indicate the selected input.)
-   * Also fills in ClbDecoders.gToName and ClbDecoders.nameToG XXX TODO
-   *
-   * The goal of all this is to generate the pips as conveniently as possible, taking advantage of patterns rather than
-   * making a giant hard-coded list. There are many complications that make this difficult.
-   * The idea is we define the location of each pip by its column and row.
-   * To take advantage of repeating tiles, we put an = in the location, which is replaced with the current
-   * row or column from the tile.
-   *
-   * Input syntax:
-   * col.stuff:row.stuff or row.stuff:col.stuff
-   * col.stuff:row.stuff:pipcol:piprow  In this clase, the first two parts specify the coordinate, while the second two parts are the name that is used
-   * (The motivation is that most pips are simply named col.stuff:row.stuff but some pips have weird names so they get hardcoded in the long-form input.)
-   * The syntax is that "=" is the specified row or column, "-" is the previous, and "+" is the next.
-   * I.e. "=" in "stuff" is replaced with the column or row name
-   * == is replaced with the current tile name. -= is replaced with the tile one row higher. += is replaced with the tile one row lower.
-   */
-  static processClbPip(pip, tile, pad) {
-    let dir;
-    let currRow = tile[0];
-    let prevRow = String.fromCharCode(tile.charCodeAt(0) - 1);
-    let nextRow = String.fromCharCode(tile.charCodeAt(0) + 1);
+  genCoords(name)
+  {
+    var ret;
 
-    let currCol = tile[1];
-    let prevCol = String.fromCharCode(tile.charCodeAt(1) - 1);
-    let nextCol = String.fromCharCode(tile.charCodeAt(1) + 1);
-    pip = pip.replace("==", tile).replace("-=", prevRow + currCol).replace("+=", nextRow + tile[1]).replace("=-", currRow + prevRow).replace("=+", currRow + nextRow);
-    let parts = pip.split(":");
-    let pipname;
-    let colName;
-    let rowName;
-    if (parts[0].startsWith("col") || parts[1].startsWith("row")) {
-      colName = parts[0];
-      rowName = parts[1];
-    } else if (parts[0].startsWith("row") || parts[1].startsWith("col")) {
-      rowName = parts[0];
-      colName = parts[1];
-    } else {
-      throw "Unexpected pip " + pip;
+    name = name.replaceAll('**', this.tile)
+        .replaceAll('col.*', 'col.'+this.tile[1])
+        .replaceAll('row.*', 'row.'+this.tile[0]);
+
+    if (name[0] == '+')
+    {
+      name = name.split(':');
+      var c1 = getGCoords(name[1]+':'+name[2]);
+      var c2 = getGCoords(name[3]+':'+name[4]);
+      ret = {x:c2.x, y:c1.y};
     }
-    rowName = rowName.replace('=', currRow).replace('+', nextRow);
-    colName = colName.replace('=', currCol).replace('+', nextCol);
-    if (parts.length == 4) {
-      pipname = parts[2] + ":" + parts[3];
-    } else {
-      pipname = colName + ":" + rowName;
+    else if (name[0] == '~')
+    {
+      name = name.split(':');
+      ret = this.lastCoords;
+      if (typeof ret != undefined)
+      {
+        ret.x += parseInt(name[1]);
+        ret.y += parseInt(name[2]);
+      }
     }
-    let col = colInfo[colName];
-    let row = rowInfo[rowName];
-    if (col == undefined) {
-      console.log('Bad Clb', tile, pip, 'col', colName, "->", col, ";", rowName, "->", row);
-      return [];
-    }
-    if (row == undefined) {
-      console.log('Bad Clb', tile, pip, 'col', colName, "->", col, ";", rowMName, "->", row);
-      return [];
-    }
-    let gCoord = col[0] + "G" + row[0];
-    ClbDecoders.gToName[gCoord] = pipname;
-    ClbDecoders.tileToG[pipname] = gCoord;
-    return [gCoord, col[1], row[1], pipname, false];
+    else
+      ret = getGCoords(name);
+
+    this.lastCoords = ret;
+    return ret;
   }
 
-  // Process the input pips for the CLB: A, B, C, K, and D
-  generateClbPips(tile) {
-    let a = [];
-    let b = [];
-    let c = [];
-    let d = [];
-    let k = [];
-    let amux = undefined;
-    let bmux = undefined;
-    let cmux = undefined;
-    let dmux = undefined;
-    let kmux = undefined;
-    const row = tile[0];
-    const col = tile[1];
+  generateClbPips()
+  {
+    var tmp;
 
-    // Inputs to A
-    if (tile[0] == "A") {
-      // Top
-      a = [ "row.A.long.2:col.=.clb:row.A.long.2:==.A", "row.A.local.1:col.=.clb:row.A.local.1:==.A",
-        "row.A.local.2:col.=.clb:row.A.local.2:==.A", "row.A.local.3:col.=.clb:row.A.local.3:==.A",
-        "row.A.local.4:col.=.clb:row.A.local.4:==.A", "row.A.long.3:col.=.clb:row.A.long.3:==.A"]
-      // Connection to pad. Hardcoding seems the easiest way.
-      const pad = {A: 1, B: 3, C: 5, D: 7, E: 9, F: 11, G: 13, H: 15}[tile[1]];
-      a.push( "row.A.io2:col.=.clb::==.A:PAD" + pad + ".I");
-      // Mux tree: 16-bit active 0, 8-bit active 0, 4-bit active 0, 2-bit active 1, 1-bit muxes between pairs.
-      amux = {30: 0, 13: 1, 24: 2, 12: 3, 21: 4, 25: 5, 31: 6}[this.mux['A']];
-    } else {
-      // Not top
-      a = [ "row.=.local.1:==.A", "row.=.local.3:==.A", "row.=.local.4:==.A", "row.=.local.5:==.A", "row.=.long.1:==.A",
-         "==.A:row.=.io4"];
-      // Mux tree: 4-bit active 1, 2-bit active 0, 1-bit active 0, 0-bit muxes between pair.
-      amux = {3: 0, 15: 1, 4: 2, 2: 3, 14: 4, 5: 5}[this.mux['A']];
+
+    this.diPath = new Path(this, 'DI', 'dest', {x:this.gPt.x,y:this.gPt.y-1}, 'H');
+    tmp = this.diPath.appendJunction(this.genCoords('+:col.*.local.4:**.DI:row.*.long.2:**.DI'));
+    if (this.row == 0)
+    {
+      tmp.appendPip(this.genCoords('row.*.long.2:**.DI'), 'V->H');
+      tmp.appendPip(this.genCoords('row.*.local.5:**.DI'), 'V->H');
     }
+    else
+    {
+      tmp.appendPip(this.genCoords('row.*.local.5:**.DI'), 'V->H');
+      tmp.appendPip(this.genCoords('row.*.long.1:**.DI'), 'V->H');
+    }
+    this.diPath.appendPip(this.genCoords('col.*.local.4:**.DI'), 'H->V');
+    this.diPath.appendPip(this.genCoords('col.*.local.1:**.DI'), 'H->V');
 
 
-    // Inputs to B
-    if (tile[1] == "A") {
-      // Left
-      b = [ "col.=.long.2:==.B", "col.=.local.1:==.B", "col.=.local.2:==.B", "col.=.local.3:==.B", "col.=.local.4:==.B",
-      "col.=.long.3:==.B", "col.=.long.4:==.B", "col.=.clk:==.B:CLK.AA.O:==.B"];
-      // Pad connections
-      const pad = {A: 58, B: 56, C: 54, D: 52, E: 51, F: 49, G: 47, H: 46}[tile[1]];
-      b.push("col.=.io3:==.B:" + "PAD" + pad + ".I:==.B");
-      if (tile == "AA") {
-        // Special case for tile AA since there's no tile above.
-        b.push("col.=.x:==.B:PAD1.I:==.B");
-      } else {
-        b.push("col.=.x:==.B:-=.X:==.B");
+    this.bPath = new Path(this, 'B', 'dest', {x:this.gPt.x,y:this.gPt.y-3}, 'H');
+    if (this.col == 0)
+    {
+      // TODO
+    }
+    else
+    {
+      this.bPath.appendPip(this.genCoords(this.tileLeft+'.X_B:**.B'), 'H->V');
+      this.bPath.appendPip(this.genCoords('col.*.long.1:**.B'), 'H->V');
+      if (this.row == 0)
+      {
+        tmp = this.bPath.appendJunction(this.genCoords('+:col.*.local.5:**.B:row.*.local.4:**.B'));
       }
-      if (tile == "AA") {
-        // Special case for top left :-(
-        bmux = {15: 0, 22: 1, 26: 2, 28: 3, 63: 4, 23: 5, 27: 6, 29: 7, 14: 8, 62: 9}[this.mux['B']];
-      } else {
-        // Other left
-        bmux = {22: 0, 15: 1, 28: 2, 63: 3, 23: 4, 26: 5, 27: 6, 29: 7, 14: 8, 62: 9}[this.mux['B']];
+      else
+      {
+        tmp = this.bPath.appendJunction(this.genCoords('~:-1:0'));
+        tmp.appendTurn(this.genCoords('~:0:7'));
+        tmp.appendTurn(this.genCoords('~:11:0'));
       }
-
-    } else {
-      // Not left
-
-      b = [ "col.=.local.1:==.B", "col.=.local.2:==.B", "col.=.local.3:==.B", "col.=.local.4:==.B", "col.=.local.5:==.B",
-      "col.=.local.6:==.B:=-.X:==.A",
-      "col.=.long.1:==.B", "col.=.long.2:==.B", 
-      "col.=.clk:==.B:CLK.AA.O:==.B", "col.=.x:==.B:-=.X:==.B"];
-      if (tile[0] == "A") {
-        // Top row is special case (top left AA is earlier)
-        bmux = {22: 0, 26: 1, 28: 2, 63: 3, 15: 4, 14: 5, 23: 6, 27: 7, 29: 8, 62: 9}[this.mux['B']];
-      } else {
-        // Mux tree: 32-bit active 1, 16-bit active 0, 8-bit active 0, 4-bit active 0, 2-bit active 0, 1-bit muxs between pairs.
-        bmux = {15: 0, 28: 1, 63: 2, 23: 3, 22: 4, 14: 5, 26: 6, 27: 7, 29: 8, 62: 9}[this.mux['B']];
-      }
+      tmp.appendPip(this.genCoords('row.*.local.4:**.B'), 'V->H');
+      tmp.appendPip(this.genCoords('row.*.local.2:**.B'), 'V->H');
+      tmp.appendPip(this.genCoords('row.*.local.1:**.B'), 'V->H');
     }
-
-    // Inputs to C
-
-    if (tile[1] == "A") {
-      // Left
-      c = [ "col.=.long.2:==.C", "col.=.local.1:==.C", "col.=.local.2:==.C", "col.=.local.3:==.C", "col.=.local.4:==.C",
-        "col.=.long.3:==.C", "col.=.long.4:==.C"];
-      if (tile == "HA") {
-        // Special case for tile HA since there's no tile below
-        c.push("col.=.x:==.C:PAD45.I:==.C");
-      } else {
-        c.push("col.=.x:==.C:+=.X:==.C");
-      }
-      if (tile == "AA") {
-        // Special case for top left
-        cmux = {6: 0, 7: 1, 11: 2, 13: 3, 30: 4, 10: 5, 12: 6, 31: 7}[this.mux["C"]];
-      } else {
-        // Other left
-        cmux = {7: 0, 12: 1, 13: 2, 30: 3, 6: 4, 11: 5, 10: 6, 31: 7}[this.mux["C"]];
-      }
-    } else {
-      c = [ "col.=.local.1:==.C", "col.=.local.2:==.C", "col.=.local.3:==.C", "col.=.local.4:==.C", "col.=.local.5:==.C",
-      "col.=.long.1:==.C", "col.=.long.2:==.C", "col.=.x:==.C:-=.X:==.C"];
-      if (tile[0] == "A") {
-        // Top (except AA)
-        cmux = {7: 0, 11: 1, 13: 2, 30: 3, 6: 4, 10: 5, 12: 6, 31: 7}[this.mux["C"]];
-      } else {
-        cmux = {12: 0, 13: 1, 30: 2, 6: 3, 7: 4, 11: 5, 10: 6, 31: 7}[this.mux['C']];
-      }
-    }
-
-    // Inputs to k
-    if (tile[1] == "A") {
-      // Left
-      k = [ "col.=.long.4:==.K", "col.=.clk:==.K:CLK.AA.O:==.K"];
-    } else {
-      k = [ "col.=.long.2:==.K", "col.=.clk:==.K:CLK.AA.O:==.K"];
-    }
-    kmux = {2: 0, 1: 1, 3: undefined}[this.mux['K']]; // 3 is used for no-connection
-
-    // Inputs to D
-    d = [];
-    if (tile[0] == "J") {
-      // Bottom, has an extra input with different mux
-      const pad = {A: 45, B: 43, C: 41, D: 39, E: 37, F: 35, G: 33, H: 31}[tile[1]];
-      d = [ "row.+.io2:==.D:==.D:PAD" + pad + ".I",
-        "row.+.long.1:==.D", "row.+.local.1:==.D", "row.+.local.2:==.D", "row.+.local.3:==.D", "row.+.local.4:==.D", "row.+.long.2:==.D"];
-      dmux = {31: 0, 25: 1, 21: 2, 12: 3, 24: 4, 13: 5, 30: 6}[this.mux['D']];
-    } else {
-      // Not bottom
-      d = [ "row.+.io3:==.D:==.D:+=.X",
-        "row.+.local.1:==.D", "row.+.local.3:==.D", "row.+.local.4:==.D", "row.+.local.5:==.D", "row.+.long.1:==.D"];
-      dmux = {5: 0, 3: 1, 15: 2, 4: 3, 2: 4, 14: 5}[this.mux['D']];
-    }
-    this.apips = [];
-    this.bpips = [];
-    this.cpips = [];
-    this.kpips = [];
-    this.dpips = [];
-    a.forEach(p => this.apips.push(ClbDecoder.processClbPip(p, tile, tile + ".A")));
-    b.forEach(p => this.bpips.push(ClbDecoder.processClbPip(p, tile, tile + ".B")));
-    c.forEach(p => this.cpips.push(ClbDecoder.processClbPip(p, tile, tile + ".C")));
-    k.forEach(p => this.kpips.push(ClbDecoder.processClbPip(p, tile, tile + ".K")));
-    d.forEach(p => this.dpips.push(ClbDecoder.processClbPip(p, tile, tile + ".D")));
-    if (amux != undefined && amux != null) {
-      this.apips[amux][4] = true; // Select the appropriate pip
-    }
-    if (bmux != undefined && bmux != null) {
-      this.bpips[bmux][4] = true; // Select the appropriate pip
-    }
-    if (cmux != undefined && cmux != null) {
-      this.cpips[cmux][4] = true; // Select the appropriate pip
-    }
-    if (kmux != undefined && kmux != null) {
-      this.kpips[kmux][4] = true; // Select the appropriate pip
-    }
-    if (dmux != undefined && dmux != null) {
-      this.dpips[dmux][4] = true; // Select the appropriate pip
-    }
+    this.bPath.appendPip(this.genCoords('col.*.local.5:**.B'), 'H->V');
+    this.bPath.appendPip(this.genCoords('col.*.local.3:**.B'), 'H->V');
+    this.bPath.appendPip(this.genCoords('col.*.local.1:**.B'), 'H->V');
   }
 
   startDecode() {
@@ -291,7 +160,7 @@ class ClbDecoder {
   // Decoded the received data
   decode() {
     this.clbInternal.decode(bitstreamTable);
-    this.generateClbPips(this.tile);
+    //this.generateClbPips(this.tile);
   }
 
   renderBackground(ctx)
@@ -328,6 +197,9 @@ class ClbDecoder {
     ctx.moveTo(this.screenPt.x, this.screenPt.y+4);
     ctx.lineTo(this.screenPt.x-2, this.screenPt.y+4);
     ctx.stroke();
+
+    this.diPath.draw(ctx);
+    this.bPath.draw(ctx);
   }
 
   render(ctx) {
@@ -352,440 +224,16 @@ class ClbDecoder {
   isInside(x, y) {
     return x >= this.screenPt.x && x < this.screenPt.x + this.W && y >= this.screenPt.y && y < this.screenPt.y + this.H;
   }
-
-  // route from output X
-  routeFromOutputX()
-  {
-    // row A: connection to IOB output PIP #3 (AA -> P10, AB -> P8, etc)
-    // row J: connection to IOB output PIP #3
-    // column J: connections to IOB outputs (#6)
-    // connection to apips[5] on CLB below
-    // connection to bpips[9] on CLB below
-    // connection to dpips[0] on CLB above
-    // connection to cpips[7] on CLB above
-    // output PIPs
-    //   row J: Y=22
-    //   row I: Y=41
-    //   ...
-
-    var pathinfo = [];
-    var destlist = [];
-
-    // output PIPs
-    // X=[28,31,35]+(tileX)*20
-    // X=[210,213,216] on column J
-    // Y=20+(tileY)*19
-    // Y for PIPs: 22, 21 on column J
-
-    var ix = this.tile.charCodeAt(1) - 0x41;
-    var iy = 9 - (this.tile.charCodeAt(0) - 0x41);
-    var xbase = (ix*20) + 23;
-    var ybase = (iy*19) + 20;
-
-    if (this.tile[0] == 'A')
-    {
-      // check opips[3] on IOBs above
-      var pins = ['P10', 'P8', 'P6', 'P4', 'P2', 'P83', 'P81', 'P79', 'P77', 'P75'];
-      var iob = iobDecoders.getFromPin(pins[ix]);
-      if (typeof iob != 'undefined')
-      {
-        if (iob.opips[3][4])
-        {
-          var tmp = iob.opips[3][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          tmp = iob.opips[0][0].split('G');
-          var dest = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (xbase+1)+'G'+ybase;
-          var turn2 = dest[0]+'G'+destpip[1];
-          var end = dest[0]+'G'+(dest[1]+3);
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, iob.opips[3][0]]);
-          pathinfo.push([iob.opips[3][0], turn2]);
-          pathinfo.push([turn2, end]);
-          destlist.push('IOB:'+iob.pin+':O');
-        }
-      }
-    }
-    else
-    {
-      // check dpips[0] and cpips[7] on CLB above
-      var tile = (String.fromCharCode(this.tile.charCodeAt(0)-1)) + '' + this.tile[1];
-      var clb = clbDecoders.get(tile);
-      if (typeof clb != 'undefined')
-      {
-        if (clb.dpips[0][4])
-        {
-          var tmp = clb.dpips[0][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (xbase+1)+'G'+ybase;
-          var turn2 = (xbase+1)+'G'+destpip[1];
-          var end = destpip[0]+'G'+(destpip[1]+2);
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, turn2]);
-          pathinfo.push([turn2, clb.dpips[0][0]]);
-          pathinfo.push([clb.dpips[0][0], end]);
-          destlist.push('CLB:'+clb.tile+':D');
-        }
-
-        if (clb.cpips[7][4])
-        {
-          var tmp = clb.dpips[0][0].split('G');
-          var turnpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          tmp = clb.cpips[7][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (xbase+1)+'G'+ybase;
-          var turn2 = (xbase+1)+'G'+turnpip[1];
-          var turn3 = destpip[0]+'G'+turnpip[1];
-          var end = (destpip[0]+1)+'G'+destpip[1];
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, turn2]);
-          pathinfo.push([turn2, turn3]);
-          pathinfo.push([turn3, clb.cpips[7][0]]);
-          pathinfo.push([clb.cpips[7][0], end]);
-          destlist.push('CLB:'+clb.tile+':C');
-        }
-      }
-    }
-
-    if (this.tile[0] == 'J')
-    {
-      // check opips[7] on IOBs below
-      var pins = ['P34', 'P36', 'P38', 'P40', 'P42', 'P45', 'P47', 'P49', 'P51', 'P53'];
-      var iob = iobDecoders.getFromPin(pins[ix]);
-      if (typeof iob != 'undefined')
-      {
-        if (iob.opips[7][4])
-        {
-          var tmp = iob.opips[7][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          tmp = (iob.pin=='P53' ? iob.opips[1][0] : iob.opips[0][0]).split('G');
-          var dest = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (xbase+1)+'G'+ybase;
-          var turn2 = dest[0]+'G'+destpip[1];
-          var end = dest[0]+'G'+(dest[1]-3);
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, iob.opips[7][0]]);
-          pathinfo.push([iob.opips[7][0], turn2]);
-          pathinfo.push([turn2, end]);
-          destlist.push('IOB:'+iob.pin+':O');
-        }
-      }
-    }
-    else
-    {
-      // check apips[5] and bpips[9] on CLB below
-      var tile = (String.fromCharCode(this.tile.charCodeAt(0)+1)) + '' + this.tile[1];
-      var clb = clbDecoders.get(tile);
-      if (typeof clb != 'undefined')
-      {
-        if (clb.apips[5][4])
-        {
-          var tmp = clb.apips[5][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (xbase+1)+'G'+ybase;
-          var turn2 = (xbase+1)+'G'+(ybase-4);
-          var turn3 = xbase+'G'+(ybase-4);
-          var turn4 = xbase+'G'+destpip[1];
-          var end = destpip[0]+'G'+(destpip[1]-1);
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, turn2]);
-          pathinfo.push([turn2, turn3]);
-          pathinfo.push([turn3, turn4]);
-          pathinfo.push([turn4, clb.apips[5][0]]);
-          pathinfo.push([clb.apips[5][0], end]);
-          destlist.push('CLB:'+clb.tile+':A');
-        }
-
-        if (clb.bpips[9][4])
-        {
-          var tmp = clb.apips[5][0].split('G');
-          var turnpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          tmp = clb.bpips[9][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (xbase+1)+'G'+ybase;
-          var turn2 = (xbase+1)+'G'+(ybase-4);
-          var turn3 = xbase+'G'+(ybase-4);
-          var turn4 = xbase+'G'+turnpip[1];
-          var turn5 = destpip[0]+'G'+turnpip[1];
-          var end = (destpip[0]+1)+'G'+destpip[1];
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, turn2]);
-          pathinfo.push([turn2, turn3]);
-          pathinfo.push([turn3, turn4]);
-          pathinfo.push([turn4, turn5]);
-          pathinfo.push([turn5, clb.bpips[9][0]]);
-          pathinfo.push([clb.bpips[9][0], end]);
-          destlist.push('CLB:'+clb.tile+':B');
-        }
-      }
-    }
-
-    if (this.tile[1] == 'J')
-    {
-      var pinsbot = [null, 'P57', 'P59', 'P61', 'P63', 'P65', 'P67', 'P69', 'P71', 'P73'];
-      var pinstop = ['P56','P58', 'P60', 'P62', null, 'P66', 'P68', 'P70', 'P72', null]
-
-      if (pinsbot[iy])
-      {
-        var iob = iobDecoders.getFromPin(pinsbot[iy]);
-        if (typeof iob != 'undefined')
-        {
-          if (iob.opips[6][4])
-          {
-            var tmp = iob.opips[6][0].split('G');
-            var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-            tmp = iob.opips[0][0].split('G');
-            var dest = [parseInt(tmp[0]), parseInt(tmp[1])];
-            var origin = xbase+'G'+ybase;
-            var turn1 = (xbase+1)+'G'+ybase;
-            var turn2 = (xbase+1)+'G'+destpip[1];
-            var turn3 = destpip[0]+'G'+dest[1];
-            var end = (dest[0]+2)+'G'+dest[1];
-            pathinfo.push([origin, turn1]);
-            pathinfo.push([turn1, turn2]);
-            pathinfo.push([turn2, iob.opips[6][0]]);
-            pathinfo.push([iob.opips[6][0], turn3]);
-            pathinfo.push([turn3, end]);
-            destlist.push('IOB:'+iob.pin+':O');
-          }
-        }
-      }
-      if (pinstop[iy])
-      {
-        var iob = iobDecoders.getFromPin(pinstop[iy]);
-        if (typeof iob != 'undefined')
-        {
-          if (iob.opips[6][4])
-          {
-            var tmp = iob.opips[6][0].split('G');
-            var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-            tmp = iob.opips[0][0].split('G');
-            var dest = [parseInt(tmp[0]), parseInt(tmp[1])];
-            var origin = xbase+'G'+ybase;
-            var turn1 = (xbase+1)+'G'+ybase;
-            var turn2 = (xbase+1)+'G'+destpip[1];
-            var turn3 = destpip[0]+'G'+dest[1];
-            var end = dest[0]+'G'+dest[1];
-            pathinfo.push([origin, turn1]);
-            pathinfo.push([turn1, turn2]);
-            pathinfo.push([turn2, iob.opips[6][0]]);
-            pathinfo.push([iob.opips[6][0], turn3]);
-            pathinfo.push([turn3, end]);
-            destlist.push('IOB:'+iob.pin+':O');
-          }
-        }
-      }
-    }
-
-    var pipoffset, yoffset;
-    if (this.tile[1] == 'J')
-    { pipoffset = [7, 10, 13]; yoffset = 1; }
-    else
-    { pipoffset = [5, 8, 12]; yoffset = 2; }
-
-    pipoffset.forEach(function(offset)
-    {
-      var entry = (xbase+offset)+'G'+(ybase+yoffset);
-      var pip = pipDecoder.entries[entry];
-      //console.log('CHECKING PIP '+entry);
-      //console.log(pip);
-      if (typeof pip != 'undefined')
-      {
-        if (pip == 0)
-        {
-          var oldcount = pathinfo.length;
-
-          //console.log('TRACING FROM PIP '+entry);
-          pipDecoder.traceFrom(entry, '|', destlist, pathinfo);
-          //console.log('TRACEFROM DONE');
-
-          if (pathinfo.length != oldcount)
-          {
-            // add first segments of path
-            var origin = xbase+'G'+ybase;
-            var turn1 = (xbase+1)+'G'+ybase;
-            var turn2 = (xbase+1)+'G'+(ybase+yoffset);
-            pathinfo.push([origin, turn1]);
-            pathinfo.push([turn1, turn2]);
-            pathinfo.push([turn2, entry]);
-          }
-        }
-      }
-    });
-
-    //console.log("ROUTE X DONE");
-    //console.log(pathinfo);
-    //console.log(destlist);
-
-    this.startPoint = 'CLB:'+this.tile+':X';
-    this.pathInfo = pathinfo;
-    this.destList = destlist;
-  }
-
-  // route from output Y
-  routeFromOutputY()
-  {
-    // column J: connections to IOB outputs (#7)
-    // connection to bpips[5] on CLB to the right
-    // output PIPs
-    //   row J: Y=18
-    //   row I: Y=37
-    //   ...
-
-    var pathinfo = [];
-    var destlist = [];
-
-    // output PIPs
-    // X=[27,30,33,36]+(tileX)*20
-    // X=[209,212,215,218] on column J
-    // Y=18+(tileY)*19
-
-    var ix = this.tile.charCodeAt(1) - 0x41;
-    var iy = 9 - (this.tile.charCodeAt(0) - 0x41);
-    var xbase = (ix*20) + 23;
-    var ybase = (iy*19) + 18;
-
-    if (this.tile[1] == 'J')
-    {
-      // check output PIPs
-      var pinsbot = [null, 'P57', 'P59', 'P61', 'P63', 'P65', 'P67', 'P69', 'P71', 'P73'];
-      var pinstop = ['P56','P58', 'P60', 'P62', null, 'P66', 'P68', 'P70', 'P72', null]
-
-      if (pinsbot[iy])
-      {
-        var iob = iobDecoders.getFromPin(pinsbot[iy]);
-        if (typeof iob != 'undefined')
-        {
-          if (iob.opips[7][4])
-          {
-            var tmp = iob.opips[7][0].split('G');
-            var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-            tmp = iob.opips[0][0].split('G');
-            var dest = [parseInt(tmp[0]), parseInt(tmp[1])];
-            var origin = xbase+'G'+ybase;
-            var turn1 = (xbase+1)+'G'+ybase;
-            var turn2 = (xbase+1)+'G'+destpip[1];
-            var turn3 = destpip[0]+'G'+dest[1];
-            var end = (dest[0]+2)+'G'+dest[1];
-            pathinfo.push([origin, turn1]);
-            pathinfo.push([turn1, turn2]);
-            pathinfo.push([turn2, iob.opips[7][0]]);
-            pathinfo.push([iob.opips[7][0], turn3]);
-            pathinfo.push([turn3, end]);
-            destlist.push('IOB:'+iob.pin+':O');
-          }
-        }
-      }
-      if (pinstop[iy])
-      {
-        var iob = iobDecoders.getFromPin(pinstop[iy]);
-        if (typeof iob != 'undefined')
-        {
-          if (iob.opips[7][4])
-          {
-            var tmp = iob.opips[7][0].split('G');
-            var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-            tmp = iob.opips[0][0].split('G');
-            var dest = [parseInt(tmp[0]), parseInt(tmp[1])];
-            var origin = xbase+'G'+ybase;
-            var turn1 = (xbase+1)+'G'+ybase;
-            var turn2 = (xbase+1)+'G'+destpip[1];
-            var turn3 = destpip[0]+'G'+dest[1];
-            var end = dest[0]+'G'+dest[1];
-            pathinfo.push([origin, turn1]);
-            pathinfo.push([turn1, turn2]);
-            pathinfo.push([turn2, iob.opips[7][0]]);
-            pathinfo.push([iob.opips[7][0], turn3]);
-            pathinfo.push([turn3, end]);
-            destlist.push('IOB:'+iob.pin+':O');
-          }
-        }
-      }
-    }
-    else
-    {
-      // check bpips[5] on next CLB
-      var tile = this.tile[0] + (String.fromCharCode(this.tile.charCodeAt(1)+1));
-      var clb = clbDecoders.get(tile);
-      if (typeof clb != 'undefined')
-      {
-        if (clb.bpips[5][4])
-        {
-          var tmp = clb.bpips[5][0].split('G');
-          var destpip = [parseInt(tmp[0]), parseInt(tmp[1])];
-          var origin = xbase+'G'+ybase;
-          var turn1 = (destpip[0])+'G'+ybase;
-          var end = (destpip[0]+5)+'G'+destpip[1];
-          pathinfo.push([origin, turn1]);
-          pathinfo.push([turn1, clb.bpips[5][0]]);
-          pathinfo.push([clb.bpips[5][0], end]);
-          destlist.push('CLB:'+clb.tile+':B');
-        }
-      }
-    }
-
-    var pipoffset;
-    if (this.tile[1] == 'J')
-      pipoffset = [6, 9, 12, 15];
-    else
-      pipoffset = [4, 7, 10, 13];
-
-    pipoffset.forEach(function(offset)
-    {
-      var entry = (xbase+offset)+'G'+ybase;
-      var pip = pipDecoder.entries[entry];
-      //console.log('CHECKING PIP '+entry);
-      //console.log(pip);
-      if (typeof pip != 'undefined')
-      {
-        if (pip == 0)
-        {
-          var oldcount = pathinfo.length;
-
-          //console.log('TRACING FROM PIP '+entry);
-          pipDecoder.traceFrom(entry, '|', destlist, pathinfo);
-          //console.log('TRACEFROM DONE');
-
-          if (pathinfo.length != oldcount)
-          {
-            // add first segments of path
-            var origin = xbase+'G'+ybase;
-            pathinfo.push([origin, entry]);
-          }
-        }
-      }
-    });
-
-    //console.log("ROUTE Y DONE");
-    //console.log(pathinfo);
-    //console.log(destlist);
-
-    this.startPoint2 = 'CLB:'+this.tile+':Y';
-    this.pathInfo2 = pathinfo;
-    this.destList2 = destlist;
-  }
-
-  routeFromOutputs()
-  {
-    this.routeFromOutputX();
-    this.routeFromOutputY();
-  }
 }
 
 class ClbDecoders {
   constructor() {
     this.clbDecoders = {};
     var fam = curBitstream.family;
-    for (let i = 0; i < fam.cols; i++) {
-      for (let j = 0; j < fam.rows; j++) {
+    for (let i = 0; i < fam.rows; i++) {
+      for (let j = 0; j < fam.cols; j++) {
         let tile = letters[i] + letters[j];
-        this.clbDecoders[tile] = new ClbDecoder(i, j, tile);
+        this.clbDecoders[tile] = new ClbDecoder(j, i, tile);
       }
     }
     // These are in the config as CLBs.

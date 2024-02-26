@@ -9,6 +9,8 @@
 <script src="chippackage.js"></script>
 <script src="draw.js"></script>
 <script src="parse.js"></script>
+  <script src="pip.js"></script>
+  <script src="path.js"></script>
 <script src="iob.js"></script>
 <script src="clb.js"></script>
 <script src="karnaugh.js"></script>
@@ -208,9 +210,9 @@ $(document).ready(function() {
   }
 
   function redraw(ctx) {
-    if (canvasMode() == 'bitstream') {
+    /*if (canvasMode() == 'bitstream') {
       drawBitstream(ctx, bitstreamTable);
-    } else if (canvasMode() == 'layout') {
+    } else if (canvasMode() == 'layout') */{
       drawLayout(ctx);
     }
   }
