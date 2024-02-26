@@ -132,7 +132,7 @@ class Iob
 
         this.gPt = getGCoords(pad);
         this.screenPt = getSCoords(this.gPt);
-
+console.log(this);
         // point to the CLB this IOB might have direct connections to
         if (style == 'topleft' || style == 'topright')
         {
@@ -256,29 +256,75 @@ class Iob
         name = name.replaceAll('PAD*', this.pad)
             .replaceAll('**', this.tile)
             .replaceAll('col.*', 'col.'+this.tile[1])
-            .replaceAll('row.*', 'row.'+this.tile[0]);
+            .replaceAll('col.+', 'col.'+letters[this.col+1])
+            .replaceAll('row.*', 'row.'+this.tile[0])
+            .replaceAll('row.+', 'row.'+letters[this.row+1]);
 
         return name;
     }
 
     generateIobPips()
     {
-        var tmp;
+        var maxcol = curBitstream.family.cols-1;
+        var maxrow = curBitstream.family.rows-1;
+
+        var okpips = [], ikpips = [],
+            opips = [], qpips = [], ipips = [], tpips = [];
 
         if (this.style == 'topleft' || this.style == 'topright')
         {
-            var okpips = ['row.*.local.10:PAD*.OK', 'row.*.local.11:PAD*.OK'];
-            var ikpips = ['row.*.local.10:PAD*.IK', 'row.*.local.11:PAD*.IK'];
-
             this.okPath = new Path(this, 'OK', 'dest', {x: this.gPt.x + 1, y: this.gPt.y}, 'V');
-            this.okPath.appendPipList(okpips, this.genCoords.bind(this));
             this.ikPath = new Path(this, 'IK', 'dest', {x: this.gPt.x + 3, y: this.gPt.y}, 'V');
-            this.ikPath.appendPipList(ikpips, this.genCoords.bind(this));
+            this.oPath = new Path(this, 'O', 'dest', {x: this.gPt.x + 1, y: this.gPt.y - 1}, 'V');
+            this.qPath = new Path(this, 'Q', 'source', {x: this.gPt.x + 2, y: this.gPt.y - 1}, 'V');
+            this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 3, y: this.gPt.y - 1}, 'V');
+            this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 4, y: this.gPt.y - 1}, 'V');
+
+            okpips.push('row.*.local.10:PAD*.OK', 'row.*.local.11:PAD*.OK');
+            ikpips.push('row.*.local.10:PAD*.IK', 'row.*.local.11:PAD*.IK');
+        }
+        else if (this.style == 'bottomleft' || this.style == 'bottomright')
+        {
+            this.okPath = new Path(this, 'OK', 'dest', {x: this.gPt.x + 1, y: this.gPt.y - 1}, 'V');
+            this.ikPath = new Path(this, 'IK', 'dest', {x: this.gPt.x + 3, y: this.gPt.y - 1}, 'V');
+            this.oPath = new Path(this, 'O', 'dest', {x: this.gPt.x + 1, y: this.gPt.y}, 'V');
+            this.qPath = new Path(this, 'Q', 'source', {x: this.gPt.x + 2, y: this.gPt.y}, 'V');
+            this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 3, y: this.gPt.y}, 'V');
+            this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 4, y: this.gPt.y}, 'V');
+
+            okpips.push('row.+.local.6:PAD*.OK', 'row.+.local.7:PAD*.OK');
+            ikpips.push('row.+.local.6:PAD*.IK', 'row.+.local.7:PAD*.IK');
+        }
+        else if (this.style == 'leftupper' || this.style == 'leftlower')
+        {
+            var ybase = this.gPt.y - ((this.style == 'leftlower') ? 0 : 2);
+            this.okPath = new Path(this, 'OK', 'dest', {x: this.gPt.x, y: ybase - 2}, 'H');
+            this.ikPath = new Path(this, 'IK', 'dest', {x: this.gPt.x, y: ybase - 1}, 'H');
+            this.oPath = new Path(this, 'O', 'dest', {x: this.gPt.x + 5, y: ybase - 4}, 'H');
+            this.qPath = new Path(this, 'Q', 'source', {x: this.gPt.x + 5, y: ybase - 3}, 'H');
+            this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 5, y: ybase - 2}, 'H');
+            this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 5, y: ybase - 1}, 'H');
+
+            okpips.push('col.*.local.13:PAD*.OK', 'col.*.local.12:PAD*.OK');
+            ikpips.push('col.*.local.13:PAD*.IK', 'col.*.local.12:PAD*.IK');
+        }
+        else if (this.style == 'rightupper' || this.style == 'rightlower')
+        {
+            var ybase = this.gPt.y - ((this.style == 'rightlower') ? 0 : 2);
+            this.okPath = new Path(this, 'OK', 'dest', {x: this.gPt.x + 5, y: ybase - 2}, 'H');
+            this.ikPath = new Path(this, 'IK', 'dest', {x: this.gPt.x + 5, y: ybase - 1}, 'H');
+            this.oPath = new Path(this, 'O', 'dest', {x: this.gPt.x, y: ybase - 4}, 'H');
+            this.qPath = new Path(this, 'Q', 'source', {x: this.gPt.x, y: ybase - 3}, 'H');
+            this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x, y: ybase - 2}, 'H');
+            this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x, y: ybase - 1}, 'H');
+
+            okpips.push('col.+.local.6:PAD*.OK', 'col.+.local.7:PAD*.OK');
+            ikpips.push('col.+.local.6:PAD*.IK', 'col.+.local.7:PAD*.IK');
         }
 
         if (this.style == 'topleft')
         {
-            var opips = ['row.*.local.2:PAD*.O', 'row.*.local.4:PAD*.O'];
+            opips.push('row.*.local.2:PAD*.O', 'row.*.local.4:PAD*.O');
             if (this.col == 0)
                 opips.push(['col.*.long.5:PAD*.O', 'col.*.long.3:PAD*.O'],
                     'row.*.long.1:PAD*.O'); // , 'PAD*.O:GCLK.O'); // TODO
@@ -287,11 +333,11 @@ class Iob
                     'col.*.long.3:PAD*.O', 'col.*.long.1:PAD*.O',
                     'col.*.local.5:PAD*.O', 'col.*.local.4:PAD*.O', 'col.*.local.1:PAD*.O');
 
-            var qpips = ['row.*.local.1:PAD*.Q', 'row.*.local.3:PAD*.Q'];
+            qpips.push('row.*.local.1:PAD*.Q', 'row.*.local.3:PAD*.Q');
             if (this.col != 0)
                 qpips.push('col.*.local.5:PAD*.Q', 'col.*.local.2:PAD*.Q');
 
-            var ipips = ['row.*.local.2:PAD*.I', 'row.*.local.4:PAD*.I'];
+            ipips.push('row.*.local.2:PAD*.I', 'row.*.local.4:PAD*.I');
             if (this.col == 0)
             {
                 //
@@ -299,20 +345,81 @@ class Iob
             else
                 ipips.push(['**.A:PAD*.I'], 'col.*.local.4:PAD*.I', 'col.*.local.1:PAD*.I');
 
-            var tpips = ['row.*.local.2:PAD*.T', 'row.*.local.4:PAD*.T', 'row.*.long.1:PAD*.T', 'row.*.long.2:PAD*.T'];
+            tpips.push('row.*.local.2:PAD*.T', 'row.*.local.4:PAD*.T', 'row.*.long.1:PAD*.T', 'row.*.long.2:PAD*.T');
 
-            this.oPath = new Path(this, 'O', 'dest', {x: this.gPt.x + 1, y: this.gPt.y - 1}, 'V');
-            this.oPath.appendPipList(opips, this.genCoords.bind(this));
-
-            this.qPath = new Path(this, 'Q', 'source', {x: this.gPt.x + 2, y: this.gPt.y - 1}, 'V');
-            this.qPath.appendPipList(qpips, this.genCoords.bind(this));
-
-            this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 3, y: this.gPt.y - 1}, 'V');
-            this.iPath.appendPipList(ipips, this.genCoords.bind(this));
-
-            this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 4, y: this.gPt.y - 1}, 'V');
-            this.tPath.appendPipList(tpips, this.genCoords.bind(this));
         }
+        else if (this.style == 'topright')
+        {
+            opips.push('row.*.local.1:PAD*.O', 'row.*.local.3:PAD*.O', 'row.*.local.5:PAD*.O',
+                'row.*.long.1:PAD*.O');
+            if (this.col == maxcol)
+            {
+                //
+            }
+            else
+                opips.push(/*'**.Y:PAD*.O',*/ 'col.+.local.2:PAD*.O', 'col.+.local.3:PAD*.O', 'col.+.long.2:PAD*.O');
+
+            qpips.push('row.*.local.2:PAD*.Q', 'row.*.local.4:PAD*.Q');
+            if (this.col != maxcol)
+                qpips.push('col.+.local.1:PAD*.Q', 'col.+.local.4:PAD*.Q');
+
+            ipips.push('row.*.local.1:PAD*.I', 'row.*.local.3:PAD*.I');
+            if (this.col == maxcol)
+                ipips.push('row.*.local.5:PAD*.I');
+            else
+                ipips.push('col.+.local.2:PAD*.I', 'col.+.local.5:PAD*.I');
+
+            tpips.push('row.*.local.1:PAD*.T', 'row.*.local.3:PAD*.T', 'row.*.long.1:PAD*.T', 'row.*.long.2:PAD*.T');
+        }
+        else if (this.style == 'bottomleft')
+        {
+            opips.push('row.+.local.4:PAD*.O', 'row.+.local.2:PAD*.O');
+            if (this.col == 0)
+                opips.push('row.+.long.3:PAD*.O', 'col.*.long.5:PAD*.O', 'col.*.long.3:PAD*.O');
+            else
+                opips.push(['col.*.long.3:PAD*.O', 'col.*.long.1:PAD*.O',
+                    'col.*.local.5:PAD*.O', 'col.*.local.4:PAD*.O', 'col.*.local.1:PAD*.O'],
+                    'row.+.long.3:PAD*.O');
+
+            qpips.push('row.+.local.5:PAD*.Q', 'row.+.local.3:PAD*.Q');
+            if (this.col != 0)
+                qpips.push('col.*.local.2:PAD*.Q', 'col.*.local.5:PAD*.Q');
+
+            ipips.push('row.+.local.4:PAD*.I', 'row.+.local.2:PAD*.I');
+            if (this.col == 0)
+                ipips.push('row.+.local.1:PAD*.I', 'PAD*.I:**.D');
+            else
+                ipips.push(['col.*.local.1:PAD*.I', 'col.*.local.4:PAD*.I'], 'PAD*.I:**.D');
+
+            tpips.push('row.+.local.4:PAD*.T', 'row.+.local.2:PAD*.T', 'row.+.long.3:PAD*.T', 'row.+.long.2:PAD*.T');
+        }
+        else if (this.style == 'bottomright')
+        {
+            opips.push('row.+.local.5:PAD*.O', 'row.+.local.3:PAD*.O', 'row.+.local.1:PAD*.O',
+                'row.+.long.3:PAD*.O');
+            // TODO connection to upper Y
+            if (this.col != maxcol)
+                opips.push('col.+.local.2:PAD*.O', 'col.+.local.3:PAD*.O', 'col.+.long.2:PAD*.O');
+
+            qpips.push('row.+.local.4:PAD*.Q', 'row.+.local.2:PAD*.Q');
+            if (this.col != maxcol)
+                qpips.push('col.+.local.1:PAD*.Q', 'col.+.local.4:PAD*.Q');
+
+            ipips.push('row.+.local.5:PAD*.I', 'row.+.local.3:PAD*.I');
+            if (this.col == maxcol)
+                ipips.push('row.+.local.1:PAD*.I'); // TODO clock connect
+            else
+                ipips.push('col.+.local.2:PAD*.I', 'col.+.local.5:PAD*.I');
+
+            tpips.push('row.+.local.5:PAD*.T', 'row.+.local.3:PAD*.T', 'row.+.long.3:PAD*.T', 'row.+.long.2:PAD*.T');
+        }
+
+        this.okPath.appendPipList(okpips, this.genCoords.bind(this));
+        this.ikPath.appendPipList(ikpips, this.genCoords.bind(this));
+        this.oPath.appendPipList(opips, this.genCoords.bind(this));
+        this.qPath.appendPipList(qpips, this.genCoords.bind(this));
+        this.iPath.appendPipList(ipips, this.genCoords.bind(this));
+        this.tPath.appendPipList(tpips, this.genCoords.bind(this));
     }
 
     renderBackground(ctx)
@@ -367,13 +474,12 @@ class Iob
         }
         ctx.stroke();
 
-        if (this.style=='topleft'){
-            this.okPath.draw(ctx);
-            this.ikPath.draw(ctx);
+        this.okPath.draw(ctx);
+        this.ikPath.draw(ctx);
         this.oPath.draw(ctx);
         this.qPath.draw(ctx);
         this.iPath.draw(ctx);
-        this.tPath.draw(ctx);}
+        this.tPath.draw(ctx);
     }
 
     render(ctx)

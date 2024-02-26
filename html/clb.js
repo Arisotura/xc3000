@@ -9,6 +9,8 @@ class ClbDecoder {
     this.W = 20;
     this.H = 32;
 
+    console.log(this);
+
     // determine neighboring tiles
     this.tileLeft = (col == 0) ? null : letters[row]+letters[col-1];
     this.tileRight = (col == curBitstream.family.cols-1) ? null : letters[row]+letters[col+1];

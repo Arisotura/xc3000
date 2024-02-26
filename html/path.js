@@ -51,6 +51,9 @@ class Path
         else
             ret = name;
 
+        if (typeof ret == 'undefined')
+            console.log('incorrect coords '+name);
+
         return ret;
     }
 
@@ -145,7 +148,14 @@ class Path
         this.checkTurn(gPt);
 
         if (!type)
-            type = (this.curDir == 'H') ? 'H->V' : 'V->H';
+        {
+            if (this.originType == 'source')
+                type = (this.curDir == 'H') ? 'H->V' : 'V->H';
+            else if (this.originType == 'dest')
+                type = (this.curDir == 'H') ? 'V->H' : 'H->V';
+            else
+                type = 'ND';
+        }
 
         var data = {
             type: 'pip',

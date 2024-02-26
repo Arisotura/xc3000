@@ -340,11 +340,11 @@ function initNames()
 
         var base;
         if (col == 0)
-          base = 30 + (5*side);
+          base = 29 + (5*side);
         else if (col == (fam.cols-1))
-          base = 33 + (11*side);
+          base = 32 + (11*side);
         else
-          base = 32 + (7*side);
+          base = 31 + (7*side);
         base += (26 * col);
 
         colInfo[fullname] = base;
@@ -427,11 +427,11 @@ function initNames()
 
         var base;
         if (col == 0)
-            base = 30 + (5*side);
+            base = 29 + (5*side);
         else if (col == (fam.cols-1))
-            base = 33 + (6*side);
+            base = 32 + (6*side);
         else
-            base = 32 + (7*side);
+            base = 31 + (7*side);
         base += (26 * col);
 
         colInfo[fullname] = base;
@@ -454,9 +454,9 @@ function initNames()
         }
         else
         {
-            rowInfo[fullname+'.O'] = 19 - (7*side);
-            rowInfo[fullname+'.Q'] = 18 - (3*side);
-            rowInfo[fullname+'.I'] = 17 - (1*side);
+            rowInfo[fullname+'.O'] = 12 + (7*side);
+            rowInfo[fullname+'.Q'] = 15 + (3*side);
+            rowInfo[fullname+'.I'] = 16 + (1*side);
         }
 
         pad++;
@@ -518,6 +518,10 @@ function initNames()
     // 293G284 PU.BK.2.O
     // 293G293 PU.BK.1.O
     // 293G307 PU.AK.1.O
+
+    rowInfo['GCLK.O_1'] = rmaxG - 20;
+    rowInfo['GLCK.O_2'] = rmaxG - 13; // connection to PAD1.O
+    rowInfo['ACLK.O'] = 4;
 
   // Make reverse tables
   Object.entries(rowInfo).forEach(([key, val]) => rowFromG[val[0]] = key);
