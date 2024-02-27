@@ -99,6 +99,7 @@ class Path
     // append a simple path turn
     appendTurn(gPt)
     {
+        gPt = this.parseCoords(gPt);
         var nextdir = (this.curDir == 'H') ? 'V' : 'H';
 
         var data = {
@@ -185,7 +186,10 @@ class Path
             {
                 var coord = p;
                 if (coordparse) coord = coordparse(coord);
-                this.appendPip(coord);
+                if (coord[0] == 'T')
+                    this.appendTurn(coord.substring(2));
+                else
+                    this.appendPip(coord);
             }
             else
             {

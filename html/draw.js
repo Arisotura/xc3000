@@ -264,7 +264,16 @@ function initNames()
       }
       else if (col == fam.cols-1)
       {
-          colInfo[fullname + '.X_C'] = coloff + 6;
+          colInfo[fullname + '.I_C'] = coloff + 6;
+          // Y_O coloff+41
+          if (row == 0)
+          {
+              // TODO AJ.Y->P75
+          }
+
+          if (row != fam.rows-1)
+              colInfo[fullname + '.X_O'] = coloff + 51;
+          colInfo[fullname + '.Y_O'] = coloff + 48;
       }
       else
       {
@@ -278,13 +287,23 @@ function initNames()
       const rowoff = (fam.rows-1-row) * 30;
 
       rowInfo[fullname] = rowoff + 35;
-      if (col == 0)
+        if (row == 0)
+        {
+            rowInfo[fullname + '.A'] = rowoff + 42;
+            if (col == 0)
+            {
+                rowInfo[fullname + '.X_O'] = rowoff + 41;
+                colInfo[fullname + '.Y_O'] = 42;
+            }
+            else if (col != fam.cols-1)
+            {
+                colInfo[fullname + '.Y_O'] = coloff + 41;
+            }
+        }
+        else if (col == 0)
       {
           rowInfo[fullname + '.A'] = rowoff + 43;
-      }
-      else if (row == 0)
-      {
-          rowInfo[fullname + '.A'] = rowoff + 42;
+          rowInfo[fullname + '.X_O'] = rowoff + 40;
       }
       else
       {
@@ -393,27 +412,32 @@ function initNames()
         colInfo[fullname] = cmaxG - 7;
         rowInfo[fullname] = base;
 
-        if (!side) base += 3;
-        rowInfo[fullname + '.IK'] = base + 1;
-        rowInfo[fullname + '.OK'] = base + 3;
-        rowInfo[fullname + '.T'] = base + 1;
-        rowInfo[fullname + '.I'] = base + 2;
-        rowInfo[fullname + '.Q'] = base + 3;
-        rowInfo[fullname + '.O'] = base + 4;
+        if (!side) base -= 2;
+        rowInfo[fullname + '.IK'] = base - 1;
+        rowInfo[fullname + '.OK'] = base - 3;
+        rowInfo[fullname + '.I'] = base - 2;
+        rowInfo[fullname + '.Q'] = base - 3;
+
 
         if (i == 0)
         {
+            rowInfo[fullname + '.T'] = base - 1;
+            rowInfo[fullname + '.O'] = base - 4;
             colInfo[fullname+'.O'] = cmaxG - 20;
         }
         else if (i == (fam.rows*2 - 1))
         {
+            rowInfo[fullname + '.T'] = base - 1;
+            rowInfo[fullname + '.O'] = base - 4;
             colInfo[fullname+'.O'] = cmaxG - 19;
         }
         else
         {
-            colInfo[fullname+'.O'] = cmaxG - 23 + (3*side);
+            rowInfo[fullname + '.T'] = base - 1 + (1*side);
+            rowInfo[fullname + '.O'] = base - 4 - (1*side);
+            colInfo[fullname+'.O'] = cmaxG - 23 + (5*side);
             colInfo[fullname+'.Q'] = cmaxG - 22 + (3*side);
-            colInfo[fullname+'.I'] = cmaxG - 21 + (3*side);
+            colInfo[fullname+'.I'] = cmaxG - 21 + (1*side);
         }
 
         pad++;
@@ -474,30 +498,36 @@ function initNames()
         else if (row == (fam.rows-1))
             base = 43 - (21*side);
         else
-            base = 43 - (9*side);
+            base = 43 - (8*side);
         base += (30 * (fam.rows-1-row));
 
         colInfo[fullname] = 2;
         rowInfo[fullname] = base;
 
-        if (!side) base += 3;
-        rowInfo[fullname + '.IK'] = base + 1;
-        rowInfo[fullname + '.OK'] = base + 3;
-        rowInfo[fullname + '.T'] = base + 1;
-        rowInfo[fullname + '.I'] = base + 2;
-        rowInfo[fullname + '.Q'] = base + 3;
-        rowInfo[fullname + '.O'] = base + 4;
+        if (!side) base -= 2;
+        rowInfo[fullname + '.IK'] = base - 1;
+        rowInfo[fullname + '.OK'] = base - 3;
+        rowInfo[fullname + '.I'] = base - 2;
 
         if (i == 0)
         {
+            rowInfo[fullname + '.T'] = base - 1;
+            rowInfo[fullname + '.Q'] = base - 3;
+            rowInfo[fullname + '.O'] = base - 4;
             colInfo[fullname+'.O'] = 17;
         }
         else if (i == (fam.rows*2 - 1))
         {
+            rowInfo[fullname + '.T'] = base + 1;
+            rowInfo[fullname + '.Q'] = base - 3;
+            rowInfo[fullname + '.O'] = base - 4;
             colInfo[fullname+'.O'] = 29;
         }
         else
         {
+            rowInfo[fullname + '.T'] = base - 1 + (1*side);
+            rowInfo[fullname + '.Q'] = base - 3 - (2*side);
+            rowInfo[fullname + '.O'] = base - 4 - (4*side);
             colInfo[fullname+'.O'] = 34 - (5*side);
             colInfo[fullname+'.Q'] = 33 - (3*side);
             colInfo[fullname+'.I'] = 32 - (1*side);
@@ -991,7 +1021,7 @@ function drawBackground(ctx)
     var fam = curBitstream.family;
 
     var w = 272 + ((fam.cols-1) * 104);
-    var h = 265 + ((fam.rows-1) * 120);
+    var h = 268 + ((fam.rows-1) * 120);
     var cx = 188 + (((fam.cols/2)-1) * 104);
     var cy = 168 + (((fam.rows/2)-1) * 120);
 
@@ -1021,16 +1051,16 @@ function drawBackground(ctx)
 
     drawTextBox(ctx, 'PWR\nDN', 12, 12, 20, 20);
     drawTextBox(ctx, 'VCC', 12, cy, 20, 20);
-    drawTextBox(ctx, 'M1R\nD', 12, h-69, 20, 20);
-    drawTextBox(ctx, 'M0R', 12, h-25, 20, 12);
+    drawTextBox(ctx, 'M1R\nD', 12, h-68, 20, 20);
+    drawTextBox(ctx, 'M0R', 12, h-24, 20, 12);
 
     drawTextBox(ctx, 'GND', cx, 12, 20, 12);
-    drawTextBox(ctx, 'GND', cx, h-25, 20, 12);
+    drawTextBox(ctx, 'GND', cx, h-24, 20, 12);
 
     drawTextBox(ctx, 'CCL\nK', w-32, 12, 20, 20);
     drawTextBox(ctx, 'VCC', w-32, cy, 20, 20);
-    drawTextBox(ctx, 'DPG\nM', w-32, h-69, 20, 20);
-    drawTextBox(ctx, 'RST', w-52, h-25, 20, 12);
+    drawTextBox(ctx, 'DPG\nM', w-32, h-68, 20, 20);
+    drawTextBox(ctx, 'RST', w-52, h-24, 20, 12);
 
     // draw background for programmable elements
 
