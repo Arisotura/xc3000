@@ -130,6 +130,9 @@ class ClbDecoder {
     this.bPath.appendPip(this.genCoords('col.*.local.5:**.B'), 'H->V');
     this.bPath.appendPip(this.genCoords('col.*.local.3:**.B'), 'H->V');
     this.bPath.appendPip(this.genCoords('col.*.local.1:**.B'), 'H->V');*/
+    var maxcol = curBitstream.family.cols-1;
+    var maxrow = curBitstream.family.rows-1;
+
     var apips = [], ecpips = [],
         dipips = [], bpips = [], cpips = [], kpips = [], epips = [],
         dpips = [], rdpips = [],
@@ -162,6 +165,71 @@ class ClbDecoder {
     {
       //
     }
+
+    if (this.row == 0)
+    {
+      dipips.push([this.col==0?'-14':'-8', 'row.*.long.2:3', 'row.*.local.5:2'],
+          'col.*.local.4:1', 'col.*.local.1:0');
+
+      bpips.push(this.col==0?'-3:4':'-2:4', this.col==0?'col.*.long.3:3':'col.*.long.1:3',
+          [this.col==0?'-3':'-1', 'row.*.local.4:5', 'row.*.local.2:6', 'row.*.local.1:7'],
+          'col.*.local.5:2', 'col.*.local.3:1', 'col.*.local.1:0');
+    }
+    else
+    {
+      dipips.push([this.col==0?'-14':'-8', 'row.*.local.5:2', 'row.*.long.1:3'],
+          'col.*.local.4:1', 'col.*.local.1:0');
+
+      if (this.col == 0)
+      {
+        bpips.push('-3:4', 'col.*.long.3:3',
+            ['-3', 'row.*.local.4:5', 'row.*.local.2:6', 'row.*.local.1:7'],
+            'col.*.local.5:2', 'col.*.local.3:1', 'col.*.local.1:0');
+      }
+      else
+      {
+        bpips.push('-2:4', 'col.*.long.1:3',
+            ['-1', 'T:+7', 'T:+11', 'row.*.local.4:5', 'row.*.local.2:6', 'row.*.local.1:7'],
+            'col.*.local.5:2', 'col.*.local.3:1', 'col.*.local.1:0');
+      }
+    }
+
+    if (this.row == maxrow)
+    {
+      cpips.push(this.col==0?'-2:4':'-1:4', this.col==0?'col.*.long.4:3':'col.*.long.2:3',
+          [this.col==0?'-3':'-5', 'row.+.local.1:7', 'row.+.local.3:6', 'row.+.local.5:5'],
+          'col.*.local.5:2', 'col.*.local.4:1', 'col.*.local.2:0');
+
+      if (this.col == 0)
+      {
+        kpips.push('col.*.long.6:1', 'col.*.long.5:2', ['-3', 'row.+.local.2:3'], 'col.*.local.2:0');
+        epips.push(['-2', 'T:-11', 'T:-4', 'row.+.local.5:3'], 'col.*.long.4:2', 'col.*.local.5:1', 'col.*.local.3:0');
+      }
+      else
+      {
+        kpips.push('col.*.long.3:2', ['-3', 'row.+.local.2:3'], 'col.*.long.0:1', 'col.*.local.2:0');
+        epips.push('col.*.long.2:2', ['-3', 'row.+.local.5:3'], 'col.*.local.5:1', 'col.*.local.3:0');
+      }
+    }
+    else
+    {
+      cpips.push(this.col==0?'-2:4':'-1:4', this.col==0?'col.*.long.4:3':'col.*.long.2:3',
+          [this.col==0?'-3':'-2', 'row.+.local.1:5', 'row.+.local.3:6', 'row.+.local.5:7'],
+          'col.*.local.5:2', 'col.*.local.4:1', 'col.*.local.2:0');
+
+      if (this.col == 0)
+      {
+        kpips.push('col.*.long.6:1', 'col.*.long.5:2', ['-3', 'row.+.local.4:3'], 'col.*.local.2:0');
+        epips.push(['-3', 'row.+.local.1:3'], 'col.*.long.4:2', 'col.*.local.5:1', 'col.*.local.3:0');
+      }
+      else
+      {
+        kpips.push(['-1', 'row.+.local.4:3'], 'col.*.long.3:2', 'col.*.long.0:1', 'col.*.local.2:0');
+        epips.push('col.*.long.2:2', ['-5', 'row.+.local.1:3'], 'col.*.local.5:1', 'col.*.local.3:0');
+      }
+    }
+
+    // k: -1 (+.local4) long3 long0 local2
 
     this.aPath.appendPipList(apips, this.genCoords.bind(this));
     this.ecPath.appendPipList(ecpips, this.genCoords.bind(this));
