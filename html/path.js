@@ -24,8 +24,14 @@ class Path
             gPt: gPt,
         };
 
+        if (originObj.type == 'junction')
+            this.rootPath = originObj.path.rootPath;
+        else
+            this.rootPath = this;
+
         this.path = [];
         this.pathByG = [];
+        this.pathById = [];
         this.lastElem = null;
         this.appendElement(data, dir);
 
@@ -37,6 +43,9 @@ class Path
     {
         var ret;
         if (typeof name == 'string')
+            name = name.split(':');
+
+        if (Array.isArray(name))
         {
             if (name[0] == '~' && this.lastElem)
             {
@@ -53,6 +62,47 @@ class Path
 
         if (typeof ret == 'undefined')
             console.log('incorrect coords '+name);
+
+        return ret;
+    }
+
+    parsePoint(name)
+    {
+        var ret = {};
+
+        if (typeof name == 'string')
+            name = name.split(':');
+
+        if (name.length >= 2)
+            ret.id = name[1];
+
+        var pt = name[0];
+        if ((pt[0] == '+' || pt[0] == '-') && this.lastElem)
+        {
+            if (this.curDir == 'H')
+            {
+                ret.x = this.lastElem.gPt.x + parseInt(pt);
+                ret.y = this.lastElem.gPt.y;
+            }
+            else
+            {
+                ret.x = this.lastElem.gPt.x;
+                ret.y = this.lastElem.gPt.y + parseInt(pt);
+            }
+        }
+        else
+        {
+            if (this.curDir == 'H')
+            {
+                ret.x = isNaN(pt) ? colInfo[pt] : parseInt(pt);
+                ret.y = this.lastElem.gPt.y;
+            }
+            else
+            {
+                ret.x = this.lastElem.gPt.x;
+                ret.y = isNaN(pt) ? rowInfo[pt] : parseInt(pt);
+            }
+        }
 
         return ret;
     }
@@ -74,11 +124,12 @@ class Path
         elem.next = null;
         this.path.push(elem);
         this.pathByG[elem.gPt.x+'G'+elem.gPt.y] = elem;
+        if (elem.gPt.id) this.rootPath.pathById[elem.gPt.id] = elem;
         this.lastElem = elem;
         this.curDir = dir;
     }
 
-    checkTurn(gPt)
+    /*checkTurn(gPt)
     {
         // append a turn if we can't get to the requested point in a straight line
         var turnpt;
@@ -94,12 +145,12 @@ class Path
             return;
 
         this.appendTurn(turnpt);
-    }
+    }*/
 
     // append a simple path turn
     appendTurn(gPt)
     {
-        gPt = this.parseCoords(gPt);
+        gPt = this.parsePoint(gPt);
         var nextdir = (this.curDir == 'H') ? 'V' : 'H';
 
         var data = {
@@ -112,22 +163,23 @@ class Path
     // append a T junction (started as a new path)
     appendJunction(gPt)
     {
-        gPt = this.parseCoords(gPt);
+        gPt = this.parsePoint(gPt);
         var juncdir = (this.curDir == 'H') ? 'V' : 'H';
 
         // align the given point to the current path line
-        if (this.curDir == 'H')
+        /*if (this.curDir == 'H')
         {
             gPt.y = this.lastElem.gPt.y;
         }
         else
         {
             gPt.x = this.lastElem.gPt.x;
-        }
+        }*/
 
         var data = {
             type: 'junction',
-            gPt: gPt
+            gPt: gPt,
+            path: this
         };
 
         var junc = new Path(data, null, this.originType, gPt, juncdir);
@@ -138,15 +190,15 @@ class Path
     }
 
     // append a PIP
-    // gPt: coordinates of the PIP
+    // gPt: coordinate of the PIP along the current path axis
     // type: PIP type
     // - H->V, V->H: only allows turning in one direction
     // - ND: may allow turning in both directions depending on config (takes two data bits)
     // - BIDI: only allows travel if enabled
     appendPip(gPt, type=null)
     {
-        gPt = this.parseCoords(gPt);
-        this.checkTurn(gPt);
+        gPt = this.parsePoint(gPt);
+        //this.checkTurn(gPt);
 
         if (!type)
         {
@@ -186,17 +238,19 @@ class Path
             {
                 var coord = p;
                 if (coordparse) coord = coordparse(coord);
+
                 if (coord[0] == 'T')
                     this.appendTurn(coord.substring(2));
                 else
                     this.appendPip(coord);
             }
-            else
+            else if (Array.isArray(p))
             {
                 var coord = p[0];
                 if (coordparse) coord = coordparse(coord);
+
                 var branch = this.appendJunction(coord);
-                branch.appendPipList(p, coordparse, level+1);
+                branch.appendPipList(p.slice(1), coordparse, level+1);
             }
         });
     }

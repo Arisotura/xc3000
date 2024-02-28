@@ -69,42 +69,26 @@ class ClbDecoder {
 
   genCoords(name)
   {
-    var ret;
-
     name = name.replaceAll('**', this.tile)
+        .replaceAll('-*', letters[this.row-1]+this.tile[1])
+        .replaceAll('*-', this.tile[0]+letters[this.col-1])
+        .replaceAll('+*', letters[this.row+1]+this.tile[1])
+        .replaceAll('*+', this.tile[0]+letters[this.col+1])
         .replaceAll('col.*', 'col.'+this.tile[1])
-        .replaceAll('row.*', 'row.'+this.tile[0]);
+        .replaceAll('col.+', 'col.'+letters[this.col+1])
+        .replaceAll('row.*', 'row.'+this.tile[0])
+        .replaceAll('row.+', 'row.'+letters[this.row+1]);
 
-    if (name[0] == '+')
-    {
-      name = name.split(':');
-      var c1 = getGCoords(name[1]+':'+name[2]);
-      var c2 = getGCoords(name[3]+':'+name[4]);
-      ret = {x:c2.x, y:c1.y};
-    }
-    else if (name[0] == '~')
-    {
-      name = name.split(':');
-      ret = this.lastCoords;
-      if (typeof ret != undefined)
-      {
-        ret.x += parseInt(name[1]);
-        ret.y += parseInt(name[2]);
-      }
-    }
-    else
-      ret = getGCoords(name);
-
-    this.lastCoords = ret;
-    return ret;
+    return name;
   }
 
   generateClbPips()
   {
-    var tmp;
+    /*var tmp;
 
 
     this.diPath = new Path(this, 'DI', 'dest', {x:this.gPt.x,y:this.gPt.y-1}, 'H');
+
     tmp = this.diPath.appendJunction(this.genCoords('+:col.*.local.4:**.DI:row.*.long.2:**.DI'));
     if (this.row == 0)
     {
@@ -145,7 +129,51 @@ class ClbDecoder {
     }
     this.bPath.appendPip(this.genCoords('col.*.local.5:**.B'), 'H->V');
     this.bPath.appendPip(this.genCoords('col.*.local.3:**.B'), 'H->V');
-    this.bPath.appendPip(this.genCoords('col.*.local.1:**.B'), 'H->V');
+    this.bPath.appendPip(this.genCoords('col.*.local.1:**.B'), 'H->V');*/
+    var apips = [], ecpips = [],
+        dipips = [], bpips = [], cpips = [], kpips = [], epips = [],
+        dpips = [], rdpips = [],
+        xpips = [], ypips = [];
+
+    this.aPath = new Path(this, 'A', 'dest', {x: this.gPt.x + 3, y: this.gPt.y}, 'V');
+    this.ecPath = new Path(this, 'EC', 'dest', {x: this.gPt.x + 1, y: this.gPt.y}, 'V');
+    this.diPath = new Path(this, 'DI', 'dest', {x: this.gPt.x, y: this.gPt.y - 1}, 'H');
+    this.bPath = new Path(this, 'B', 'dest', {x: this.gPt.x, y: this.gPt.y - 3}, 'H');
+    this.cPath = new Path(this, 'C', 'dest', {x: this.gPt.x, y: this.gPt.y - 4}, 'H');
+    this.kPath = new Path(this, 'K', 'dest', {x: this.gPt.x, y: this.gPt.y - 6}, 'H');
+    this.ePath = new Path(this, 'E', 'dest', {x: this.gPt.x, y: this.gPt.y - 7}, 'H');
+    this.dPath = new Path(this, 'D', 'dest', {x: this.gPt.x + 1, y: this.gPt.y - 8}, 'V');
+    this.rdPath = new Path(this, 'RD', 'dest', {x: this.gPt.x + 2, y: this.gPt.y - 8}, 'V');
+    this.xPath = new Path(this, 'X', 'source', {x: this.gPt.x + 5, y: this.gPt.y - 2}, 'H');
+    this.yPath = new Path(this, 'Y', 'source', {x: this.gPt.x + 5, y: this.gPt.y - 5}, 'H');
+
+    //
+
+    if (this.col == 0)
+    {
+      /*if (this.row == 0)
+        apips.push('row.*.long.3:**.A', 'PAD1.I:**.A', // TODO not hardcode!!
+            'col.*.local.3:**.A', 'col.*.local.1:**.A');
+      else
+        apips.push(['col.*.local.3:**.A', 'col.*.local.1:**.A'],
+            'row.*.long.2:**.A', 'row.*.local.3:**.A', 'row.*.local.1:**.A', '**.A:-*.Y_A');*/
+    }
+    else
+    {
+      //
+    }
+
+    this.aPath.appendPipList(apips, this.genCoords.bind(this));
+    this.ecPath.appendPipList(ecpips, this.genCoords.bind(this));
+    this.diPath.appendPipList(dipips, this.genCoords.bind(this));
+    this.bPath.appendPipList(bpips, this.genCoords.bind(this));
+    this.cPath.appendPipList(cpips, this.genCoords.bind(this));
+    this.kPath.appendPipList(kpips, this.genCoords.bind(this));
+    this.ePath.appendPipList(epips, this.genCoords.bind(this));
+    this.dPath.appendPipList(dpips, this.genCoords.bind(this));
+    this.rdPath.appendPipList(rdpips, this.genCoords.bind(this));
+    this.xPath.appendPipList(xpips, this.genCoords.bind(this));
+    this.yPath.appendPipList(ypips, this.genCoords.bind(this));
   }
 
   startDecode() {
@@ -200,8 +228,17 @@ class ClbDecoder {
     ctx.lineTo(this.screenPt.x-2, this.screenPt.y+4);
     ctx.stroke();
 
+    this.aPath.draw(ctx);
+    this.ecPath.draw(ctx);
     this.diPath.draw(ctx);
     this.bPath.draw(ctx);
+    this.cPath.draw(ctx);
+    this.kPath.draw(ctx);
+    this.ePath.draw(ctx);
+    this.dPath.draw(ctx);
+    this.rdPath.draw(ctx);
+    this.xPath.draw(ctx);
+    this.yPath.draw(ctx);
   }
 
   render(ctx) {

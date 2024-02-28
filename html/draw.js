@@ -128,7 +128,7 @@ function initNames()
         rowInfo['row.' + name + '.local.6'] = g--;
         rowInfo['row.' + name + '.long.1'] = g--;
         rowInfo['row.' + name + '.long.2'] = g--;
-        rowInfo['row.' + name + '.local.7'] = g; g-=8;
+        rowInfo['row.' + name + '.local.7'] = g; g-=6;
         rowInfo['row.' + name + '.local.9'] = g; g-=2;
         rowInfo['row.' + name + '.local.8'] = g; g-=3;
         rowInfo['row.' + name + '.long.3'] = g;
@@ -185,7 +185,8 @@ function initNames()
           colInfo[fullname] = 35;
           if (row == 0)
           {
-              colInfo[fullname + '.A'] = 29;
+              colInfo[fullname + '.A'] = 38;
+              colInfo[fullname + '.A_2'] = 29;
               colInfo[fullname + '.EC'] = 28;
           }
           else
@@ -292,6 +293,7 @@ function initNames()
             rowInfo[fullname + '.A'] = rowoff + 42;
             if (col == 0)
             {
+                rowInfo[fullname + '.A'] = rowoff + 43;
                 rowInfo[fullname + '.X_O'] = rowoff + 41;
                 colInfo[fullname + '.Y_O'] = 42;
             }
@@ -438,6 +440,8 @@ function initNames()
             colInfo[fullname+'.O'] = cmaxG - 23 + (5*side);
             colInfo[fullname+'.Q'] = cmaxG - 22 + (3*side);
             colInfo[fullname+'.I'] = cmaxG - 21 + (1*side);
+
+            if (side) colInfo[fullname+'.O_X'] = cmaxG - 15;
         }
 
         pad++;

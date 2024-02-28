@@ -254,8 +254,6 @@ console.log(this);
 
     genCoords(name)
     {
-        var ret;
-
         name = name.replaceAll('PAD*', this.pad)
             .replaceAll('**', this.tile)
             .replaceAll('col.*', 'col.'+this.tile[1])
@@ -283,8 +281,8 @@ console.log(this);
             this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 3, y: this.gPt.y - 1}, 'V');
             this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 4, y: this.gPt.y - 1}, 'V');
 
-            okpips.push('row.*.local.10:PAD*.OK', 'row.*.local.11:PAD*.OK');
-            ikpips.push('row.*.local.10:PAD*.IK', 'row.*.local.11:PAD*.IK');
+            okpips.push('row.*.local.10:0', 'row.*.local.11:1');
+            ikpips.push('row.*.local.10:0', 'row.*.local.11:1');
         }
         else if (this.style == 'bottomleft' || this.style == 'bottomright')
         {
@@ -295,8 +293,8 @@ console.log(this);
             this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 3, y: this.gPt.y}, 'V');
             this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 4, y: this.gPt.y}, 'V');
 
-            okpips.push('row.+.local.6:PAD*.OK', 'row.+.local.7:PAD*.OK');
-            ikpips.push('row.+.local.6:PAD*.IK', 'row.+.local.7:PAD*.IK');
+            okpips.push('row.+.local.6:0', 'row.+.local.7:1');
+            ikpips.push('row.+.local.6:0', 'row.+.local.7:1');
         }
         else if (this.style == 'leftupper' || this.style == 'leftlower')
         {
@@ -308,8 +306,8 @@ console.log(this);
             this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 5, y: ybase - 2}, 'H');
             this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 5, y: ybase - 1}, 'H');
 
-            okpips.push('col.*.local.13:PAD*.OK', 'col.*.local.12:PAD*.OK');
-            ikpips.push('col.*.local.13:PAD*.IK', 'col.*.local.12:PAD*.IK');
+            okpips.push('col.*.local.13:0', 'col.*.local.12:1');
+            ikpips.push('col.*.local.13:0', 'col.*.local.12:1');
         }
         else if (this.style == 'rightupper' || this.style == 'rightlower')
         {
@@ -321,195 +319,200 @@ console.log(this);
             this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x, y: ybase - 2}, 'H');
             this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x, y: ybase - 1}, 'H');
 
-            okpips.push('col.+.local.6:PAD*.OK', 'col.+.local.7:PAD*.OK');
-            ikpips.push('col.+.local.6:PAD*.IK', 'col.+.local.7:PAD*.IK');
+            okpips.push('col.+.local.6:0', 'col.+.local.7:1');
+            ikpips.push('col.+.local.6:0', 'col.+.local.7:1');
         }
 
         if (this.style == 'topleft')
         {
-            opips.push('row.*.local.2:PAD*.O', 'row.*.local.4:PAD*.O');
+            opips.push('row.*.local.2:0', 'row.*.local.4:1');
             if (this.col == 0)
-                opips.push(['col.*.long.5:PAD*.O', 'col.*.long.3:PAD*.O'],
-                    'row.*.long.1:PAD*.O'); // , 'PAD*.O:GCLK.O'); // TODO
+                opips.push(['-2', 'col.*.long.5:4', 'col.*.long.3:5'],
+                    'row.*.long.1:2', '-2:3');
             else
-                opips.push('row.*.long.1:PAD*.O',
-                    'col.*.long.3:PAD*.O', 'col.*.long.1:PAD*.O',
-                    'col.*.local.5:PAD*.O', 'col.*.local.4:PAD*.O', 'col.*.local.1:PAD*.O');
+                opips.push('row.*.long.1:2',
+                    'T:-5', 'col.*.long.3:3', 'col.*.long.1:4',
+                    'col.*.local.5:5', 'col.*.local.4:6', 'col.*.local.1:7');
 
-            qpips.push('row.*.local.1:PAD*.Q', 'row.*.local.3:PAD*.Q');
+            qpips.push('row.*.local.1:0', 'row.*.local.3:1');
             if (this.col != 0)
-                qpips.push('col.*.local.5:PAD*.Q', 'col.*.local.2:PAD*.Q');
+                qpips.push('T:-10', 'col.*.local.5:2', 'col.*.local.2:3');
 
-            ipips.push('row.*.local.2:PAD*.I', 'row.*.local.4:PAD*.I');
+            ipips.push('row.*.local.2:0', 'row.*.local.4:1');
             if (this.col == 0)
-            {
-                //
-            }
+                ipips.push('row.*.local.5:2', '-7', '-2');
             else
-                ipips.push(['**.A:PAD*.I'], 'col.*.local.4:PAD*.I', 'col.*.local.1:PAD*.I');
+                ipips.push(['-10', this.col==maxcol?'+2':'+3'],
+                    'T:+0', 'col.*.local.4:2', 'col.*.local.1:3');
 
-            tpips.push('row.*.local.2:PAD*.T', 'row.*.local.4:PAD*.T', 'row.*.long.1:PAD*.T', 'row.*.long.2:PAD*.T');
+            tpips.push('row.*.local.2:0', 'row.*.local.4:1', 'row.*.long.1:2', 'row.*.long.2:3');
         }
         else if (this.style == 'topright')
         {
-            opips.push('row.*.local.1:PAD*.O', 'row.*.local.3:PAD*.O', 'row.*.local.5:PAD*.O',
-                'row.*.long.1:PAD*.O');
+            opips.push('row.*.local.1:0', 'row.*.local.3:1', 'row.*.local.5:2', 'row.*.long.1:3');
             if (this.col == maxcol)
-            {
-                //
-            }
+                opips.push('-2:4', '-7:5');
             else
-                opips.push('**.Y_O:PAD*.O', 'col.+.local.2:PAD*.O', 'col.+.local.3:PAD*.O', 'col.+.long.2:PAD*.O');
+                opips.push('T:-4', this.col==0?'+7:4':'+2:4',
+                    'col.+.local.2:5', 'col.+.local.3:6', 'col.+.long.2:7');
 
-            qpips.push('row.*.local.2:PAD*.Q', 'row.*.local.4:PAD*.Q');
+            qpips.push('row.*.local.2:0', 'row.*.local.4:1');
             if (this.col != maxcol)
-                qpips.push('col.+.local.1:PAD*.Q', 'col.+.local.4:PAD*.Q');
+                qpips.push('T:-6', 'col.+.local.1:2', 'col.+.local.4:3');
 
-            ipips.push('row.*.local.1:PAD*.I', 'row.*.local.3:PAD*.I');
+            ipips.push('row.*.local.1:0', 'row.*.local.3:1');
             if (this.col == maxcol)
-                ipips.push('row.*.local.5:PAD*.I');
+                ipips.push('row.*.local.5:2');
             else
-                ipips.push('col.+.local.2:PAD*.I', 'col.+.local.5:PAD*.I');
+                ipips.push('T:-6', 'col.+.local.2:2', 'col.+.local.5:3');
 
-            tpips.push('row.*.local.1:PAD*.T', 'row.*.local.3:PAD*.T', 'row.*.long.1:PAD*.T', 'row.*.long.2:PAD*.T');
+            tpips.push('row.*.local.1:0', 'row.*.local.3:1', 'row.*.long.1:2', 'row.*.long.2:3');
         }
         else if (this.style == 'bottomleft')
         {
-            opips.push('row.+.local.4:PAD*.O', 'row.+.local.2:PAD*.O');
             if (this.col == 0)
-                opips.push('row.+.long.3:PAD*.O', 'col.*.long.5:PAD*.O', 'col.*.long.3:PAD*.O');
+                opips.push('+1:0', 'row.+.local.4:1', 'row.+.local.2:2', 'row.+.long.3:3',
+                    'T:+7', 'col.*.long.5:4', 'col.*.long.3:5');
             else
-                opips.push(['col.*.long.3:PAD*.O', 'col.*.long.1:PAD*.O',
-                    'col.*.local.5:PAD*.O', 'col.*.local.4:PAD*.O', 'col.*.local.1:PAD*.O'],
-                    'row.+.long.3:PAD*.O');
+                opips.push('row.+.local.4:0', 'row.+.local.2:1',
+                    ['+3', 'col.*.long.3:3', 'col.*.long.1:4',
+                    'col.*.local.5:5', 'col.*.local.4:6', 'col.*.local.1:7'],
+                    'row.+.long.3:2');
 
-            qpips.push('row.+.local.5:PAD*.Q', 'row.+.local.3:PAD*.Q');
+            qpips.push('row.+.local.5:0', 'row.+.local.3:1');
             if (this.col != 0)
-                qpips.push('col.*.local.2:PAD*.Q', 'col.*.local.5:PAD*.Q');
+                qpips.push('T:+7', 'col.*.local.2:2', 'col.*.local.5:3');
 
-            ipips.push('row.+.local.4:PAD*.I', 'row.+.local.2:PAD*.I');
+            ipips.push('row.+.local.4:0', 'row.+.local.2:1');
             if (this.col == 0)
-                ipips.push('row.+.local.1:PAD*.I', 'PAD*.I:**.D');
+                ipips.push('row.+.local.1:2', '+15');
             else
-                ipips.push(['col.*.local.1:PAD*.I', 'col.*.local.4:PAD*.I'], 'PAD*.I:**.D');
+                ipips.push('T:+7', [this.col==maxcol?'-1':'+0', '+9'],
+                    'col.*.local.1:2', 'col.*.local.4:3');
 
-            tpips.push('row.+.local.4:PAD*.T', 'row.+.local.2:PAD*.T', 'row.+.long.3:PAD*.T', 'row.+.long.2:PAD*.T');
+            tpips.push('row.+.local.4:0', 'row.+.local.2:1', 'row.+.long.3:2', 'row.+.long.2:3');
         }
         else if (this.style == 'bottomright')
         {
-            opips.push('row.+.local.5:PAD*.O', 'row.+.local.3:PAD*.O', 'row.+.local.1:PAD*.O',
-                'row.+.long.3:PAD*.O');
-            // TODO connection to upper Y
-            if (this.col != maxcol)
-                opips.push('col.+.local.2:PAD*.O', 'col.+.local.3:PAD*.O', 'col.+.long.2:PAD*.O');
-
-            qpips.push('row.+.local.4:PAD*.Q', 'row.+.local.2:PAD*.Q');
-            if (this.col != maxcol)
-                qpips.push('col.+.local.1:PAD*.Q', 'col.+.local.4:PAD*.Q');
-
-            ipips.push('row.+.local.5:PAD*.I', 'row.+.local.3:PAD*.I');
             if (this.col == maxcol)
-                ipips.push('row.+.local.1:PAD*.I'); // TODO clock connect
+                opips.push('+1:0', 'row.+.local.5:1', 'row.+.local.3:2', 'row.+.local.1:3', 'row.+.long.3:4',
+                    'T:+4', '+1:5');
             else
-                ipips.push('col.+.local.2:PAD*.I', 'col.+.local.5:PAD*.I');
+                opips.push('row.+.local.5:0', 'row.+.local.3:1', 'row.+.local.1:2', 'row.+.long.3:3',
+                    'T:+6', this.col==0?'+6:4':'+1:4');
 
-            tpips.push('row.+.local.5:PAD*.T', 'row.+.local.3:PAD*.T', 'row.+.long.3:PAD*.T', 'row.+.long.2:PAD*.T');
+            qpips.push('row.+.local.4:0', 'row.+.local.2:1');
+            if (this.col != maxcol)
+                qpips.push('T:+9', 'col.+.local.1:2', 'col.+.local.4:3');
+
+            ipips.push('row.+.local.5:0', 'row.+.local.3:1');
+            if (this.col == maxcol)
+                ipips.push('row.+.local.1:2', '+13');
+            else
+                ipips.push('T:+9', 'col.+.local.2:2', 'col.+.local.5:3');
+
+            tpips.push('row.+.local.5:0', 'row.+.local.3:1', 'row.+.long.3:2', 'row.+.long.2:3');
         }
         else if (this.style == 'leftupper')
         {
-            // TODO clock connect for upper IOB
-            opips.push('col.*.local.1:PAD*.O', 'col.*.local.4:PAD*.O');
             if (this.row == 0)
-                opips.push('col.*.local.1:PAD*.O', 'col.*.local.4:PAD*.O');
+                opips.push('+1:0', 'col.*.local.1:1', 'col.*.local.4:2',
+                    ['+2', 'row.*.long.3:5'], 'col.*.long.1:3', 'col.*.long.4:4');
             else
-                opips.push('col.*.local.1:PAD*.O', 'col.*.local.4:PAD*.O', 'col.*.long.1:PAD*.O',
-                    'row.*.long.2:PAD*.O', 'row.*.local.5:PAD*.O', 'row.*.local.3:PAD*.O', 'row.*.local.1:PAD*.O');
+                opips.push('col.*.local.1:0', 'col.*.local.4:1', 'col.*.long.1:2',
+                    'T:+15', 'row.*.long.2:3', 'row.*.local.5:4', 'row.*.local.3:5', 'row.*.local.1:6');
 
-            qpips.push('col.*.local.2:PAD*.Q', 'col.*.local.5:PAD*.Q');
+            qpips.push('col.*.local.2:0', 'col.*.local.5:1');
             if (this.row != 0)
-                qpips.push('row.*.local.4:PAD*.Q', 'row.*.local.2:PAD*.Q');
+                qpips.push('T:+17', 'row.*.local.4:2', 'row.*.local.2:3');
 
-            ipips.push('col.*.local.1:PAD*.I', 'col.*.local.4:PAD*.I');
             if (this.row == 0)
-            {}
+                ipips.push('col.*.local.1:0', 'col.*.local.3:1', 'col.*.local.4:2',
+                    '+9', 'T:+6', 'T:-7', 'T:+2', '-7');
             else
-                ipips.push(['PAD*.I:**.B'], 'row.*.local.5:PAD*.I', 'row.*.local.3:PAD*.I');
+                ipips.push('col.*.local.1:0', 'col.*.local.4:1',
+                    ['+17', '-7'], 'T:+0', 'row.*.local.5:2', 'row.*.local.3:3');
 
-            tpips.push('col.*.local.1:PAD*.T', 'col.*.local.4:PAD*.T', 'col.*.long.1:PAD*.T', 'col.*.long.2:PAD*.T');
+            tpips.push('col.*.local.1:0', 'col.*.local.4:1', 'col.*.long.1:2', 'col.*.long.2:3');
         }
         else if (this.style == 'leftlower')
         {
             if (this.row != maxrow)
             {
-                opips.push('T:~:3:0');
-                qpips.push('T:~:4:0');
-                tpips.push('T:~:3:0');
+                opips.push('T:+3', 'T:-4');
+                qpips.push('T:+4', 'T:-2');
+                tpips.push('T:+3', 'T:+1');
             }
             else
-                tpips.push('T:~:4:0');
+                tpips.push('T:+4', 'T:+2');
 
-            opips.push('col.*.local.2:PAD*.O', 'col.*.local.3:PAD*.O', 'col.*.local.5:PAD*.O', 'col.*.long.1:PAD*.O');
+            opips.push('col.*.local.2:0', 'col.*.local.3:1', 'col.*.local.5:2', 'col.*.long.1:3');
             if (this.row == maxrow)
-                opips.push('col.*.long.4:PAD*.O', 'row.+.long.1:PAD*.O', 'PAD*.O:**.X_O');
+                opips.push('col.*.long.4:6', 'T:+3', 'row.+.long.1:5', '+16:4');
             else
-                opips.push(['PAD*.O:**.X_O'], 'row.+.long.1:PAD*.O', 'row.+.local.2:PAD*.O', 'row.+.local.4:PAD*.O');
+                opips.push(['+10', this.row==0?'+15:4':'+13:4'],
+                    'T:+0', 'row.+.long.1:5', 'row.+.local.2:6', 'row.+.local.4:7');
 
-            qpips.push('col.*.local.1:PAD*.Q', 'col.*.local.4:PAD*.Q');
+            qpips.push('col.*.local.1:0', 'col.*.local.4:1');
             if (this.row != maxrow)
-                qpips.push('row.+.local.3:PAD*.Q', 'row.+.local.5:PAD*.Q');
+                qpips.push('T:+15', 'row.+.local.3:2', 'row.+.local.5:3');
 
             if (this.row == maxrow)
-                ipips.push('col.*.local.2:PAD*.I', 'col.*.local.3:PAD*.I', 'col.*.local.5:PAD*.I');
+                ipips.push('col.*.local.2:0', 'col.*.local.3:1', 'col.*.local.5:2');
             else
-                ipips.push('col.*.local.2:PAD*.I', 'col.*.local.5:PAD*.I',
-                    'row.+.local.2:PAD*.I', 'row.+.local.4:PAD*.I');
+                ipips.push('col.*.local.2:0', 'col.*.local.5:1',
+                    'T:+15', 'row.+.local.2:2', 'row.+.local.4:3');
 
-            tpips.push('col.*.local.2:PAD*.T', 'col.*.local.3:PAD*.T', 'col.*.long.1:PAD*.T', 'col.*.long.2:PAD*.T');
+            tpips.push('col.*.local.2:0', 'col.*.local.3:1', 'col.*.long.1:2', 'col.*.long.2:3');
         }
         else if (this.style == 'rightupper')
         {
-            opips.push('col.+.local.4:PAD*.O', 'col.+.local.1:PAD*.O', 'col.+.long.2:PAD*.O', '**.Y_O:PAD*.O');
+            opips.push('col.+.local.4:0', 'col.+.local.1:1', 'col.+.long.2:2', '-2:3');
             if (this.row == 0)
-                opips.push('row.*.long.3:PAD*.O');
+                opips.push('T:-2', 'row.*.long.3:4');
             else
-                opips.push('row.*.long.2:PAD*.O', 'row.*.local.5:PAD*.O', 'row.*.local.3:PAD*.O', 'row.*.local.1:PAD*.O');
+                opips.push('T:-5', 'row.*.long.2:4', 'row.*.local.5:5', 'row.*.local.3:6', 'row.*.local.1:7');
 
-            qpips.push('col.+.local.5:PAD*.Q', 'col.+.local.2:PAD*.Q');
+            qpips.push('col.+.local.5:0', 'col.+.local.2:1');
             if (this.row != 0)
-                qpips.push('row.*.local.4:PAD*.Q', 'row.*.local.2:PAD*.Q');
+                qpips.push('T:-9', 'row.*.local.4:2', 'row.*.local.2:3');
 
             if (this.row == 0)
-                ipips.push('col.+.local.4:PAD*.I', 'col.+.local.3:PAD*.I', 'col.+.local.1:PAD*.I');//, 'PAD*.O:**.I_C');
+                ipips.push('col.+.local.4:0', 'col.+.local.3:1', 'col.+.local.1:2',
+                    'T:-7', 'T:-9', 'T:-12', '-5');
             else
-                ipips.push('col.+.local.4:PAD*.I', 'col.+.local.1:PAD*.I',
-                    /*['T:~:0:-3', 'PAD*.O:**.I_C'],*/
-                    'row.*.local.5:PAD*.I', 'row.*.local.3:PAD*.I');
+                ipips.push('col.+.local.4:0', 'col.+.local.1:1',
+                    ['-7', 'T:-3', 'T:-12', '-5'],
+                    'T:+0', 'row.*.local.5:2', 'row.*.local.3:3');
 
-            tpips.push('col.+.local.4:PAD*.T', 'col.+.local.1:PAD*.T', 'col.+.long.2:PAD*.T', 'col.+.long.1:PAD*.T');
+            tpips.push('col.+.local.4:0', 'col.+.local.1:1', 'col.+.long.2:2', 'col.+.long.1:3');
         }
         else if (this.style == 'rightlower')
         {
             if (this.row != maxrow)
             {
-                opips.push('T:~:-2:0');
-                tpips.push('T:~:-2:0');
+                opips.push('T:-2', 'T:-1');
+                tpips.push('T:-2', 'T:+1');
 
-                opips.push('col.+.local.5:PAD*.O', 'col.+.local.3:PAD*.O', 'col.+.local.2:PAD*.O',
-                    /*['PAD*.O:**.X'],*/ 'col.+.long.2:PAD*.O',
-                    'row.+.long.1:PAD*.O', 'row.+.local.2:PAD*.O', 'row.+.local.4:PAD*.O');
+                opips.push('col.+.local.5:0', 'col.+.local.3:1', 'col.+.local.2:2',
+                    ['-2', '+4:3'], 'col.+.long.2:4',
+                    'T:-2', 'row.+.long.1:5', 'row.+.local.2:6', 'row.+.local.4:7');
             }
+            else
+                opips.push('-1:0', 'col.+.local.5:1', 'col.+.local.3:2', 'col.+.local.2:3', 'col.+.long.2:4',
+                    'T:-3', 'row.+.long.1:5', '-9:6')
 
-            qpips.push('col.+.local.4:PAD*.Q', 'col.+.local.1:PAD*.Q');
+            qpips.push('col.+.local.4:0', 'col.+.local.1:1');
             if (this.row != maxrow)
-                qpips.push('row.+.local.3:PAD*.Q', 'row.+.local.5:PAD*.Q');
+                qpips.push('T:-5', 'row.+.local.3:2', 'row.+.local.5:3');
 
             if (this.row == maxrow)
-                ipips.push('col.+.local.5:PAD*.I', 'col.+.local.3:PAD*.I', 'col.+.local.2:PAD*.I'); // TODO clock thing
+                ipips.push('col.+.local.5:0', 'col.+.local.3:1', 'col.+.local.2:2', '-8');
             else
-                ipips.push('col.+.local.5:PAD*.I', 'col.+.local.2:PAD*.I',
-                    'row.+.local.2:PAD*.I', 'row.+.local.4:PAD*.I');
+                ipips.push('col.+.local.5:0', 'col.+.local.2:1',
+                    'T:-7', 'row.+.local.2:2', 'row.+.local.4:3');
 
-            tpips.push('col.+.local.5:PAD*.T', 'col.+.local.3:PAD*.T', 'col.+.long.2:PAD*.T', 'col.+.long.1:PAD*.T');
+            tpips.push('col.+.local.5:0', 'col.+.local.3:1', 'col.+.long.2:2', 'col.+.long.1:3');
         }
 
         this.okPath.appendPipList(okpips, this.genCoords.bind(this));
