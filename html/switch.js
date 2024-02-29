@@ -15,7 +15,7 @@ class SwitchDecoders
                 if ((i == fam.rows) && (j == 0 || j == fam.cols)) continue; // Bottom corners
 
                 const name = letters[i] + letters[j] + '.20.1';
-                const sw = new Switch(name);
+                const sw = new Switch(i, j, name);
                 this.switches[name] = sw;
             }
         }
@@ -55,8 +55,10 @@ class SwitchDecoders
  */
 class Switch
 {
-    constructor(name)
+    constructor(row, col, name)
     {
+        this.row = row;
+        this.col = col;
         this.name = name;
         this.tilename = name[0] + name[1];
         this.num = parseInt(name[5], 10);
@@ -111,14 +113,26 @@ class Switch
         ctx.beginPath();
         for (var i = 1; i <= 5; i++)
         {
-            ctx.moveTo(this.screenPt.x+(i*4), this.screenPt.y);
-            ctx.lineTo(this.screenPt.x+(i*4), this.screenPt.y-2);
-            ctx.moveTo(this.screenPt.x+(i*4), this.screenPt.y+this.H);
-            ctx.lineTo(this.screenPt.x+(i*4), this.screenPt.y+this.H+2);
-            ctx.moveTo(this.screenPt.x, this.screenPt.y+(i*4));
-            ctx.lineTo(this.screenPt.x-2, this.screenPt.y+(i*4));
-            ctx.moveTo(this.screenPt.x+this.W, this.screenPt.y+(i*4));
-            ctx.lineTo(this.screenPt.x+this.W+2, this.screenPt.y+(i*4));
+            if (this.row != 0)
+            {
+                ctx.moveTo(this.screenPt.x + (i * 4), this.screenPt.y);
+                ctx.lineTo(this.screenPt.x + (i * 4), this.screenPt.y - 2);
+            }
+            if (this.row != curBitstream.family.rows)
+            {
+                ctx.moveTo(this.screenPt.x + (i * 4), this.screenPt.y + this.H);
+                ctx.lineTo(this.screenPt.x + (i * 4), this.screenPt.y + this.H + 2);
+            }
+            if (this.col != 0)
+            {
+                ctx.moveTo(this.screenPt.x, this.screenPt.y + (i * 4));
+                ctx.lineTo(this.screenPt.x - 2, this.screenPt.y + (i * 4));
+            }
+            if (this.col != curBitstream.family.cols)
+            {
+                ctx.moveTo(this.screenPt.x + this.W, this.screenPt.y + (i * 4));
+                ctx.lineTo(this.screenPt.x + this.W + 2, this.screenPt.y + (i * 4));
+            }
         }
         ctx.stroke();
     }
