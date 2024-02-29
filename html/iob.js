@@ -399,7 +399,7 @@ console.log(this);
                     'T:+4', '+1:5');
             else
                 opips.push('row.+.local.5:0', 'row.+.local.3:1', 'row.+.local.1:2', 'row.+.long.3:3',
-                    'T:+6', this.col==0?'+6:4':'+1:4');
+                    'T:+6', this.col==0?'+6:4':'+1:4', 'col.+.local.2:5', 'col.+.local.3:6', 'col.+.long.2:7');
 
             qpips.push('row.+.local.4:0', 'row.+.local.2:1');
             if (this.col != maxcol)
