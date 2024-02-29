@@ -122,8 +122,12 @@ class ClbDecoder {
             ['+5', 'col.*.local.3:5', 'col.*.local.1:4'],
             '+1:0', 'row.*.local.3:2', 'row.*.local.1:1');
 
-        ecpips.push(['+5', 'col.*.long.1:3', 'col.*.local.3:2'],
-            'T:+7', 'T:-8', 'row.*.local.5:1', 'row.*.local.2:0');
+        ecpips.push(['+5', 'col.*.long.1:3', 'col.*.local.3:2']);
+        if (this.col == maxcol)
+          ecpips.push('T:+0', 'T:+1', 'T:+7', 'T:-9');
+        else
+          ecpips.push('T:+7', 'T:-8');
+        ecpips.push('row.*.local.5:1', 'row.*.local.2:0');
       }
 
       dipips.push([this.col==0?'-14':'-8', 'row.*.long.2:3', 'row.*.local.5:2'],
