@@ -315,9 +315,9 @@ function initDecoders() {
   //bidiDecoder = new BidiDecoder();
   //otherDecoder = new OtherDecoder();
   clbDecoders = new ClbDecoders;
-  //switchDecoders = new SwitchDecoders();
+  switchDecoders = new SwitchDecoders();
   //decoders = [iobDecoders, pipDecoder, bidiDecoder, otherDecoder, clbDecoders, switchDecoders];
-  decoders = [pipDecoder, iobDecoders, clbDecoders];
+  decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders];
   decoders.forEach(d => d.startDecode());
 }
 
@@ -570,126 +570,6 @@ class BidiDecoder {
 
   render(ctx) {
   }
-}
-
-class SwitchDecoders {
-  constructor() {
-    this.switches = {};
-    this.switchesFromG = {};
-    for (let i = 0; i < 11; i++) {
-      for (let j = 0; j < 11; j++) {
-        if ((i == 0) && (j == 0 || j == 10)) continue; // Top corners
-        if ((i == 10) && (j == 0 || j == 10)) continue; // Bottom corners
-        for (let num = 1; num <= 2; num++) {
-          const name = "ABCDEFGHIJK"[i] + "ABCDEFGHIJK"[j] + ".8." + num;
-          const sw = new Switch(name);
-          this.switches[name] = sw;
-          //console.log('init switch: '+sw.gPt[0] + "G" + sw.gPt[1]);
-          this.switchesFromG[sw.gPt[0] + "G" + sw.gPt[1]] = sw;
-        }
-      }
-    }
-  }
-
-  startDecode() {
-    Object.entries(this.switches).forEach(([k, s]) => s.startDecode());
-  }
-
-  doConnect() {
-    for (let i = 0; i < 11; i++) {
-      for (let j = 0; j < 11; j++) {
-        if ((i == 0) && (j == 0 || j == 10)) continue; // Top corners
-        if ((i == 10) && (j == 0 || j == 10)) continue; // Bottom corners
-        for (let num = 1; num <= 2; num++) {
-          const name = "ABCDEFGHIJK"[i] + "ABCDEFGHIJK"[j] + ".8." + num;
-          //const sw = new Switch(name);
-          //this.switches[name] = sw;
-          //console.log('init switch: '+sw.gPt[0] + "G" + sw.gPt[1]);
-          //this.switchesFromG[sw.gPt[0] + "G" + sw.gPt[1]] = sw;
-
-          if (i > 0)
-          {
-            // top
-            const coname = "ABCDEFGHIJK"[i-1] + "ABCDEFGHIJK"[j] + ".8." + num;
-            this.switches[name].doConnect(0, this.switches[coname]);
-          }
-          /*if (i < 10)
-          {
-            // bottom
-            const coname = "ABCDEFGHIJK"[i+1] + "ABCDEFGHIJK"[j] + ".8." + num;
-            this.switches[name].doConnect(4, this.switches[coname]);
-          }*/
-          if (j > 0)
-          {
-            // left
-            const coname = "ABCDEFGHIJK"[i] + "ABCDEFGHIJK"[j-1] + ".8." + num;
-            this.switches[name].doConnect(6, this.switches[coname]);
-          }
-          /*if (j < 10)
-          {
-            // right
-            const coname = "ABCDEFGHIJK"[i] + "ABCDEFGHIJK"[j+1] + ".8." + num;
-            this.switches[name].doConnect(2, this.switches[coname]);
-          }*/
-        }
-      }
-    }
-  }
-
-  getFromG(name) {
-    return this.switchesFromG[name];
-  }
-
-  get(name) {
-    return this.switches[name];
-  }
-
-  decode() {}
-
-  render(ctx) {
-    Object.entries(this.switches).forEach(([name, obj]) => obj.render(ctx));
-  }
-
-  // get switch and corresponding pin number for the given G
-  getFromPinG(coord, dir)
-  {
-    // sw Y=207: 204 for lower, 205 for upper
-    // sw X=5: 5 for leftmost 6 for rightmost
-
-    var self = this;
-    var tmp = coord.split('G');
-    var tmp2 = [parseInt(tmp[0]), parseInt(tmp[1])];
-
-    var chkcoords = [];
-    if (dir == '-')
-    {
-      chkcoords.push([tmp2[0]+1, tmp2[1]+1, 8]);
-      chkcoords.push([tmp2[0]+1, tmp2[1]+2, 7]);
-      chkcoords.push([tmp2[0]-2, tmp2[1]+1, 3]);
-      chkcoords.push([tmp2[0]-2, tmp2[1]+2, 4]);
-    }
-    else if (dir == '|')
-    {
-      chkcoords.push([tmp2[0], tmp2[1], 1]);
-      chkcoords.push([tmp2[0], tmp2[1]+3, 6]);
-      chkcoords.push([tmp2[0]-1, tmp2[1], 2]);
-      chkcoords.push([tmp2[0]-1, tmp2[1]+3, 5]);
-    }
-
-    var ret = undefined;
-    chkcoords.forEach(function(chk)
-    {
-      var g = chk[0] + 'G' + chk[1];
-      //console.log('CHECKING '+g+' FOR SWITCH (wouldbe '+coord+')');
-      var sw = self.switchesFromG[g];
-      if (typeof sw == 'undefined') return;
-//console.log('FOUND! '+g+' FOR SWITCH (wouldbe '+coord+')');
-      ret = [sw, chk[2]];
-    });
-
-    return ret;
-  }
-
 }
 
 
