@@ -500,7 +500,7 @@ console.log(this);
             }
             else
                 opips.push('-1:0', 'col.+.local.5:1', 'col.+.local.3:2', 'col.+.local.2:3', 'col.+.long.2:4',
-                    'T:-3', 'row.+.long.1:5', '-9:6')
+                    'T:-3', 'row.+.long.1:5', '+9:6')
 
             qpips.push('col.+.local.4:0', 'col.+.local.1:1');
             if (this.row != maxrow)

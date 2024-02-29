@@ -70,10 +70,10 @@ class ClbDecoder {
   genCoords(name)
   {
     name = name.replaceAll('**', this.tile)
-        .replaceAll('-*', letters[this.row-1]+this.tile[1])
+        /*.replaceAll('-*', letters[this.row-1]+this.tile[1])
         .replaceAll('*-', this.tile[0]+letters[this.col-1])
         .replaceAll('+*', letters[this.row+1]+this.tile[1])
-        .replaceAll('*+', this.tile[0]+letters[this.col+1])
+        .replaceAll('*+', this.tile[0]+letters[this.col+1])*/
         .replaceAll('col.*', 'col.'+this.tile[1])
         .replaceAll('col.+', 'col.'+letters[this.col+1])
         .replaceAll('row.*', 'row.'+this.tile[0])
@@ -84,52 +84,6 @@ class ClbDecoder {
 
   generateClbPips()
   {
-    /*var tmp;
-
-
-    this.diPath = new Path(this, 'DI', 'dest', {x:this.gPt.x,y:this.gPt.y-1}, 'H');
-
-    tmp = this.diPath.appendJunction(this.genCoords('+:col.*.local.4:**.DI:row.*.long.2:**.DI'));
-    if (this.row == 0)
-    {
-      tmp.appendPip(this.genCoords('row.*.long.2:**.DI'), 'V->H');
-      tmp.appendPip(this.genCoords('row.*.local.5:**.DI'), 'V->H');
-    }
-    else
-    {
-      tmp.appendPip(this.genCoords('row.*.local.5:**.DI'), 'V->H');
-      tmp.appendPip(this.genCoords('row.*.long.1:**.DI'), 'V->H');
-    }
-    this.diPath.appendPip(this.genCoords('col.*.local.4:**.DI'), 'H->V');
-    this.diPath.appendPip(this.genCoords('col.*.local.1:**.DI'), 'H->V');
-
-
-    this.bPath = new Path(this, 'B', 'dest', {x:this.gPt.x,y:this.gPt.y-3}, 'H');
-    if (this.col == 0)
-    {
-      // TODO
-    }
-    else
-    {
-      this.bPath.appendPip(this.genCoords(this.tileLeft+'.X_B:**.B'), 'H->V');
-      this.bPath.appendPip(this.genCoords('col.*.long.1:**.B'), 'H->V');
-      if (this.row == 0)
-      {
-        tmp = this.bPath.appendJunction(this.genCoords('+:col.*.local.5:**.B:row.*.local.4:**.B'));
-      }
-      else
-      {
-        tmp = this.bPath.appendJunction(this.genCoords('~:-1:0'));
-        tmp.appendTurn(this.genCoords('~:0:7'));
-        tmp.appendTurn(this.genCoords('~:11:0'));
-      }
-      tmp.appendPip(this.genCoords('row.*.local.4:**.B'), 'V->H');
-      tmp.appendPip(this.genCoords('row.*.local.2:**.B'), 'V->H');
-      tmp.appendPip(this.genCoords('row.*.local.1:**.B'), 'V->H');
-    }
-    this.bPath.appendPip(this.genCoords('col.*.local.5:**.B'), 'H->V');
-    this.bPath.appendPip(this.genCoords('col.*.local.3:**.B'), 'H->V');
-    this.bPath.appendPip(this.genCoords('col.*.local.1:**.B'), 'H->V');*/
     var maxcol = curBitstream.family.cols-1;
     var maxrow = curBitstream.family.rows-1;
 
@@ -150,24 +104,28 @@ class ClbDecoder {
     this.xPath = new Path(this, 'X', 'source', {x: this.gPt.x + 5, y: this.gPt.y - 2}, 'H');
     this.yPath = new Path(this, 'Y', 'source', {x: this.gPt.x + 5, y: this.gPt.y - 5}, 'H');
 
-    //
-
-    if (this.col == 0)
-    {
-      /*if (this.row == 0)
-        apips.push('row.*.long.3:**.A', 'PAD1.I:**.A', // TODO not hardcode!!
-            'col.*.local.3:**.A', 'col.*.local.1:**.A');
-      else
-        apips.push(['col.*.local.3:**.A', 'col.*.local.1:**.A'],
-            'row.*.long.2:**.A', 'row.*.local.3:**.A', 'row.*.local.1:**.A', '**.A:-*.Y_A');*/
-    }
-    else
-    {
-      //
-    }
-
     if (this.row == 0)
     {
+      if (this.col == 0)
+      {
+        apips.push('row.*.long.3:3', 'T:+6', '-6:0',
+            ['-3', 'row.*.local.3:2', 'row.*.local.1:1'],
+            'col.*.local.3:5', 'col.*.local.1:4');
+
+        ecpips.push('T:+3', 'T:+1', 'T:+6',
+            ['-4', 'T:-4', 'col.*.long.3:3', 'col.*.local.3:2'],
+            'T:-5', 'row.*.local.5:1', 'row.*.local.2:0');
+      }
+      else
+      {
+        apips.push('row.*.long.3:3',
+            ['+5', 'col.*.local.3:5', 'col.*.local.1:4'],
+            '+1:0', 'row.*.local.3:2', 'row.*.local.1:1');
+
+        ecpips.push(['+5', 'col.*.long.1:3', 'col.*.local.3:2'],
+            'T:+7', 'T:-8', 'row.*.local.5:1', 'row.*.local.2:0');
+      }
+
       dipips.push([this.col==0?'-14':'-8', 'row.*.long.2:3', 'row.*.local.5:2'],
           'col.*.local.4:1', 'col.*.local.1:0');
 
@@ -177,8 +135,15 @@ class ClbDecoder {
     }
     else
     {
+      apips.push([this.col==0?'+8':'+5', 'col.*.local.3:5', 'col.*.local.1:4'],
+          'row.*.long.2:3', 'row.*.local.3:2', 'row.*.local.1:1', this.col==0?'+2:0':'+6:0');
+
       dipips.push([this.col==0?'-14':'-8', 'row.*.local.5:2', 'row.*.long.1:3'],
           'col.*.local.4:1', 'col.*.local.1:0');
+
+      ecpips.push('T:+6',
+          ['-1', 'row.*.local.5:1', 'row.*.local.2:0'],
+          this.col==0?'col.*.long.3:3':'col.*.long.1:3', 'col.*.local.3:2');
 
       if (this.col == 0)
       {
@@ -188,9 +153,14 @@ class ClbDecoder {
       }
       else
       {
-        bpips.push('-2:4', 'col.*.long.1:3',
-            ['-1', 'T:+7', 'T:+11', 'row.*.local.4:5', 'row.*.local.2:6', 'row.*.local.1:7'],
-            'col.*.local.5:2', 'col.*.local.3:1', 'col.*.local.1:0');
+        if (this.row == maxrow)
+          bpips.push('col.*.long.1:3',
+              ['-1', 'T:+7', 'T:+11', 'row.*.local.4:5', 'row.*.local.2:6', 'row.*.local.1:7'],
+              'col.*.local.8:4', 'col.*.local.5:2', 'col.*.local.3:1', 'col.*.local.1:0');
+        else
+          bpips.push('-2:4', 'col.*.long.1:3',
+              ['-1', 'T:+7', 'T:+11', 'row.*.local.4:5', 'row.*.local.2:6', 'row.*.local.1:7'],
+              'col.*.local.5:2', 'col.*.local.3:1', 'col.*.local.1:0');
       }
     }
 
@@ -204,11 +174,26 @@ class ClbDecoder {
       {
         kpips.push('col.*.long.6:1', 'col.*.long.5:2', ['-3', 'row.+.local.2:3'], 'col.*.local.2:0');
         epips.push(['-2', 'T:-11', 'T:-4', 'row.+.local.5:3'], 'col.*.long.4:2', 'col.*.local.5:1', 'col.*.local.3:0');
+
+        dpips.push('T:-2',
+            ['-2', 'row.+.long.1:2', 'row.+.local.2:5', 'row.+.local.4:4'],
+            '-2:3', 'col.*.local.4:1', 'col.*.local.2:0');
+
+        rdpips.push('T:-1', 'col.*.long.3:1',
+            ['-4', 'row.+.long.2:3', 'row.+.local.3:2'],
+            'col.*.local.4:0');
       }
       else
       {
         kpips.push('col.*.long.3:2', ['-3', 'row.+.local.2:3'], 'col.*.long.0:1', 'col.*.local.2:0');
         epips.push('col.*.long.2:2', ['-3', 'row.+.local.5:3'], 'col.*.local.5:1', 'col.*.local.3:0');
+
+        dpips.push('T:-2', '-1:3',
+            ['-8', 'row.+.long.1:2', 'row.+.local.2:5', 'row.+.local.4:4'],
+            'col.*.local.4:1', 'col.*.local.2:0');
+
+        rdpips.push(['-1', 'T:+1', 'row.+.long.2:3', 'row.+.local.3:2'],
+            'T:+0', 'col.*.long.1:1', 'col.*.local.4:0');
       }
     }
     else
@@ -221,15 +206,75 @@ class ClbDecoder {
       {
         kpips.push('col.*.long.6:1', 'col.*.long.5:2', ['-3', 'row.+.local.4:3'], 'col.*.local.2:0');
         epips.push(['-3', 'row.+.local.1:3'], 'col.*.long.4:2', 'col.*.local.5:1', 'col.*.local.3:0');
+
+        dpips.push(['-3', 'col.*.local.4:1', 'col.*.local.2:0'],
+            'row.+.long.1:2', 'row.+.local.6:3', 'row.+.local.2:4', 'row.+.local.4:5');
       }
       else
       {
         kpips.push(['-1', 'row.+.local.4:3'], 'col.*.long.3:2', 'col.*.long.0:1', 'col.*.local.2:0');
         epips.push('col.*.long.2:2', ['-5', 'row.+.local.1:3'], 'col.*.local.5:1', 'col.*.local.3:0');
+
+        dpips.push(['-1', 'T:-12', 'T:+1', 'col.*.local.4:1', 'col.*.local.2:0'],
+            'row.+.long.1:2', 'row.+.local.6:3', 'row.+.local.2:4', 'row.+.local.4:5');
       }
+
+      rdpips.push([this.col==0?'-1':'-3', this.col==0?'col.*.long.3:1':'col.*.long.1:1', 'col.*.local.4:0'],
+          'row.+.local.3:2', 'row.+.long.2:3');
     }
 
-    // k: -1 (+.local4) long3 long0 local2
+    if (this.col == 0)
+    {
+      if (this.row == 0) xpips.push(['+1', 'T:+9', '-12']);
+      else               xpips.push(['+1', 'T:+6', 'T:-1', 'T:+1', '-11']);
+      xpips.push('col.+.local.1:0', 'col.+.local.4:1');
+      if (this.row == maxrow) xpips.push('T:+3', '-1', 'T:row.+.local.8', 'T:+12', 'row.+.local.1:2', 'row.+.local.5:3');
+      else                    xpips.push('T:+11', '-1', 'row.+.local.1:2', 'row.+.local.5:3');
+    }
+    else if (this.col == maxcol)
+    {
+      if (this.row == 0) xpips.push(['+1', 'T:+5', 'T:-17', 'T:-2', 'T:-16', '-5']);
+      else               xpips.push(['+1', 'T:+4', 'T:-17', 'T:-1', 'T:-16', '-5']);
+      xpips.push(this.row==maxrow?'+7':'col.+.local.8',
+          'col.+.local.1:0', 'col.+.local.4:1', 'col.+.local.5:2');
+    }
+    else
+    {
+      if (this.row == 0) xpips.push(['+1', 'T:+5', 'T:-17', 'T:-2', 'T:-16', '-5']);
+      else               xpips.push(['+1', 'T:+4', 'T:-17', 'T:-1', 'T:-16', '-5']);
+      xpips.push('col.+.local.1:0', 'col.+.local.4:1');
+      if (this.row == maxrow) xpips.push('T:+3', '-1', 'T:row.+.local.8', 'T:+12', 'row.+.local.1:2', 'row.+.local.5:3');
+      else                    xpips.push('T:+11', '-1', 'row.+.local.1:2', 'row.+.local.5:3');
+    }
+
+    if (this.col == 0)
+    {
+      if (this.row == maxrow) ypips.push(['+1', '-11']);
+      else                    ypips.push(['+1', 'T:-8', '-3']);
+      if (this.row == 0) ypips.push(['+1', '+16']);
+      else               ypips.push(['+1', 'T:+10', 'T:-1', 'T:+11', '-5']);
+      ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
+      if (this.row == maxrow) ypips.push('T:+1', 'T:+5', 'T:+2', 'row.*.local.4:3');
+      else                    ypips.push('T:+3', 'row.*.local.4:3');
+    }
+    else if (this.col == maxcol)
+    {
+      if (this.row == maxrow) ypips.push(['+1', '-11']);
+      else                    ypips.push(['+1', 'T:-4', '-3']);
+      if (this.row == 0) ypips.push(['+1', '+16'], ['+7', '+13']);
+      else               ypips.push(['+1', 'T:+9', 'T:-1', 'T:+12', '-5'], ['+7', '+7']);
+      ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
+    }
+    else
+    {
+      if (this.row == maxrow) ypips.push(['+1', '-13']);
+      else                    ypips.push(['+1', 'T:-4', '-3']);
+      if (this.row == 0) ypips.push(['+1', 'T:+18', '+3']);
+      else               ypips.push(['+1', 'T:+9', 'T:-1', 'T:+12', '-5']);
+      ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
+      if (this.row == maxrow) ypips.push('T:+1', 'T:+5', 'T:+2', 'row.*.local.4:3');
+      else                    ypips.push('T:+3', 'row.*.local.4:3');
+    }
 
     this.aPath.appendPipList(apips, this.genCoords.bind(this));
     this.ecPath.appendPipList(ecpips, this.genCoords.bind(this));
