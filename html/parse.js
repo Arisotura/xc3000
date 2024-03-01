@@ -308,6 +308,7 @@ var clbDecoders;
 var otherDecoder;
 var switchDecoders;
 var tribufDecoders;
+var pullupDecoders;
 var bidiDecoder;
 let decoders = [];
 function initDecoders() {
@@ -318,8 +319,9 @@ function initDecoders() {
   clbDecoders = new ClbDecoders;
   switchDecoders = new SwitchDecoders();
   tribufDecoders = new TriBufDecoders();
+  pullupDecoders = new PullUpDecoders();
   //decoders = [iobDecoders, pipDecoder, bidiDecoder, otherDecoder, clbDecoders, switchDecoders];
-  decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders, tribufDecoders];
+  decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders, tribufDecoders, pullupDecoders];
   decoders.forEach(d => d.startDecode());
 }
 

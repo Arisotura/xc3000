@@ -23,7 +23,6 @@ class TriBufDecoders
                 }
             }
         }
-        console.log(this.tribufs);
     }
 
     startDecode() {
@@ -94,9 +93,7 @@ class TriBuf
     {
         name = name.replaceAll('**', this.tile)
             .replaceAll('col.*', 'col.'+this.tile[1])
-            .replaceAll('col.+', 'col.'+letters[this.col+1])
-            .replaceAll('row.*', 'row.'+this.tile[0])
-            .replaceAll('row.+', 'row.'+letters[this.row+1]);
+            .replaceAll('row.*', 'row.'+this.tile[0]);
 
         return name;
     }
