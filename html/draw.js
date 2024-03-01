@@ -182,13 +182,9 @@ function initNames()
             const rowoff = (fam.rows - 1 - row) * 30;
 
             if (col == 0)
-            {
                 colInfo[fullname] = 35;
-            }
             else
-            {
                 colInfo[fullname] = coloff + 34;
-            }
 
             rowInfo[fullname] = rowoff + 35;
         }
@@ -206,11 +202,11 @@ function initNames()
 
         var base;
         if (col == 0)
-          base = 29 + (5*side);
+            base = 29 + (5*side);
         else if (col == (fam.cols-1))
-          base = 32 + (11*side);
+            base = 32 + (11*side);
         else
-          base = 31 + (7*side);
+            base = 31 + (7*side);
         base += (26 * col);
 
         colInfo[fullname] = base;
@@ -283,6 +279,109 @@ function initNames()
     }
 
     console.log((pad-1)+' pads assigned');
+
+    // pull-ups
+    for (var i = 0; i <= fam.rows; i++)
+    {
+        var tileL = letters[i] + letters[0];
+        var tileR = letters[i] + letters[fam.cols];
+
+        if (i == 0)
+        {
+            colInfo['PU.'+tileL+'.1'] = 2;
+            rowInfo['PU.'+tileL+'.1'] = rowInfo['row.'+letters[i]+'.long.3'] + 1;
+            colInfo['PU.'+tileR+'.1'] = cmaxG - 7;
+            rowInfo['PU.'+tileR+'.1'] = rowInfo['row.'+letters[i]+'.long.3'] + 1;
+        }
+        else
+        {
+            colInfo['PU.'+tileL+'.1'] = 2;
+            rowInfo['PU.'+tileL+'.1'] = rowInfo['row.'+letters[i]+'.long.1'] + 1;
+            colInfo['PU.'+tileR+'.1'] = cmaxG - 7;
+            rowInfo['PU.'+tileR+'.1'] = rowInfo['row.'+letters[i]+'.long.1'] + 1;
+            if (i != fam.rows)
+            {
+                colInfo['PU.' + tileL + '.2'] = 2;
+                rowInfo['PU.' + tileL + '.2'] = rowInfo['row.' + letters[i] + '.long.2'] + 1;
+                colInfo['PU.' + tileR + '.2'] = cmaxG - 7;
+                rowInfo['PU.' + tileR + '.2'] = rowInfo['row.' + letters[i] + '.long.2'] + 1;
+            }
+        }
+    }
+
+    // tristate buffers
+    for (let col = 0; col <= fam.cols; col++)
+    {
+        for (let row = 0; row <= fam.rows; row++)
+        {
+            const fullname = letters[row] + letters[col];
+
+            const coloff = col * 26;
+            const rowoff = (fam.rows - 1 - row) * 30;
+
+            if (col == 0)
+            {
+                if (row == fam.rows)
+                {
+                    colInfo['TBUF.'+fullname+'.1'] = 31;
+                }
+                else
+                {
+                    colInfo['TBUF.'+fullname+'.1'] = 9;
+                    if (row != 0)
+                        colInfo['TBUF.'+fullname+'.2'] = 9;
+                }
+            }
+            else if (col == 1)
+            {
+                if (row == 0)
+                    colInfo['TBUF.'+fullname+'.1'] = 35;
+                else if (row == fam.rows)
+                    colInfo['TBUF.'+fullname+'.1'] = 42;
+                else
+                {
+                    colInfo['TBUF.' + fullname + '.1'] = 39;
+                    colInfo['TBUF.' + fullname + '.2'] = 39;
+                }
+            }
+            else if (col == fam.cols)
+            {
+                if (row == 0)
+                    colInfo['TBUF.'+fullname+'.1'] = coloff + 17;
+                else if (row == fam.rows)
+                    colInfo['TBUF.'+fullname+'.1'] = coloff + 19;
+                else
+                {
+                    colInfo['TBUF.' + fullname + '.1'] = coloff + 15;
+                    colInfo['TBUF.' + fullname + '.2'] = coloff + 15;
+                }
+            }
+            else
+            {
+                if (row == 0 || row == fam.rows)
+                    colInfo['TBUF.'+fullname+'.1'] = coloff + 16;
+                else
+                {
+                    colInfo['TBUF.' + fullname + '.1'] = coloff + 15;
+                    colInfo['TBUF.' + fullname + '.2'] = coloff + 15;
+                }
+            }
+
+            if (row == 0)
+            {
+                rowInfo['TBUF.'+fullname+'.1'] = rowInfo['row.' + letters[row] + '.long.3'] + 1;
+            }
+            else if (row == fam.rows)
+            {
+                rowInfo['TBUF.'+fullname+'.1'] = rowInfo['row.' + letters[row] + '.long.1'] + (col==fam.cols ? 2:-1);
+            }
+            else
+            {
+                rowInfo['TBUF.'+fullname+'.1'] = rowInfo['row.' + letters[row] + '.long.1'] + 1;
+                rowInfo['TBUF.'+fullname+'.2'] = rowInfo['row.' + letters[row] + '.long.2'] - 1;
+            }
+        }
+    }
 
     // TODO: pullups, TRI buffers, CLK inputs, ...
     // BCLKIN.I

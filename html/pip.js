@@ -79,6 +79,14 @@ class PipDecoder {
                 pips.push('bidiV:col.*.long.1:row.*.local.6', 'bidiV:col.*.long.2:row.*.local.6');
         }
 
+        if (col == (fam.cols/2))
+        {
+            if (row == 0)
+                pips.push('bidiH:col.*.local.6:row.*.long.1');
+            else if (row == fam.rows)
+                pips.push('bidiH:col.*.local.6:row.*.long.3');
+        }
+
         if (row == 0 && col == 0)
         {
             pips.push('ND:col.*.local.1:row.*.local.1', 'ND:col.*.local.2:row.*.local.2',
