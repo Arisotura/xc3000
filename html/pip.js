@@ -43,13 +43,13 @@ class PipDecoder {
         if (hbidi) pips.push('bidiH:col.*.local.'+(col==0?(row==0||row==fam.rows?6:7):8)+':row.*.local.'+hbidi);
         if (vbidi) pips.push('bidiV:col.*.local.'+vbidi+':row.*.local.'+(row==fam.rows?11:0));
 
-        if (row == (fam.rows/2) && !fam.noMidBuffers)
+        if (row == (fam.rows/2))
         {
             if (col == 0)
                 pips.push('bidiV:col.*.long.1:row.*.local.6', 'bidiV:col.*.long.3:row.*.local.6', 'bidiV:col.*.long.4:row.*.local.6');
             else if (col == fam.cols)
                 pips.push('bidiV:col.*.long.2:row.*.local.6');
-            else
+            else if (!fam.noMidBuffers)
                 pips.push('bidiV:col.*.long.1:row.*.local.6', 'bidiV:col.*.long.2:row.*.local.6');
         }
 

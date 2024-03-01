@@ -383,20 +383,12 @@ function initNames()
         }
     }
 
-    // TODO: pullups, TRI buffers, CLK inputs, ...
-    // BCLKIN.I
-
-    // 293G24 PU.KK.1.O
-    // 293G44 PU.JK.2.O
-    // 293G53 PU.JK.1.O
-    // ..
-    // 293G284 PU.BK.2.O
-    // 293G293 PU.BK.1.O
-    // 293G307 PU.AK.1.O
-
-    rowInfo['GCLK.O_1'] = rmaxG - 20;
-    rowInfo['GLCK.O_2'] = rmaxG - 13; // connection to PAD1.O
-    rowInfo['ACLK.O'] = 4;
+    colInfo['GCLK'] = 24;
+    rowInfo['GCLK'] = rmaxG - 13;
+    colInfo['ACLK'] = cmaxG - 23;
+    rowInfo['ACLK'] = 20;
+    colInfo['OSC'] = cmaxG - 24;
+    rowInfo['OSC'] = 26;
 
   // Make reverse tables
   Object.entries(rowInfo).forEach(([key, val]) => rowFromG[val[0]] = key);
