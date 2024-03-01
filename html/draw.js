@@ -171,183 +171,28 @@ function initNames()
         rowInfo['row.' + name + '.local.7'] = g;
     }
 
-  // The e.g. DE.B entries
-  for (let col = 0; col < fam.cols; col++)
-  {
-    for (let row = 0; row < fam.rows; row++)
+    // The e.g. DE.B entries
+    for (let col = 0; col < fam.cols; col++)
     {
-      const fullname = letters[row] + letters[col];
-
-      const coloff = col * 26;
-
-      if (col == 0)
-      {
-          colInfo[fullname] = 35;
-          if (row == 0)
-          {
-              colInfo[fullname + '.A'] = 38;
-              colInfo[fullname + '.A_2'] = 29;
-              colInfo[fullname + '.EC'] = 28;
-          }
-          else
-          {
-              colInfo[fullname + '.A'] = 38;
-              colInfo[fullname + '.EC'] = 35;
-          }
-          colInfo[fullname + '.DI'] = 21;
-          colInfo[fullname + '.B'] = 22;
-          colInfo[fullname + '.C'] = 23;
-          colInfo[fullname + '.K'] = 24;
-          if (row == fam.rows-1)
-          {
-              colInfo[fullname + '.E'] = 29;
-              colInfo[fullname + '.D'] = 34;
-              colInfo[fullname + '.RD'] = 21;
-              colInfo[fullname + '.X'] = 62;
-              colInfo[fullname + '.Y'] = 51;
-          }
-          else
-          {
-              colInfo[fullname + '.E'] = 32;
-              colInfo[fullname + '.D'] = 36;
-              colInfo[fullname + '.RD'] = 37;
-              colInfo[fullname + '.X'] = 58;
-              colInfo[fullname + '.Y'] = 51;
-          }
-      }
-      else
-      {
-          colInfo[fullname] = coloff + 34;
-          if (row == 0)
-          {
-              colInfo[fullname + '.EC'] = coloff + 27;
-              colInfo[fullname + '.B'] = coloff + 28;
-          }
-          else
-          {
-              colInfo[fullname + '.EC'] = coloff;
-              colInfo[fullname + '.B'] = coloff + 39;
-          }
-          colInfo[fullname + '.A'] = coloff + 37;
-          colInfo[fullname + '.DI'] = coloff + 26;
-          if (row == fam.rows-1)
-          {
-              colInfo[fullname + '.C'] = coloff + 25;
-              colInfo[fullname + '.K'] = coloff + 28;
-              colInfo[fullname + '.E'] = coloff + 27;
-              colInfo[fullname + '.D'] = coloff + 26;
-              colInfo[fullname + '.RD'] = coloff + 37;
-              if (col != fam.cols-1)
-              {
-                  colInfo[fullname + '.X'] = coloff + 62;
-                  colInfo[fullname + '.Y'] = coloff + 51;
-              }
-          }
-          else
-          {
-              colInfo[fullname + '.C'] = coloff + 28;
-              colInfo[fullname + '.K'] = coloff + 33;
-              colInfo[fullname + '.E'] = coloff + 25;
-              colInfo[fullname + '.D'] = coloff + 35;
-              colInfo[fullname + '.RD'] = coloff + 36;
-              if (col != fam.cols-1)
-              {
-                  colInfo[fullname + '.X'] = coloff + 58;
-                  colInfo[fullname + '.Y'] = coloff + 51;
-              }
-          }
-      }
-
-      if (col == 0)
-      {
-          //colInfo[fullname + '.X_C'] = 33;
-          colInfo[fullname + '.X_B'] = 58;
-      }
-      else if (col == fam.cols-1)
-      {
-          colInfo[fullname + '.I_C'] = coloff + 6;
-          // Y_O coloff+41
-          if (row == 0)
-          {
-              // TODO AJ.Y->P75
-          }
-
-          if (row != fam.rows-1)
-              colInfo[fullname + '.X_O'] = coloff + 51;
-          colInfo[fullname + '.Y_O'] = coloff + 48;
-      }
-      else
-      {
-          if (row == fam.rows-1)
-              colInfo[fullname + '.X_B'] = coloff + 50;
-          else
-              colInfo[fullname + '.X_B'] = coloff + 58;
-          colInfo[fullname + '.X_C'] = coloff + 6;
-      }
-
-      const rowoff = (fam.rows-1-row) * 30;
-
-      rowInfo[fullname] = rowoff + 35;
-        if (row == 0)
+        for (let row = 0; row < fam.rows; row++)
         {
-            rowInfo[fullname + '.A'] = rowoff + 42;
+            const fullname = letters[row] + letters[col];
+
+            const coloff = col * 26;
+            const rowoff = (fam.rows - 1 - row) * 30;
+
             if (col == 0)
             {
-                rowInfo[fullname + '.A'] = rowoff + 43;
-                rowInfo[fullname + '.X_O'] = rowoff + 41;
-                colInfo[fullname + '.Y_O'] = 42;
+                colInfo[fullname] = 35;
             }
-            else if (col != fam.cols-1)
+            else
             {
-                colInfo[fullname + '.Y_O'] = coloff + 41;
+                colInfo[fullname] = coloff + 34;
             }
-        }
-        else if (col == 0)
-      {
-          rowInfo[fullname + '.A'] = rowoff + 43;
-          rowInfo[fullname + '.X_O'] = rowoff + 40;
-      }
-      else
-      {
-          rowInfo[fullname + '.A'] = rowoff + 40;
-      }
-      if (row == 0)
-      {
-          rowInfo[fullname + '.EC'] = rowoff + 40;
-      }
-      else
-      {
-          rowInfo[fullname + '.EC'] = rowoff + 41;
-      }
-        rowInfo[fullname + '.DI'] = rowoff + 34;
-        rowInfo[fullname + '.B'] = rowoff + 32;
-        rowInfo[fullname + '.C'] = rowoff + 31;
-        rowInfo[fullname + '.K'] = rowoff + 29;
-        rowInfo[fullname + '.E'] = rowoff + 28;
-        rowInfo[fullname + '.X'] = rowoff + 33;
-        rowInfo[fullname + '.Y'] = rowoff + 30;
-        if (row == fam.rows-1)
-        {
-            rowInfo[fullname + '.D'] = rowoff + 25;
-            rowInfo[fullname + '.EC'] = rowoff + 26;
-        }
-        else if (col == 0)
-        {
-            rowInfo[fullname + '.D'] = rowoff + 24;
-            rowInfo[fullname + '.EC'] = rowoff + 26;
-        }
-        else
-        {
-            rowInfo[fullname + '.D'] = rowoff + 27;
-            rowInfo[fullname + '.EC'] = rowoff + 24;
-        }
 
-        if (row != 0)
-            rowInfo[fullname + '.Y_D'] = rowoff + 51;
-        if (row != fam.rows-1)
-            rowInfo[fullname + '.Y_A'] = rowoff + 22;
+            rowInfo[fullname] = rowoff + 35;
+        }
     }
-  }
 
     // IOB entries
     // the pads are assigned clockwise from the leftmost top pad
@@ -371,28 +216,6 @@ function initNames()
         colInfo[fullname] = base;
         rowInfo[fullname] = rmaxG - 2;
 
-        colInfo[fullname + '.OK'] = base + 1;
-        colInfo[fullname + '.IK'] = base + 3;
-        colInfo[fullname + '.O'] = base + 1;
-        colInfo[fullname + '.Q'] = base + 2;
-        colInfo[fullname + '.I'] = base + 3;
-        colInfo[fullname + '.T'] = base + 4;
-
-        if (i == 0)
-        {
-          rowInfo[fullname+'.O'] = rmaxG - 10;
-        }
-        else if (i == (fam.cols*2 - 1))
-        {
-          // nothing on a row
-        }
-        else
-        {
-          rowInfo[fullname+'.O'] = rmaxG - 16 + (1*side);
-          rowInfo[fullname+'.Q'] = rmaxG - 17 + (3*side);
-          rowInfo[fullname+'.I'] = rmaxG - 18 + (5*side);
-        }
-
         pad++;
     }
 
@@ -413,36 +236,6 @@ function initNames()
 
         colInfo[fullname] = cmaxG - 7;
         rowInfo[fullname] = base;
-
-        if (!side) base -= 2;
-        rowInfo[fullname + '.IK'] = base - 1;
-        rowInfo[fullname + '.OK'] = base - 3;
-        rowInfo[fullname + '.I'] = base - 2;
-        rowInfo[fullname + '.Q'] = base - 3;
-
-
-        if (i == 0)
-        {
-            rowInfo[fullname + '.T'] = base - 1;
-            rowInfo[fullname + '.O'] = base - 4;
-            colInfo[fullname+'.O'] = cmaxG - 20;
-        }
-        else if (i == (fam.rows*2 - 1))
-        {
-            rowInfo[fullname + '.T'] = base - 1;
-            rowInfo[fullname + '.O'] = base - 4;
-            colInfo[fullname+'.O'] = cmaxG - 19;
-        }
-        else
-        {
-            rowInfo[fullname + '.T'] = base - 1 + (1*side);
-            rowInfo[fullname + '.O'] = base - 4 - (1*side);
-            colInfo[fullname+'.O'] = cmaxG - 23 + (5*side);
-            colInfo[fullname+'.Q'] = cmaxG - 22 + (3*side);
-            colInfo[fullname+'.I'] = cmaxG - 21 + (1*side);
-
-            if (side) colInfo[fullname+'.O_X'] = cmaxG - 15;
-        }
 
         pad++;
     }
@@ -465,28 +258,6 @@ function initNames()
         colInfo[fullname] = base;
         rowInfo[fullname] = 3;
 
-        colInfo[fullname + '.OK'] = base + 1;
-        colInfo[fullname + '.IK'] = base + 3;
-        colInfo[fullname + '.O'] = base + 1;
-        colInfo[fullname + '.Q'] = base + 2;
-        colInfo[fullname + '.I'] = base + 3;
-        colInfo[fullname + '.T'] = base + 4;
-
-        if (i == 0)
-        {
-            rowInfo[fullname+'.O'] = 20;
-        }
-        else if (i == (fam.cols*2 - 1))
-        {
-            rowInfo[fullname+'.O'] = 17;
-        }
-        else
-        {
-            rowInfo[fullname+'.O'] = 12 + (7*side);
-            rowInfo[fullname+'.Q'] = 15 + (3*side);
-            rowInfo[fullname+'.I'] = 16 + (1*side);
-        }
-
         pad++;
     }
 
@@ -507,35 +278,6 @@ function initNames()
 
         colInfo[fullname] = 2;
         rowInfo[fullname] = base;
-
-        if (!side) base -= 2;
-        rowInfo[fullname + '.IK'] = base - 1;
-        rowInfo[fullname + '.OK'] = base - 3;
-        rowInfo[fullname + '.I'] = base - 2;
-
-        if (i == 0)
-        {
-            rowInfo[fullname + '.T'] = base - 1;
-            rowInfo[fullname + '.Q'] = base - 3;
-            rowInfo[fullname + '.O'] = base - 4;
-            colInfo[fullname+'.O'] = 17;
-        }
-        else if (i == (fam.rows*2 - 1))
-        {
-            rowInfo[fullname + '.T'] = base + 1;
-            rowInfo[fullname + '.Q'] = base - 3;
-            rowInfo[fullname + '.O'] = base - 4;
-            colInfo[fullname+'.O'] = 29;
-        }
-        else
-        {
-            rowInfo[fullname + '.T'] = base - 1 + (1*side);
-            rowInfo[fullname + '.Q'] = base - 3 - (2*side);
-            rowInfo[fullname + '.O'] = base - 4 - (4*side);
-            colInfo[fullname+'.O'] = 34 - (5*side);
-            colInfo[fullname+'.Q'] = 33 - (3*side);
-            colInfo[fullname+'.I'] = 32 - (1*side);
-        }
 
         pad++;
     }
