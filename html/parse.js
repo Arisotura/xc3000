@@ -322,6 +322,8 @@ function initDecoders() {
   pullupDecoders = new PullUpDecoders();
   //decoders = [iobDecoders, pipDecoder, bidiDecoder, otherDecoder, clbDecoders, switchDecoders];
   decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders, tribufDecoders, pullupDecoders];
+  pipDecoder.generateLongLines();
+  switchDecoders.generateLocalLines();
   decoders.forEach(d => d.startDecode());
 }
 

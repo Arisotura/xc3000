@@ -21,6 +21,11 @@ class SwitchDecoders
         }
     }
 
+    generateLocalLines()
+    {
+        Object.entries(this.switches).forEach(([name, obj]) => obj.generateLocalLines());
+    }
+
     startDecode() {
         //Object.entries(this.switches).forEach(([k, s]) => s.startDecode());
     }
@@ -61,8 +66,7 @@ class Switch
         this.col = col;
         this.name = name;
         this.tilename = name[0] + name[1];
-        this.num = parseInt(name[5], 10);
-        this.pins = {}; // Dictionary holding names of pins
+        this.num = parseInt(name[6], 10);
 
         // The switch's upper left wires are local.1
         var row = rowInfo['row.' + this.tilename[0] + '.local.1'];
@@ -72,6 +76,209 @@ class Switch
         this.screenPt = getSCoords(this.gPt);
         this.W = 24;
         this.H = 24;
+    }
+
+    getPinCoords(pin)
+    {
+        var pinx = [0,
+            1, 2, 3, 4, 5,
+            6, 6, 6, 6, 6,
+            5, 4, 3, 2, 1,
+            0, 0, 0, 0, 0
+        ];
+        var piny = [0,
+            0, 0, 0, 0, 0,
+            1, 2, 3, 4, 5,
+            6, 6, 6, 6, 6,
+            5, 4, 3, 2, 1
+        ];
+
+        var ret = {
+            x: this.gPt.x + pinx[pin],
+            y: this.gPt.y - piny[pin]
+        };
+        return ret;
+    }
+
+    connectPath(pin, path)
+    {
+        var coord = this.getPinCoords(pin);
+        path.terminate(this, pin, path.curDir=='H' ? coord.x : coord.y);
+    }
+
+    generateLocalLines()
+    {
+        var pinsfacing = [0,
+            15, 14, 13, 12, 11,
+            20, 19, 18, 17, 16,
+            5, 4, 3, 2, 1,
+            10, 9, 8, 7, 6
+        ];
+        var fam = curBitstream.family;
+        var nrows = fam.rows;
+        var ncols = fam.cols;
+
+        this.paths = [];
+
+        if (this.row != 0)
+        {
+            // connect to switch above
+
+            if (this.col == 0 && this.row == 1)
+            {
+                for (var i = 1; i <= 5; i++)
+                {
+                    var pl = i;
+                    var pr = pinsfacing[pl];
+                    var gStart = this.getPinCoords(pl);
+                    var gEnd = getGCoords('col.'+letters[0]+'.local.'+i+':row.'+letters[0]+'.local.'+i);
+
+                    var path = new Path(this, pl, 'both', gStart, 'V');
+                    pipDecoder.addPipsToPath(gStart, gEnd, path);
+                    this.paths[pl] = path;
+                }
+            }
+            else if (this.col == ncols && this.row == 1)
+            {
+                for (var i = 1; i <= 5; i++)
+                {
+                    var pl = i;
+                    var pr = pinsfacing[pl];
+                    var gStart = this.getPinCoords(pl);
+                    var gEnd = getGCoords('col.'+letters[ncols]+'.local.'+i+':row.'+letters[0]+'.local.'+(6-i));
+
+                    var path = new Path(this, pl, 'both', gStart, 'V');
+                    pipDecoder.addPipsToPath(gStart, gEnd, path);
+                    this.paths[pl] = path;
+                }
+            }
+            else
+            {
+                var remote = switchDecoders.get(letters[this.row - 1] + letters[this.col] + '.20.' + this.num);
+                for (var i = 1; i <= 5; i++)
+                {
+                    var pl = i;
+                    var pr = pinsfacing[pl];
+                    var gStart = this.getPinCoords(pl);
+                    var gEnd = remote.getPinCoords(pr);
+
+                    var path = new Path(this, pl, 'both', gStart, 'V');
+                    pipDecoder.addPipsToPath(gStart, gEnd, path);
+                    remote.connectPath(pr, path);
+                    this.paths[pl] = path;
+                }
+            }
+        }
+
+        if (this.col != 0)
+        {
+            // connect to switch left
+
+            if (this.row == 0 && this.col == 1)
+            {
+                for (var i = 1; i <= 5; i++)
+                {
+                    var pl = 15 + i;
+                    var pr = pinsfacing[pl];
+                    var gStart = this.getPinCoords(pl);
+                    var gEnd = getGCoords('col.'+letters[0]+'.local.'+(6-i)+':row.'+letters[0]+'.local.'+(6-i));
+
+                    var path = new Path(this, pl, 'both', gStart, 'H');
+                    pipDecoder.addPipsToPath(gStart, gEnd, path);
+                    this.paths[pl] = path;
+                }
+            }
+            else if (this.row == nrows && this.col == 1)
+            {
+                for (var i = 1; i <= 5; i++)
+                {
+                    var pl = 15 + i;
+                    var pr = pinsfacing[pl];
+                    var gStart = this.getPinCoords(pl);
+                    var gEnd = getGCoords('col.'+letters[0]+'.local.'+i+':row.'+letters[nrows]+'.local.'+(6-i));
+
+                    var path = new Path(this, pl, 'both', gStart, 'H');
+                    pipDecoder.addPipsToPath(gStart, gEnd, path);
+                    this.paths[pl] = path;
+                }
+            }
+            else
+            {
+                var remote = switchDecoders.get(letters[this.row] + letters[this.col - 1] + '.20.' + this.num);
+                for (var i = 1; i <= 5; i++)
+                {
+                    var pl = 15 + i;
+                    var pr = pinsfacing[pl];
+                    var gStart = this.getPinCoords(pl);
+                    var gEnd = remote.getPinCoords(pr);
+
+                    var path = new Path(this, pl, 'both', gStart, 'H');
+                    pipDecoder.addPipsToPath(gStart, gEnd, path);
+                    remote.connectPath(pr, path);
+                    this.paths[pl] = path;
+                }
+            }
+        }
+
+        // connect below/right if needed
+
+        if (this.col == 0 && this.row == nrows-1)
+        {
+            for (var i = 1; i <= 5; i++)
+            {
+                var pl = 10 + i;
+                var pr = pinsfacing[pl];
+                var gStart = this.getPinCoords(pl);
+                var gEnd = getGCoords('col.'+letters[0]+'.local.'+(6-i)+':row.'+letters[nrows]+'.local.'+i);
+
+                var path = new Path(this, pl, 'both', gStart, 'V');
+                pipDecoder.addPipsToPath(gStart, gEnd, path);
+                this.paths[pl] = path;
+            }
+        }
+        else if (this.col == ncols && this.row == nrows-1)
+        {
+            for (var i = 1; i <= 5; i++)
+            {
+                var pl = 10 + i;
+                var pr = pinsfacing[pl];
+                var gStart = this.getPinCoords(pl);
+                var gEnd = getGCoords('col.'+letters[ncols]+'.local.'+(6-i)+':row.'+letters[nrows]+'.local.'+(6-i));
+
+                var path = new Path(this, pl, 'both', gStart, 'V');
+                pipDecoder.addPipsToPath(gStart, gEnd, path);
+                this.paths[pl] = path;
+            }
+        }
+
+        if (this.row == 0 && this.col == ncols-1)
+        {
+            for (var i = 1; i <= 5; i++)
+            {
+                var pl = 5 + i;
+                var pr = pinsfacing[pl];
+                var gStart = this.getPinCoords(pl);
+                var gEnd = getGCoords('col.'+letters[ncols]+'.local.'+(6-i)+':row.'+letters[0]+'.local.'+i);
+
+                var path = new Path(this, pl, 'both', gStart, 'H');
+                pipDecoder.addPipsToPath(gStart, gEnd, path);
+                this.paths[pl] = path;
+            }
+        }
+        else if (this.row == nrows && this.col == ncols-1)
+        {
+            for (var i = 1; i <= 5; i++)
+            {
+                var pl = 5 + i;
+                var pr = pinsfacing[pl];
+                var gStart = this.getPinCoords(pl);
+                var gEnd = getGCoords('col.'+letters[ncols]+'.local.'+i+':row.'+letters[nrows]+'.local.'+i);
+
+                var path = new Path(this, pl, 'both', gStart, 'H');
+                pipDecoder.addPipsToPath(gStart, gEnd, path);
+                this.paths[pl] = path;
+            }
+        }
     }
 
     startDecode() {
@@ -135,6 +342,13 @@ class Switch
             }
         }
         ctx.stroke();
+
+        if (false)
+        {
+            ctx.strokeStyle = '#ffa';
+            Object.entries(this.paths).forEach(([key,path]) => path.draw(ctx));
+            ctx.strokeStyle = '#aaa';
+        }
     }
 
     render(ctx) {

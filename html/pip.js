@@ -20,32 +20,6 @@ class PipDecoder {
 
         // generate stand-alone PIPs, they will later be added to line paths
 
-        // BIDI
-        // 3 5 1 3 5 1 ..
-        // 3 5 1 3 5 1
-        // 1 3 5 1 3 5
-        // 5 1 3 5 1 3
-        // 3 5 1 3 5 1
-        // ..
-        // 3 1 5 3 1 5
-
-        // vertical
-        // _ 1 3 .. _
-        // 5 _ 1 .. 5
-        // 3 3 _ .. 3
-        // _ 1 3 .. _
-        // 5 _ 1 .. 5
-        // 3 3 _ .. 3
-
-        // 5 1 3
-        // 3 5 1
-        // 1 3 5
-
-        // 1 3 _ 1
-        // _ 1 3 _
-        // 3 _ 1 3
-        // 1 3 _ 1
-
         var hbidi = 0, vbidi = 0;
 
         if (col != fam.cols)
@@ -167,6 +141,51 @@ class PipDecoder {
         });
     }
 
+    generateLongLines()
+    {
+        var fam = curBitstream.family;
+        var c = fam.cols, r = fam.rows;
+
+        var cmaxG = 66 + (26 * (c-1));
+        var rmaxG = 61 + (30 * (r-1));
+
+        var vlines = [], hlines = [];
+        this.vLines = []; this.hLines = [];
+
+        vlines.push('col.A.long.1', 'col.A.long.2', 'col.A.long.3', 'col.A.long.4', 'col.A.long.5');
+        for (var i = 1; i < c; i++)
+            vlines.push('col.'+letters[i]+'.long.1', 'col.'+letters[i]+'.long.2', 'col.'+letters[i]+'.long.3');
+        vlines.push('col.'+letters[c]+'.long.1', 'col.'+letters[c]+'.long.2');
+
+        hlines.push('row.A.long.1', 'row.A.long.2', 'row.A.long.3');
+        for (var i = 1; i < r; i++)
+            hlines.push('row.'+letters[i]+'.long.1', 'row.'+letters[i]+'.long.2');
+        hlines.push('row.'+letters[r]+'.long.1', 'row.'+letters[r]+'.long.2', 'row.'+letters[r]+'.long.3');
+
+        vlines.forEach((coord) =>
+        {
+            var x = colInfo[coord];
+            var gStart = {x:x, y:3};
+            var gEnd = {x:x, y:rmaxG-3};
+
+            var path = new Path(null, null, 'both', gStart, 'V');
+            this.addPipsToPath(gStart, gEnd, path);
+            this.vLines[coord] = path;
+        });
+
+        hlines.forEach((coord) =>
+        {
+            var y = rowInfo[coord];
+            var gStart = {x:2, y:y};
+            var gEnd = {x:cmaxG-2, y:y};
+
+            var path = new Path(null, null, 'both', gStart, 'H');
+            this.addPipsToPath(gStart, gEnd, path);
+            this.hLines[coord] = path;
+        });
+        console.log(this);
+    }
+
     startDecode() {
         //this.entries = {};
     }
@@ -200,6 +219,58 @@ class PipDecoder {
         pip.paths[dir] = path;
     }
 
+    // add all PIPs within the given segment to the given path
+    addPipsToPath(start, end, path)
+    {
+        var gStart = (typeof start == 'string') ? getGCoords(start) : start;
+        var gEnd = (typeof end == 'string') ? getGCoords(end) : end;
+
+        if (gStart.y == gEnd.y && gStart.x < gEnd.x)
+        {
+            for (var x = gStart.x; x <= gEnd.x; x++)
+            {
+                var key = x+'G'+gStart.y;
+                var pip = this.entries[key];
+                if (typeof pip != 'undefined')
+                    path.appendPip(pip.gPt.x, pip.type);
+            }
+        }
+        else if (gStart.y == gEnd.y && gStart.x > gEnd.x)
+        {
+            for (var x = gStart.x; x >= gEnd.x; x--)
+            {
+                var key = x+'G'+gStart.y;
+                var pip = this.entries[key];
+                if (typeof pip != 'undefined')
+                    path.appendPip(pip.gPt.x, pip.type);
+            }
+        }
+        else if (gStart.x == gEnd.x && gStart.y < gEnd.y)
+        {
+            for (var y = gStart.y; y <= gEnd.y; y++)
+            {
+                var key = gStart.x+'G'+y;
+                var pip = this.entries[key];
+                if (typeof pip != 'undefined')
+                    path.appendPip(pip.gPt.y, pip.type);
+            }
+        }
+        else if (gStart.x == gEnd.x && gStart.y > gEnd.y)
+        {
+            for (var y = gStart.y; y >= gEnd.y; y--)
+            {
+                var key = gStart.x+'G'+y;
+                var pip = this.entries[key];
+                if (typeof pip != 'undefined')
+                    path.appendPip(pip.gPt.y, pip.type);
+            }
+        }
+        else
+        {
+            console.log('bad segment');
+        }
+    }
+
     getPath(gPt, dir)
     {
         var key = gPt.x+'G'+gPt.y;
@@ -230,5 +301,13 @@ class PipDecoder {
 
             ctx.strokeRect(pip.screenPt.x-1, pip.screenPt.y-1, 2, 2);
         });
+
+        if (false)
+        {
+            ctx.strokeStyle = '#ffa';
+            Object.entries(this.vLines).forEach(([key,path]) => path.draw(ctx));
+            Object.entries(this.hLines).forEach(([key,path]) => path.draw(ctx));
+            ctx.strokeStyle = '#aaa';
+        }
     }
 }

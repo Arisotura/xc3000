@@ -24,7 +24,7 @@ class Path
             gPt: gPt,
         };
 
-        if (originObj.type == 'junction')
+        if (originObj && originObj.type == 'junction')
             this.rootPath = originObj.path.rootPath;
         else
             this.rootPath = this;
@@ -70,6 +70,8 @@ class Path
     {
         var ret = {};
 
+        if (typeof name == 'number')
+            name = ''+name;
         if (typeof name == 'string')
             name = name.split(':');
 
@@ -253,6 +255,20 @@ class Path
                 branch.appendPipList(p.slice(1), coordparse, level+1);
             }
         });
+    }
+
+    terminate(obj, objPin, gPt)
+    {
+        gPt = this.parsePoint(gPt);
+
+        var data = {
+            type: 'endpoint',
+            obj: obj,
+            pin: objPin,
+            gPt: gPt,
+        };
+
+        this.appendElement(data);
     }
 
     draw(ctx, level=0)
