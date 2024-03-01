@@ -265,7 +265,7 @@ class ClbDecoder {
     {
       if (this.row == maxrow) ypips.push(['+1', '-13']);
       else                    ypips.push(['+1', 'T:-4', '-3']);
-      if (this.row == 0) ypips.push(['+1', '+16'], ['+7', '+13']);
+      if (this.row == 0) ypips.push(['+1', 'T:+18', '+3'], ['+7', '+13']);
       else               ypips.push(['+1', 'T:+9', 'T:-1', 'T:+12', '-5'], ['+7', '+7']);
       ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
     }
@@ -273,7 +273,7 @@ class ClbDecoder {
     {
       if (this.row == maxrow) ypips.push(['+1', '-11']);
       else                    ypips.push(['+1', 'T:-4', '-3']);
-      if (this.row == 0) ypips.push(['+1', 'T:+18', '+3']);
+      if (this.row == 0) ypips.push(['+1', '+16']);
       else               ypips.push(['+1', 'T:+9', 'T:-1', 'T:+12', '-5']);
       ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
       if (this.row == maxrow) ypips.push('T:+1', 'T:+5', 'T:+2', 'row.*.local.4:3');

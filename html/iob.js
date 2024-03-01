@@ -164,6 +164,13 @@ console.log(this);
         }
         this.tile = letters[this.row] + letters[this.col];
 
+        if (style == 'leftupper' && this.row == 0)
+            this.clkin = 'TCLKIN';
+        else if (style == 'rightupper' && this.row == curBitstream.family.rows-1)
+            this.clkin = 'BCLKIN';
+        else
+            this.clkin = null;
+
         this.generateIobPips();
 
         this.input = 2;
@@ -308,6 +315,12 @@ console.log(this);
 
             okpips.push('col.*.local.13:0', 'col.*.local.12:1');
             ikpips.push('col.*.local.13:0', 'col.*.local.12:1');
+
+            if (this.clkin == 'TCLKIN')
+            {
+                this.ciPath = new Path(this, 'CLKI', 'source', {x: this.gPt.x + 5, y: ybase - 6}, 'H');
+                this.ciPath.appendPip('+17:0');
+            }
         }
         else if (this.style == 'rightupper' || this.style == 'rightlower')
         {
@@ -321,6 +334,12 @@ console.log(this);
 
             okpips.push('col.+.local.6:0', 'col.+.local.7:1');
             ikpips.push('col.+.local.6:0', 'col.+.local.7:1');
+
+            if (this.clkin == 'BCLKIN')
+            {
+                this.ciPath = new Path(this, 'CLKI', 'source', {x: this.gPt.x, y: ybase - 7}, 'H');
+                this.ciPath.appendPip('-2:0');
+            }
         }
 
         if (this.style == 'topleft')
@@ -532,6 +551,11 @@ console.log(this);
 
         drawTextBox(ctx, this.pin, this.screenPt.x, this.screenPt.y, this.W, this.H);
 
+        if (this.clkin == 'TCLKIN')
+            drawTextBox(ctx, 'TCL', this.screenPt.x, this.screenPt.y+this.H, this.W, 12);
+        else if (this.clkin == 'BCLKIN')
+            drawTextBox(ctx, 'BCL', this.screenPt.x, this.screenPt.y+this.H, this.W, 16);
+
         // draw connect lines for the CLB inputs/outputs
         ctx.beginPath();
         if (this.style == 'topleft' || this.style == 'topright' ||
@@ -572,6 +596,17 @@ console.log(this);
             ctx.lineTo(base2 + 2, base3 + 8);
             ctx.moveTo(base2, base3 + 4);
             ctx.lineTo(base2 + 2, base3 + 4);
+
+            if (this.clkin == 'TCLKIN')
+            {
+                ctx.moveTo(base2, base3 + 24);
+                ctx.lineTo(base2 + 2, base3 + 24);
+            }
+            else if (this.clkin == 'BCLKIN')
+            {
+                ctx.moveTo(base2, base3 + 28);
+                ctx.lineTo(base2 + 2, base3 + 28);
+            }
         }
         ctx.stroke();
 
@@ -581,6 +616,7 @@ console.log(this);
         this.qPath.draw(ctx);
         this.iPath.draw(ctx);
         this.tPath.draw(ctx);
+        if (this.ciPath) this.ciPath.draw(ctx);
     }
 
     render(ctx)
