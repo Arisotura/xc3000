@@ -183,7 +183,7 @@ class ClockBuf
 
         if (this.name == 'GCLK')
         {
-            var kbranch = ['-3', 'col.A.long.6:2'];
+            var kbranch = ['-3', 'col.A.long.6:2', ['+3', 'T:+7', '-1']];
             for (var i = 1; i < curBitstream.family.cols; i++)
                 kbranch.push('col.'+letters[i]+'.long.0:'+(i+2));
             kbranch.push('+17', 'col.K.local.6:1');

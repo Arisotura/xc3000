@@ -691,7 +691,7 @@ function drawBackground(ctx)
 
     drawTextBox(ctx, 'CCL\nK', w-32, 12, 20, 20);
     drawTextBox(ctx, 'VCC', w-32, cy, 20, 20);
-    drawTextBox(ctx, 'DPG\nM', w-32, h-68, 20, 20);
+    drawTextBox(ctx, 'DPG\nM', w-32, h-64, 20, 20);
     drawTextBox(ctx, 'RST', w-52, h-24, 20, 12);
 
     // draw background for programmable elements

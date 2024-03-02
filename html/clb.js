@@ -247,7 +247,7 @@ class ClbDecoder {
       if (this.row == 0) xpips.push(['+1', 'T:+5', 'T:-17', 'T:-2', 'T:-16', '-5']);
       else               xpips.push(['+1', 'T:+4', 'T:-17', 'T:-1', 'T:-16', '-5']);
       xpips.push('col.+.local.1:0', 'col.+.local.4:1');
-      if (this.row == maxrow) xpips.push('T:+3', '-1', 'T:row.+.local.8', 'T:+12', 'row.+.local.1:2', 'row.+.local.5:3');
+      if (this.row == maxrow) xpips.push('T:+3', '-1', 'T:row.+.local.8', (this.col==maxcol-1?'T:+8':'T:+12'), 'row.+.local.1:2', 'row.+.local.5:3');
       else                    xpips.push('T:+11', '-1', 'row.+.local.1:2', 'row.+.local.5:3');
     }
 
