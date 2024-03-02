@@ -207,11 +207,19 @@ class PipDecoder {
 
     createPip(gPt, type)
     {
+        // PIP TYPE AND STATUS
+        // H->V  : bit0=active
+        // V->H  : bit0=active
+        // ND    : bit0=H->V bit1=V->H
+        // bidiH : bit0=left->right bit1=right->left
+        // bidiV : bit0=bottom->top bit1=top->bottom
+
         var key = gPt.x+'G'+gPt.y;
         this.entries[key] = {
             gPt: gPt,
             screenPt: getSCoords(gPt),
             type: type,
+            status: 0,
             paths: []
         };
     }
@@ -232,6 +240,7 @@ class PipDecoder {
         }
 
         pip.paths[dir] = path;
+        return pip;
     }
 
     // add all PIPs within the given segment to the given path
@@ -303,9 +312,9 @@ class PipDecoder {
         Object.entries(this.entries).forEach(([gpt,pip]) =>
         {
             // DEBUG
-            if (pip.type=='bidiH' || pip.type=='bidiV')
-                ctx.strokeStyle = '#f00';
-            else
+            //if (pip.type=='bidiH' || pip.type=='bidiV')
+            //    ctx.strokeStyle = '#f00';
+            //else
                 ctx.strokeStyle = '#aaa';
 
             ctx.strokeRect(pip.screenPt.x-1, pip.screenPt.y-1, 2, 2);
@@ -322,6 +331,12 @@ class PipDecoder {
 
     render(ctx)
     {
-        //
+        // DEBUG VIEW
+        Object.entries(this.entries).forEach(([gpt,pip]) =>
+        {
+            if (!pip.status) return;
+            ctx.fillStyle = ['', '#f00', '#0f0', '#ff0'][pip.status];
+            ctx.fillRect(pip.screenPt.x-2, pip.screenPt.y-2, 3, 3);
+        });
     }
 }

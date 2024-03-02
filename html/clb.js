@@ -297,6 +297,105 @@ class ClbDecoder {
   decode()
   {
     //this.clbInternal.decode(bitstreamTable);
+
+    var fam = curBitstream.family;
+    var offset = getTileOffset(this.col, this.row);
+    const self = this;
+
+    var inputbits = {
+      'A': [4,7, 5,5, 5,6, 5,7],
+      'EC': [2,6, 3,6, 3,7, 4,6],
+      'DI': [3,10, 3,11, 3,14, 4,14],
+      'B': [4,1, 4,4, 5,2, 5,3, 5,4],
+      'C': [4,15, 5,14, 5,15, 5,16, 5,17],
+      'K': [2,5, 3,5, 3,8, 3,9],
+      'E': [5,0, 5,1],
+      'D': [4,20, 4,21, 5,20, 5,21],
+      'RD': [5,18, 5,19]
+    };
+
+    var inputmux = {
+      'A': {0x2:0, 0x5:1, 0xA:2, 0xB:2, 0x1:3, 0x6:4, 0xF:5},
+      'EC': {0xA:0, 0x9:1, 0xF:2, 0x3:3},
+      'DI': {0xB:0, 0xA:0, 0xF:1, 0x9:2, 0x3:3},
+      'B': {0x1B:0, 0x0D:1, 0x0E:2, 0x03:3, 0x07:4, 0x09:5, 0x1F:6, 0x0A:7},
+      'C': {0x1F:0, 0x0E:1, 0x0D:2, 0x09:3, 0x03:4, 0x0A:5, 0x07:6, 0x1B:7},
+      'K': {0xB:0, 0x3:0, 0x6:1, 0x5:2, 0xF:3},
+      'E': {0x2:0, 0x3:1, 0x0:2, 0x1:3},
+      'D': {0x6:0, 0x5:1, 0x1:2, 0x2:3, 0xF:4, 0xB:5},
+      'RD': {0x2:0, 0x1:1, 0x3:2, 0x0:3}
+    };
+
+    Object.entries(inputbits).forEach(([key, val]) =>
+    {
+      var bits = 0;
+      for (var i = 0; i < val.length; i+=2)
+      {
+        var bit = curBitstream.data[offset.y+val[i]][offset.x+val[i+1]];
+        bits |= (bit << (i>>1));
+      }
+
+      var mux = inputmux[key][bits];
+      if (typeof mux == 'undefined')
+      {
+        console.log('bad mux ' + key + '=' + bits);
+        return;
+      }
+
+      // enable the corresponding PIP
+      this[key.toLowerCase()+'Path'].setPipStatus(mux, 1);
+    });
+
+    var outputbits = {'X':[], 'Y':[]};
+    if (this.col == fam.cols-1)
+    {
+      // right edge, output PIPs are different
+
+      var offset1 = getTileOffset(this.col+1, this.row);
+
+      outputbits['X'].push(offset1.y+4, offset1.x+0);
+      outputbits['X'].push(offset1.y+4, offset1.x+8);
+      outputbits['X'].push(offset1.y+4, offset1.x+9);
+
+      outputbits['Y'].push(offset1.y+4, offset1.x+4);
+      outputbits['Y'].push(offset1.y+4, offset1.x+6);
+      outputbits['Y'].push(offset1.y+4, offset1.x+10);
+    }
+    else
+    {
+      // middle
+
+      var offset1 = getTileOffset(this.col+1, this.row);
+      var offset2 = getTileOffset(this.col+1, this.row+1);
+
+      outputbits['X'].push(offset1.y+3, offset1.x+0);
+      outputbits['X'].push(offset1.y+3, offset1.x+16);
+      if (this.row == fam.rows-1)
+      {
+        outputbits['X'].push(offset2.y+0, offset2.x+13);
+        outputbits['X'].push(offset2.y+0, offset2.x+7);
+      }
+      else
+      {
+        outputbits['X'].push(offset2.y+4, offset2.x+18);
+        outputbits['X'].push(offset2.y+3, offset2.x+19);
+      }
+
+      outputbits['Y'].push(offset1.y+4, offset1.x+3);
+      outputbits['Y'].push(offset1.y+4, offset1.x+12);
+      outputbits['Y'].push(offset1.y+3, offset1.x+17);
+      outputbits['Y'].push(offset1.y+3, offset1.x+18);
+    }
+
+    Object.entries(outputbits).forEach(([key, val]) =>
+    {
+      for (var i = 0; i < val.length; i+=2)
+      {
+        var bit = curBitstream.data[val[i]][val[i+1]];
+        if (!bit)
+          this[key.toLowerCase()+'Path'].setPipStatus(i>>1, 1);
+      }
+    });
   }
 
   renderBackground(ctx)

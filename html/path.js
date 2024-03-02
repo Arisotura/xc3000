@@ -42,23 +42,6 @@ class Path
     parseCoords(name)
     {
         var ret;
-        /*if (typeof name == 'string')
-            name = name.split(':');
-
-        if (Array.isArray(name))
-        {
-            if (name[0] == '~' && this.lastElem)
-            {
-                name = name.split(':');
-                ret = {};
-                ret.x = this.lastElem.gPt.x + parseInt(name[1]);
-                ret.y = this.lastElem.gPt.y + parseInt(name[2]);
-            }
-            else
-                ret = getGCoords(name.join(':'));
-        }
-        else
-            ret = name;*/
 
         if (typeof name == 'string')
             ret = getGCoords(name);
@@ -136,24 +119,6 @@ class Path
         this.curDir = dir;
     }
 
-    /*checkTurn(gPt)
-    {
-        // append a turn if we can't get to the requested point in a straight line
-        var turnpt;
-        if (this.curDir == 'H' && gPt.y != this.lastElem.gPt.y)
-        {
-            turnpt = {x: gPt.x, y: this.lastElem.gPt.y};
-        }
-        else if (this.curDir == 'V' && gPt.x != this.lastElem.gPt.x)
-        {
-            turnpt = {x: this.lastElem.gPt.x, y: gPt.y};
-        }
-        else
-            return;
-
-        this.appendTurn(turnpt);
-    }*/
-
     // append a simple path turn
     appendTurn(gPt)
     {
@@ -172,16 +137,6 @@ class Path
     {
         gPt = this.parsePoint(gPt);
         var juncdir = (this.curDir == 'H') ? 'V' : 'H';
-
-        // align the given point to the current path line
-        /*if (this.curDir == 'H')
-        {
-            gPt.y = this.lastElem.gPt.y;
-        }
-        else
-        {
-            gPt.x = this.lastElem.gPt.x;
-        }*/
 
         var data = {
             type: 'junction',
@@ -205,7 +160,6 @@ class Path
     appendPip(gPt, type=null)
     {
         gPt = this.parsePoint(gPt);
-        //this.checkTurn(gPt);
 
         if (!type)
         {
@@ -274,6 +228,24 @@ class Path
         };
 
         this.appendElement(data);
+    }
+
+    // set the status for a PIP selected by ID
+    setPipStatus(id, status)
+    {
+        var elem = this.pathById[id];
+        if (!elem)
+        {
+            console.log('element '+id+' not found');
+            return;
+        }
+        if (elem.type != 'pip')
+        {
+            console.log('element '+id+' is not a PIP');
+            return;
+        }
+
+        elem.obj.status = status;
     }
 
     draw(ctx, level=0)
