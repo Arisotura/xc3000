@@ -200,8 +200,9 @@ class PipDecoder {
         });
     }
 
-    startDecode() {
-        //this.entries = {};
+    decode()
+    {
+        // TODO
     }
 
     createPip(gPt, type)
@@ -297,12 +298,6 @@ class PipDecoder {
         return pip.paths[dir];
     }
 
-    /*add(str, bit) {
-        this.entries[str] = bit;
-    }*/
-
-    //decode() {}
-
     renderBackground(ctx)
     {
         Object.entries(this.entries).forEach(([gpt,pip]) =>
@@ -323,5 +318,10 @@ class PipDecoder {
             Object.entries(this.hLines).forEach(([key,path]) => path.draw(ctx));
             ctx.strokeStyle = '#aaa';
         }
+    }
+
+    render(ctx)
+    {
+        //
     }
 }

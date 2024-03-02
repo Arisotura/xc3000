@@ -66,19 +66,9 @@ class IobDecoders {
     return updates;
   }
 
-  startDecode() {
-    /*const self = this;
-    pads.forEach(function([pin, tile, style, pad]) {
-      //console.log("IOB PAD "+pad+" STARTDECODE");
-      self.iobs[pad].startDecode();
-    });*/
-  }
-
-  decode() {
-    /*const self = this;
-    pads.forEach(function([pin, tile, style, pad]) {
-      self.iobs[pad].decode();
-    });*/
+  decode()
+  {
+      Object.entries(this.iobs).forEach(([name, obj]) => obj.decode());
   }
 
   routeFromInput() {
@@ -248,7 +238,7 @@ console.log(this);
         });
     }
 
-    startDecode()
+    decode()
     {
         this.data = [];
         this.muxo = 0; // Mux bits converted to binary
@@ -257,6 +247,8 @@ console.log(this);
         this.latch = 0; // Pad/latch (Q) bit. Note that the PAD state is not visible in the bitstream.
         this.label = "";
         this.tmode = ""; // Or ON or TRI
+
+        // TODO
     }
 
     genCoords(name)

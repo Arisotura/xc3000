@@ -293,21 +293,10 @@ class ClbDecoder {
     this.yPath.appendPipList(ypips, this.genCoords.bind(this));
   }
 
-  startDecode() {
-    this.mux = {'A': 0, 'B': 0, 'C': 0, 'K': 0, 'D': 0}; // Holds binary value for each input mux
-  }
-
-  add(str, bit) {
-    const m = str.match(/\.([ABCDK]) MuxBit: (\d)/);
-    if (m) {
-      this.mux[m[1]] |= (bit << parseInt(m[2]));
-    }
-  }
-
   // Decoded the received data
-  decode() {
-    this.clbInternal.decode(bitstreamTable);
-    //this.generateClbPips(this.tile);
+  decode()
+  {
+    //this.clbInternal.decode(bitstreamTable);
   }
 
   renderBackground(ctx)
@@ -358,17 +347,9 @@ class ClbDecoder {
     this.yPath.draw(ctx);
   }
 
-  render(ctx) {
-    if (debug) {
-      ctx.font = "6px arial";
-      ctx.fillStyle = "red";
-      ctx.fillText(this.clbInternal.shortInfo(), this.screenPt[0], this.screenPt[1] + 10);
-    }
-    drawPips(ctx, this.apips);
-    drawPips(ctx, this.kpips);
-    drawPips(ctx, this.dpips);
-    drawPips(ctx, this.bpips);
-    drawPips(ctx, this.cpips);
+  render(ctx)
+  {
+    //
   }
 
   info() {
@@ -399,10 +380,6 @@ class ClbDecoders {
 
   reset() {
     Object.entries(this.clbDecoders).forEach(([k, c]) => c.reset());
-  }
-
-  startDecode() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.startDecode());
   }
 
   get(tile) {

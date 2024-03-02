@@ -25,8 +25,9 @@ class PullUpDecoders
         }
     }
 
-    startDecode() {
-        //Object.entries(this.pullups).forEach(([k, s]) => s.startDecode());
+    decode()
+    {
+        Object.entries(this.pullups).forEach(([k, s]) => s.decode());
     }
 
     getFromG(name) {
@@ -36,8 +37,6 @@ class PullUpDecoders
     get(name) {
         return this.pullups[name];
     }
-
-    decode() {}
 
     renderBackground(ctx)
     {
@@ -93,8 +92,9 @@ class PullUp
         this.oPath.appendPipList(opips, this.genCoords.bind(this));
     }
 
-    startDecode() {
-        //
+    decode()
+    {
+        // TODO
     }
 
     renderBackground(ctx)

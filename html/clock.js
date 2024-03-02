@@ -110,8 +110,9 @@ class ClockDecoders
         this.clockLines.push(path);
     }
 
-    startDecode() {
-        //Object.entries(this.tribufs).forEach(([k, s]) => s.startDecode());
+    decode()
+    {
+        Object.entries(this.clocks).forEach(([name, obj]) => obj.decode());
     }
 
     getFromG(name) {
@@ -121,8 +122,6 @@ class ClockDecoders
     get(name) {
         return this.clocks[name];
     }
-
-    decode() {}
 
     renderBackground(ctx)
     {
@@ -212,7 +211,8 @@ class ClockBuf
         this.iPath.appendPipList(ipips, this.genCoords.bind(this));
     }
 
-    startDecode() {
+    decode()
+    {
         //
     }
 
@@ -296,7 +296,8 @@ class ClockOsc
         this.oPath.appendPipList(opips, this.genCoords.bind(this));
     }
 
-    startDecode() {
+    decode()
+    {
         //
     }
 

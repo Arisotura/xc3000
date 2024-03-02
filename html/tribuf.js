@@ -25,8 +25,9 @@ class TriBufDecoders
         }
     }
 
-    startDecode() {
-        //Object.entries(this.tribufs).forEach(([k, s]) => s.startDecode());
+    decode()
+    {
+        Object.entries(this.tribufs).forEach(([k, s]) => s.decode());
     }
 
     getFromG(name) {
@@ -36,8 +37,6 @@ class TriBufDecoders
     get(name) {
         return this.tribufs[name];
     }
-
-    decode() {}
 
     renderBackground(ctx)
     {
@@ -137,8 +136,9 @@ class TriBuf
         this.tPath.appendPipList(tpips, this.genCoords.bind(this));
     }
 
-    startDecode() {
-        //
+    decode()
+    {
+        // TODO
     }
 
     renderBackground(ctx)

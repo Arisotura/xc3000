@@ -699,68 +699,34 @@ function drawBackground(ctx)
     decoders.forEach(d => d.renderBackground(ctx));
 }
 
-  function drawLayout(ctx) {
-    return;
-    $("#img").css('opacity', 1);
+function drawLayout(ctx)
+{
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset
-    const HEIGHT = 824 * SCALE;
-    const WIDTH = 824 * SCALE;
+
+    var fam = curBitstream.family;
+
+    var w = 272 + ((fam.cols-1) * 104);
+    var h = 268 + ((fam.rows-1) * 120);
+    var cx = 188 + (((fam.cols/2)-1) * 104);
+    var cy = 168 + (((fam.rows/2)-1) * 120);
+
+    var HEIGHT = h * SCALE;
+    var WIDTH = w * SCALE;
+
     ctx.canvas.height = HEIGHT;
     ctx.canvas.width = WIDTH;
-    $("#container").css('height', HEIGHT + 'px');
-    $("#container").css('width', WIDTH + 'px');
-    $("#info").css('margin-left', WIDTH + 'px');
-    $("#info3").css('margin-left', WIDTH + 'px');
-    $("#info3").css('clear', 'none');
+
+    ctx.fillStyle = '#000';
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.translate(0.5, 0.5); // Prevent antialiasing
     ctx.scale(SCALE, SCALE);
-    $("#img").width(WIDTH);
-    $("#img").height(HEIGHT);
     ctx.lineWidth = 1;
     ctx.lineCap = 'butt';
-    // objects.forEach(o => o.draw(ctx));
-    if (bitstreamTable) {
-      decoders.forEach(d => d.render(ctx));
-    }
 
-    // ROUTING SHITO
-    ctx.beginPath();
-    ctx.strokeStyle = '#0f0';
-    visPathInfo.forEach(function(w)
-    {
-      const sparts = w[0].split('G');
-      const dparts = w[1].split('G');
+    // draw programmable elements
 
-      var sx = __calcCoord(colInfo, colFromG, sparts[0]);
-      var sy = __calcCoord(rowInfo, rowFromG, sparts[1]);
-      var dx = __calcCoord(colInfo, colFromG, dparts[0]);
-      var dy = __calcCoord(rowInfo, rowFromG, dparts[1]);
-
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(dx, dy);
-    });
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#0ff';
-    visPathInfo2.forEach(function(w)
-    {
-      const sparts = w[0].split('G');
-      const dparts = w[1].split('G');
-
-      var sx = __calcCoord(colInfo, colFromG, sparts[0]);
-      var sy = __calcCoord(rowInfo, rowFromG, sparts[1]);
-      var dx = __calcCoord(colInfo, colFromG, dparts[0]);
-      var dy = __calcCoord(rowInfo, rowFromG, dparts[1]);
-
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(dx, dy);
-    });
-    ctx.stroke();
-
-    $("#settings").text(otherDecoder.info());
-  }
+    decoders.forEach(d => d.render(ctx));
+}
 
 /**
  * Renders a set of pips, specified in entries. Each entry is {"nGn": 0/1}.
