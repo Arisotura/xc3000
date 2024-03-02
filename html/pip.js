@@ -149,13 +149,17 @@ class PipDecoder {
         var cmaxG = 66 + (26 * (c-1));
         var rmaxG = 61 + (30 * (r-1));
 
-        var vlines = [], hlines = [];
+        var vlines = [], vlines2 = [], hlines = [];
         this.vLines = []; this.hLines = [];
 
         vlines.push('col.A.long.1', 'col.A.long.2', 'col.A.long.3', 'col.A.long.4', 'col.A.long.5');
         for (var i = 1; i < c; i++)
             vlines.push('col.'+letters[i]+'.long.1', 'col.'+letters[i]+'.long.2', 'col.'+letters[i]+'.long.3');
         vlines.push('col.'+letters[c]+'.long.1', 'col.'+letters[c]+'.long.2');
+
+        vlines2.push('col.A.long.6');
+        for (var i = 1; i < c; i++)
+            vlines2.push('col.'+letters[i]+'.long.0');
 
         hlines.push('row.A.long.1', 'row.A.long.2', 'row.A.long.3');
         for (var i = 1; i < r; i++)
@@ -173,6 +177,17 @@ class PipDecoder {
             this.vLines[coord] = path;
         });
 
+        vlines2.forEach((coord) =>
+        {
+            var x = colInfo[coord];
+            var gStart = {x:x, y:5};
+            var gEnd = {x:x, y:rmaxG-20};
+
+            var path = new Path(null, null, 'both', gStart, 'V');
+            this.addPipsToPath(gStart, gEnd, path);
+            this.vLines[coord] = path;
+        });
+
         hlines.forEach((coord) =>
         {
             var y = rowInfo[coord];
@@ -183,7 +198,6 @@ class PipDecoder {
             this.addPipsToPath(gStart, gEnd, path);
             this.hLines[coord] = path;
         });
-        console.log(this);
     }
 
     startDecode() {

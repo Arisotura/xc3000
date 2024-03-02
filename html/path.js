@@ -42,7 +42,7 @@ class Path
     parseCoords(name)
     {
         var ret;
-        if (typeof name == 'string')
+        /*if (typeof name == 'string')
             name = name.split(':');
 
         if (Array.isArray(name))
@@ -55,8 +55,13 @@ class Path
                 ret.y = this.lastElem.gPt.y + parseInt(name[2]);
             }
             else
-                ret = getGCoords(name);
+                ret = getGCoords(name.join(':'));
         }
+        else
+            ret = name;*/
+
+        if (typeof name == 'string')
+            ret = getGCoords(name);
         else
             ret = name;
 
