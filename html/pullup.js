@@ -11,6 +11,8 @@ class PullUpDecoders
         {
             for (let j = 0; j <= fam.cols; j++)
             {
+                if (j != 0 && j != fam.cols) continue;
+
                 var name = 'PU.' + letters[i] + letters[j] + '.1';
                 var tb = new PullUp(i, j, name);
                 this.pullups[name] = tb;
@@ -94,7 +96,27 @@ class PullUp
 
     decode()
     {
-        // TODO
+        var row, num;
+        if (this.row == 0 || this.num == 2)
+        {
+            row = this.row;
+            num = 0;
+        }
+        else
+        {
+            row = this.row - 1;
+            num = 1;
+        }
+
+        var offset = getTileOffset(this.col, row);
+        var pip;
+        if (this.col == 0)
+            pip = curBitstream.data[offset.y + 3][(num?1:2)];
+        else
+            pip = curBitstream.data[offset.y + (num?4:3)][offset.x + (num?3:6)];
+
+        if (!pip)
+            this.oPath.setPipStatus(0, 1);
     }
 
     renderBackground(ctx)
