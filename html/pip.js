@@ -35,7 +35,12 @@ class PipDecoder {
         if (row != 0)
         {
             if (col == 0 || col == fam.cols)
-                vbidi = [3, 0, 5][row % 3];
+            {
+                if (row == fam.rows)
+                    vbidi = 0;
+                else
+                    vbidi = [3, 0, 5][row % 3];
+            }
             else
                 vbidi = [1, 0, 3][(row - col + 99) % 3];
         }
