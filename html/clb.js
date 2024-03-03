@@ -298,6 +298,8 @@ class ClbDecoder {
   {
     //this.clbInternal.decode(bitstreamTable);
 
+    // TODO: exclude inputs that aren't used
+
     var fam = curBitstream.family;
     var offset = getTileOffset(this.col, this.row);
     const self = this;

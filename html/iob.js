@@ -135,7 +135,7 @@ console.log(this);
         {
             this.W = 20;
             this.H = 12;
-            this.row = curBitstream.family.rows - 1;
+            this.row = curBitstream.family.rows;
             this.col = tile;
         }
         else if (style == 'leftupper' || style == 'leftlower')
@@ -150,7 +150,7 @@ console.log(this);
             this.W = 20;
             this.H = 28;
             this.row = tile;
-            this.col = curBitstream.family.cols - 1;
+            this.col = curBitstream.family.cols;
         }
         this.tile = letters[this.row] + letters[this.col];
 
@@ -292,8 +292,8 @@ console.log(this);
             this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x + 3, y: this.gPt.y}, 'V');
             this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + 4, y: this.gPt.y}, 'V');
 
-            okpips.push('row.+.local.6:0', 'row.+.local.7:1');
-            ikpips.push('row.+.local.6:0', 'row.+.local.7:1');
+            okpips.push('row.*.local.6:0', 'row.*.local.7:1');
+            ikpips.push('row.*.local.6:0', 'row.*.local.7:1');
         }
         else if (this.style == 'leftupper' || this.style == 'leftlower')
         {
@@ -324,8 +324,8 @@ console.log(this);
             this.iPath = new Path(this, 'I', 'source', {x: this.gPt.x, y: ybase - 2}, 'H');
             this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x, y: ybase - 1}, 'H');
 
-            okpips.push('col.+.local.6:0', 'col.+.local.7:1');
-            ikpips.push('col.+.local.6:0', 'col.+.local.7:1');
+            okpips.push('col.*.local.6:0', 'col.*.local.7:1');
+            ikpips.push('col.*.local.6:0', 'col.*.local.7:1');
 
             if (this.clkin == 'BCLKIN')
             {
@@ -382,47 +382,47 @@ console.log(this);
         else if (this.style == 'bottomleft')
         {
             if (this.col == 0)
-                opips.push('+1:0', 'row.+.local.4:1', 'row.+.local.2:2', 'row.+.long.3:3',
+                opips.push('+1:0', 'row.*.local.4:1', 'row.*.local.2:2', 'row.*.long.3:3',
                     'T:+7', 'col.*.long.5:4', 'col.*.long.3:5');
             else
-                opips.push('row.+.local.4:0', 'row.+.local.2:1',
+                opips.push('row.*.local.4:0', 'row.*.local.2:1',
                     ['+3', 'col.*.long.3:3', 'col.*.long.1:4',
                     'col.*.local.5:5', 'col.*.local.4:6', 'col.*.local.1:7'],
-                    'row.+.long.3:2');
+                    'row.*.long.3:2');
 
-            qpips.push('row.+.local.5:0', 'row.+.local.3:1');
+            qpips.push('row.*.local.5:0', 'row.*.local.3:1');
             if (this.col != 0)
                 qpips.push('T:+7', 'col.*.local.2:2', 'col.*.local.5:3');
 
-            ipips.push('row.+.local.4:0', 'row.+.local.2:1');
+            ipips.push('row.*.local.4:0', 'row.*.local.2:1');
             if (this.col == 0)
-                ipips.push('row.+.local.1:2', '+15');
+                ipips.push('row.*.local.1:2', '+15');
             else
                 ipips.push('T:+7', [this.col==maxcol?'-1':'+0', '+9'],
                     'col.*.local.1:2', 'col.*.local.4:3');
 
-            tpips.push('row.+.local.4:0', 'row.+.local.2:1', 'row.+.long.3:2', 'row.+.long.2:3');
+            tpips.push('row.*.local.4:0', 'row.*.local.2:1', 'row.*.long.3:2', 'row.*.long.2:3');
         }
         else if (this.style == 'bottomright')
         {
             if (this.col == maxcol)
-                opips.push('+1:0', 'row.+.local.5:1', 'row.+.local.3:2', 'row.+.local.1:3', 'row.+.long.3:4',
+                opips.push('+1:0', 'row.*.local.5:1', 'row.*.local.3:2', 'row.*.local.1:3', 'row.*.long.3:4',
                     'T:+4', '+1:5');
             else
-                opips.push('row.+.local.5:0', 'row.+.local.3:1', 'row.+.local.1:2', 'row.+.long.3:3',
+                opips.push('row.*.local.5:0', 'row.*.local.3:1', 'row.*.local.1:2', 'row.*.long.3:3',
                     'T:+6', this.col==0?'+6:4':'+1:4', 'col.+.local.2:5', 'col.+.local.3:6', 'col.+.long.2:7');
 
-            qpips.push('row.+.local.4:0', 'row.+.local.2:1');
+            qpips.push('row.*.local.4:0', 'row.*.local.2:1');
             if (this.col != maxcol)
                 qpips.push('T:+9', 'col.+.local.1:2', 'col.+.local.4:3');
 
-            ipips.push('row.+.local.5:0', 'row.+.local.3:1');
+            ipips.push('row.*.local.5:0', 'row.*.local.3:1');
             if (this.col == maxcol)
-                ipips.push('row.+.local.1:2', '+13');
+                ipips.push('row.*.local.1:2', '+13');
             else
                 ipips.push('T:+9', 'col.+.local.2:2', 'col.+.local.5:3');
 
-            tpips.push('row.+.local.5:0', 'row.+.local.3:1', 'row.+.long.3:2', 'row.+.long.2:3');
+            tpips.push('row.*.local.5:0', 'row.*.local.3:1', 'row.*.long.3:2', 'row.*.long.2:3');
         }
         else if (this.style == 'leftupper')
         {
@@ -478,25 +478,25 @@ console.log(this);
         }
         else if (this.style == 'rightupper')
         {
-            opips.push('col.+.local.4:0', 'col.+.local.1:1', 'col.+.long.2:2', '-2:3');
+            opips.push('col.*.local.4:0', 'col.*.local.1:1', 'col.*.long.2:2', '-2:3');
             if (this.row == 0)
                 opips.push('T:-2', 'row.*.long.3:4');
             else
                 opips.push('T:-5', 'row.*.long.2:4', 'row.*.local.5:5', 'row.*.local.3:6', 'row.*.local.1:7');
 
-            qpips.push('col.+.local.5:0', 'col.+.local.2:1');
+            qpips.push('col.*.local.5:0', 'col.*.local.2:1');
             if (this.row != 0)
                 qpips.push('T:-9', 'row.*.local.4:2', 'row.*.local.2:3');
 
             if (this.row == 0)
-                ipips.push('col.+.local.4:0', 'col.+.local.3:1', 'col.+.local.1:2',
+                ipips.push('col.*.local.4:0', 'col.*.local.3:1', 'col.*.local.1:2',
                     'T:-7', 'T:-9', 'T:-12', '-5');
             else
-                ipips.push('col.+.local.4:0', 'col.+.local.1:1',
+                ipips.push('col.*.local.4:0', 'col.*.local.1:1',
                     ['-7', 'T:-3', 'T:-12', '-5'],
                     'T:+0', 'row.*.local.5:2', 'row.*.local.3:3');
 
-            tpips.push('col.+.local.4:0', 'col.+.local.1:1', 'col.+.long.2:2', 'col.+.long.1:3');
+            tpips.push('col.*.local.4:0', 'col.*.local.1:1', 'col.*.long.2:2', 'col.*.long.1:3');
         }
         else if (this.style == 'rightlower')
         {
@@ -505,25 +505,25 @@ console.log(this);
                 opips.push('T:-2', 'T:-1');
                 tpips.push('T:-2', 'T:+1');
 
-                opips.push('col.+.local.5:0', 'col.+.local.3:1', 'col.+.local.2:2',
-                    ['-2', '+4:3'], 'col.+.long.2:4',
+                opips.push('col.*.local.5:0', 'col.*.local.3:1', 'col.*.local.2:2',
+                    ['-2', '+4:3'], 'col.*.long.2:4',
                     'T:-2', 'row.+.long.1:5', 'row.+.local.2:6', 'row.+.local.4:7');
             }
             else
-                opips.push('-1:0', 'col.+.local.5:1', 'col.+.local.3:2', 'col.+.local.2:3', 'col.+.long.2:4',
+                opips.push('-1:0', 'col.*.local.5:1', 'col.*.local.3:2', 'col.*.local.2:3', 'col.*.long.2:4',
                     'T:-3', 'row.+.long.1:5', '+9:6')
 
-            qpips.push('col.+.local.4:0', 'col.+.local.1:1');
+            qpips.push('col.*.local.4:0', 'col.*.local.1:1');
             if (this.row != maxrow)
                 qpips.push('T:-5', 'row.+.local.3:2', 'row.+.local.5:3');
 
             if (this.row == maxrow)
-                ipips.push('col.+.local.5:0', 'col.+.local.3:1', 'col.+.local.2:2', '-8');
+                ipips.push('col.*.local.5:0', 'col.*.local.3:1', 'col.*.local.2:2', '-8');
             else
-                ipips.push('col.+.local.5:0', 'col.+.local.2:1',
+                ipips.push('col.*.local.5:0', 'col.*.local.2:1',
                     'T:-7', 'row.+.local.2:2', 'row.+.local.4:3');
 
-            tpips.push('col.+.local.5:0', 'col.+.local.3:1', 'col.+.long.2:2', 'col.+.long.1:3');
+            tpips.push('col.*.local.5:0', 'col.*.local.3:1', 'col.*.long.2:2', 'col.*.long.1:3');
         }
 
         this.okPath.appendPipList(okpips, this.genCoords.bind(this));
@@ -616,46 +616,280 @@ console.log(this);
         //
     }
 
-    add(str, bit)
-    {
-        if (str == ".I PAD/Latched")
-        {
-            this.latch = bit;
-        } else if (str == "")
-        {
-            this.muxt |= (bit << 0);
-        } else
-        {
-            let m = str.match(/\.([OKT]) MuxBit: (\d+)/);
-            if (m)
-            {
-                if (m[1] == 'K')
-                {
-                    this.muxk |= (bit << parseInt(m[2]));
-                } else if (m[1] == 'O')
-                {
-                    this.muxo |= (bit << parseInt(m[2]));
-                } else if (m[1] == 'T')
-                {
-                    this.muxt |= (bit << parseInt(m[2]));
-                } else
-                {
-                    alert('Bad mux ' + str);
-                }
-            } else
-            {
-                alert('Bad mux2 ' + str);
-            }
-        }
-        this.data.push(str + " " + bit);
-    }
-
-    /*
-     * Finish the IOB decoding.
-     */
     decode()
     {
-        //this.generateIobPips(this.pin, this.tile, this.style, this.pad);
+        var fam = curBitstream.family;
+        var offset = getTileOffset(this.col, this.row);
+        const self = this;
+
+        var inputbits = {};
+        var inputmux = {};
+        var outputbits = {};
+
+        if (this.style == 'topleft')
+        {
+            inputbits['OK'] = [3, offset.x+5];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [3, offset.x+7];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.col == 0)
+            {
+                // TODO!!
+                inputbits['O'] = [3, offset.x+0,  3+1, offset.x+0,  3+1, offset.x+1,  3+1, offset.x+2];
+                inputmux['O'] = {0xF:0, 0xE:1, 0x4:2, 0x2:3, 0x3:4, 0x5:5};
+
+                outputbits['Q'] = [3+4, offset.x+18,  3+4, offset.x+19];
+                outputbits['I'] = [3+3, offset.x+12,  3+3, offset.x+21,  3+4, offset.x+17];
+            }
+            else
+            {
+                inputbits['O'] = [3, offset.x+0,  3, offset.x+1,  3+1, offset.x+0,  3+1, offset.x+1,  3+1, offset.x+2];
+                inputmux['O'] = {0x0D:0, 0x0B:1, 0x0A:2, 0x07:3, 0x0C:4, 0x1E:5, 0x06:6, 0x1F:7};
+
+                outputbits['Q'] = [3+4, offset.x+21,  3+4, offset.x+18,  3+4, offset.x+10,  3+3, offset.x+10];
+                outputbits['I'] = [3+2, offset.x+6,  3+3, offset.x+19,  3+3, offset.x+12,  3+3, offset.x+6];
+            }
+
+            inputbits['T'] = [3, offset.x+8,  3+1, offset.x+8];
+            inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+        }
+        else if (this.style == 'topright')
+        {
+            var offset1 = getTileOffset(this.col+1, this.row);
+
+            inputbits['OK'] = [3, offset.x+16];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [3, offset.x+14];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.col == fam.cols-1)
+            {
+                inputbits['O'] = [3, offset.x+20,  3, offset.x+21,  3+1, offset.x+18,  3+1, offset.x+20,  3+1, offset.x+21];
+                inputmux['O'] = {0x0C:0, 0x1D:1, 0x09:2, 0x0B:3, 0x0E:4, 0x07:5};
+
+                outputbits['Q'] = [3+2, offset.x+7,  3+3, offset.x+18];
+                outputbits['I'] = [3+4, offset.x+20,  3+4, offset.x+19,  3+3, offset1.x+3];
+            }
+            else
+            {
+                inputbits['O'] = [3, offset.x+20,  3, offset.x+21,  3+1, offset.x+18,  3+1, offset.x+20,  3+1, offset.x+21];
+                inputmux['O'] = {0x0C:0, 0x1D:1, 0x09:2, 0x0B:3, 0x0E:4, 0x07:5, 0x1F:6, 0x05:7};
+
+                if (this.col == 0)
+                {
+                    outputbits['Q'] = [3+3, offset.x+13,  3+2, offset.x+21];
+                    outputbits['I'] = [3+4, offset.x+21,  3+4, offset.x+20,  3+2, offset1.x+10,  3+2, offset1.x+11];
+                }
+                else
+                {
+                    outputbits['Q'] = [3+2, offset.x+7,  3+3, offset.x+18,  3+2, offset1.x+2,  3+3, offset1.x+11];
+                    outputbits['I'] = [3+4, offset.x+20,  3+4, offset.x+19,  3+2, offset1.x+10,  3+2, offset1.x+11];
+                }
+            }
+
+            inputbits['T'] = [3, offset.x+11,  3+1, offset.x+12];
+            inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+        }
+        else if (this.style == 'bottomleft')
+        {
+            inputbits['OK'] = [offset.y+4, offset.x+5];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [offset.y+4, offset.x+7];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.col == 0)
+            {
+                inputbits['O'] = [offset.y+3, offset.x,  offset.y+3, offset.x+1,  offset.y+3, offset.x+2,  offset.y+4, offset.x];
+                inputmux['O'] = {0x1:0, 0xF:1, 0x7:2, 0x2:3, 0x9:4, 0xA:5};
+
+                outputbits['Q'] = [offset.y, offset.x+21,  offset.y, offset.x+18];
+                outputbits['I'] = [offset.y+2, offset.x+6,  offset.y+1, offset.x+19,  offset.y+2, offset.x+21];
+            }
+            else
+            {
+                inputbits['O'] = [offset.y+3, offset.x,  offset.y+3, offset.x+1,  offset.y+3, offset.x+2,  offset.y+4, offset.x,  offset.y+4, offset.x+1];
+                inputmux['O'] = {0x0B:0, 0x1A:1, 0x12:2, 0x19:3, 0x03:4, 0x17:5, 0x11:6, 0x1F:7};
+
+                outputbits['Q'] = [offset.y, offset.x+21,  offset.y, offset.x+18,  offset.y+1, offset.x+10,  offset.y, offset.x+10];
+                outputbits['I'] = [offset.y+2, offset.x+6,  offset.y+1, offset.x+19,  offset.y+1, offset.x+12,  offset.y+1, offset.x+6];
+            }
+
+            inputbits['T'] = [offset.y+4, offset.x+8,  offset.y+3, offset.x+8];
+            inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+        }
+        else if (this.style == 'bottomright')
+        {
+            var offset1 = getTileOffset(this.col+1, this.row);
+
+            inputbits['OK'] = [offset.y+4, offset.x+16];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [offset.y+4, offset.x+14];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.col == fam.cols-1)
+            {
+                inputbits['O'] = [offset.y+3, offset.x+18,  offset.y+3, offset.x+20,  offset.y+3, offset.x+21,  offset.y+4, offset.x+20,  offset.y+4, offset.x+21];
+                inputmux['O'] = {0x09:0, 0x03:1, 0x0F:2, 0x0A:3, 0x1A:4, 0x13:5};
+
+                outputbits['Q'] = [offset.y+2, offset.x+7,  offset.y+1, offset.x+18];
+                outputbits['I'] = [offset.y, offset.x+20,  offset.y, offset.x+19,  offset1.y, offset1.x+1];
+            }
+            else
+            {
+                inputbits['O'] = [offset.y+3, offset.x+18,  offset.y+3, offset.x+20,  offset.y+3, offset.x+21,  offset.y+4, offset.x+20,  offset.y+4, offset.x+21];
+                inputmux['O'] = {0x03:0, 0x0F:1, 0x0A:2, 0x1A:3, 0x13:4, 0x19:5, 0x1F:6, 0x09:7};
+
+                outputbits['Q'] = [offset.y+2, offset.x+7,  offset.y+1, offset.x+18,  offset1.y+2, offset1.x+2,  offset1.y+1, offset1.x+11];
+                outputbits['I'] = [offset.y, offset.x+20,  offset.y, offset.x+19,  offset1.y+2, offset1.x+10,  offset1.y+2, offset1.x+11];
+            }
+
+            inputbits['T'] = [offset.y+4, offset.x+11,  offset.y+3, offset.x+12];
+            inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+        }
+        else if (this.style == 'leftupper')
+        {
+            if (this.row == 0) inputbits['OK'] = [offset.y+2, 2];
+            else               inputbits['OK'] = [offset.y, 0];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [offset.y+4, 1];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.row == 0)
+            {
+                inputbits['O'] = [offset.y, 2,  offset.y+1, 1,  offset.y+1, 3,  offset.y+1, 4];
+                inputmux['O'] = {0x4:0, 0xD:1, 0xF:2, 0x1:3, 0x6:4, 0x3:5};
+
+                outputbits['Q'] = [offset.y+1, offset.x+10,  offset.y+1, offset.x+11];
+                outputbits['I'] = [offset.y, offset.x+2,  offset.y+1, offset.x+17,  offset.y, offset.x+17];
+            }
+            else
+            {
+                inputbits['O'] = [offset.y, 0,  offset.y, 2,  offset.y, 4,  offset.y, 5,  offset.y, 6];
+                inputmux['O'] = {0x0A:0, 0x1F:1, 0x0D:2, 0x07:3, 0x0B:4, 0x06:5, 0x0C:6};
+
+                outputbits['Q'] = [offset.y+2, offset.x+15,  offset.y+2, offset.x+10,  offset.y+2, 5,  offset.y+2, 4];
+                outputbits['I'] = [offset.y+2, offset.x+9,  offset.y+2, offset.x+18,  offset.y+3, offset.x+17,  offset.y+4, offset.x+18];
+            }
+
+            inputbits['T'] = [offset.y+5, 2,  offset.y+4, 3];
+            inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+        }
+        else if (this.style == 'leftlower')
+        {
+            var offset1 = getTileOffset(this.col, this.row+1);
+
+            inputbits['OK'] = [offset.y+6, 0];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [offset.y+5, 1];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.row == fam.rows-1)
+            {
+                inputbits['O'] = [offset.y+5, 4,  offset.y+5, 6,  offset.y+7, 3,  offset.y+7, 5,  offset.y+7, 6];
+                inputmux['O'] = {0x0E:0, 0x1F:1, 0x05:2, 0x0B:3, 0x0D:4, 0x06:5, 0x03:6};
+
+                outputbits['Q'] = [offset.y+3, offset.x,  offset.y+3, offset.x+16];
+                outputbits['I'] = [offset.y+4, offset.x+3,  offset1.y, 6,  offset.y+2, 6];
+            }
+            else
+            {
+                inputbits['O'] = [offset.y+5, 4,  offset.y+5, 6,  offset.y+7, 3,  offset.y+7, 5,  offset.y+7, 6];
+                inputmux['O'] = {0x0E:0, 0x1F:1, 0x05:2, 0x0B:3, 0x0D:4, 0x06:5, 0x03:6, 0x17:7};
+
+                outputbits['Q'] = [offset.y+3, offset.x,  offset.y+3, offset.x+16,  offset1.y+3, offset1.x+18,  offset1.y+3, offset1.x+19];
+                outputbits['I'] = [offset.y+4, offset.x+3,  offset.y+2, 6,  offset1.y+2, 3,  offset1.y+3, 4];
+            }
+
+            inputbits['T'] = [offset.y+7, 1,  offset.y+6, 2];
+            inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+        }
+        else if (this.style == 'rightupper')
+        {
+            inputbits['OK'] = [offset.y+4, offset.x+11];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [offset.y+5, offset.x+12];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.row == 0)
+            {
+                inputbits['O'] = [offset.y+2, offset.x+11,  offset.y+2, offset.x+12,  offset.y+3, offset.x+11,  offset.y+3, offset.x+12,  offset.y+3, offset.x+13];
+                inputmux['O'] = {0x19:0, 0x0F:1, 0x05:2, 0x15:3, 0x09:4};
+
+                outputbits['Q'] = [offset.y+5, offset.x+9,  offset.y+5, offset.x+4];
+                outputbits['I'] = [offset.y+4, offset.x+7,  offset.y+3, offset.x+7,  offset.y+4, offset.x+1];
+            }
+            else
+            {
+                inputbits['O'] = [offset.y+2, offset.x+11,  offset.y+2, offset.x+12,  offset.y+3, offset.x+11,  offset.y+3, offset.x+12,  offset.y+3, offset.x+13];
+                inputmux['O'] = {0x19:0, 0x0F:1, 0x05:2, 0x15:3, 0x09:4, 0x1C:5, 0x0C:6, 0x1F:7};
+
+                outputbits['Q'] = [offset.y+5, offset.x+9,  offset.y+5, offset.x+4,  offset.y+2, offset.x+5,  offset.y+2, offset.x+6];
+                outputbits['I'] = [offset.y+4, offset.x+7,  offset.y+4, offset.x+1,  offset.y+3, offset.x+10,  offset.y+3, offset.x+7];
+            }
+
+            inputbits['T'] = [offset.y+5, offset.x+5,  offset.y+4, offset.x+5];
+            inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+        }
+        else if (this.style == 'rightlower')
+        {
+            var offset1 = getTileOffset(this.col, this.row+1);
+
+            inputbits['OK'] = [offset.y+6, offset.x+11];
+            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputbits['IK'] = [offset.y+6, offset.x+13];
+            inputmux['IK'] = {0x1:0, 0x0:1};
+
+            if (this.row == fam.rows-1)
+            {
+                inputbits['O'] = [offset.y+6, offset.x+5,  offset.y+7, offset.x+4,  offset.y+7, offset.x+7,  offset.y+7, offset.x+8,  offset.y+7, offset.x+9];
+                inputmux['O'] = {0x0D:0, 0x0A:1, 0x1E:2, 0x06:3, 0x0B:4, 0x07:5, 0x0C:6};
+
+                outputbits['Q'] = [offset.y+6, offset.x+9,  offset.y+6, offset.x+4];
+                outputbits['I'] = [offset.y+6, offset.x+10,  offset1.y, offset1.x+4,  offset.y+6, offset.x+6];
+            }
+            else
+            {
+                inputbits['O'] = [offset.y+6, offset.x+5,  offset.y+7, offset.x+4,  offset.y+7, offset.x+7,  offset.y+7, offset.x+8,  offset.y+7, offset.x+9];
+                inputmux['O'] = {0x0A:0, 0x1E:1, 0x06:2, 0x0C:3, 0x0B:4, 0x07:5, 0x1F:6, 0x0D:7};
+
+                outputbits['Q'] = [offset.y+6, offset.x+9,  offset.y+6, offset.x+4,  offset1.y+3, offset1.x+8,  offset1.y+3, offset1.x+9];
+                outputbits['I'] = [offset.y+6, offset.x+10,  offset.y+6, offset.x+6,  offset1.y+3, offset1.x+5,  offset1.y+3, offset1.x+4];
+            }
+
+            inputbits['T'] = [offset.y+6, offset.x+2,  offset.y+6, offset.x+1];
+            inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+        }
+
+        Object.entries(inputbits).forEach(([key, val]) =>
+        {
+            var bits = 0;
+            for (var i = 0; i < val.length; i+=2)
+            {
+                var bit = curBitstream.data[val[i]][val[i+1]];
+                bits |= (bit << (i>>1));
+            }
+
+            var mux = inputmux[key][bits];
+            if (typeof mux == 'undefined')
+            {
+                console.log(this.pin+': bad mux ' + key + '=' + bits);
+                return;
+            }
+
+            // enable the corresponding PIP
+            this[key.toLowerCase()+'Path'].setPipStatus(mux, 1);
+        });
+
+        Object.entries(outputbits).forEach(([key, val]) =>
+        {
+            for (var i = 0; i < val.length; i+=2)
+            {
+                var bit = curBitstream.data[val[i]][val[i+1]];
+                if (!bit)
+                    this[key.toLowerCase()+'Path'].setPipStatus(i>>1, 1);
+            }
+        });
     }
 
     isInside(x, y)
