@@ -213,7 +213,38 @@ class ClockBuf
 
     decode()
     {
-        //
+        var inputbits;
+        var inputmux;
+
+        if (this.name == 'GCLK')
+        {
+            inputbits = [3+2, 7,  3+3, 7,  3+3, 7+2,  3+3, 7+5,  3+3, 7+8,  3+3, 7+9,  3+4, 7,  3+5, 3];
+            inputmux = {0xDD:0, 0xDE:1, 0x9F:2, 0x7F:3, 0xD7:4, 0xCF:5, 0xDB:6, 0xFF:7};
+        }
+        else if (this.name == 'ACLK')
+        {
+            var o = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
+
+            inputbits = [o.y+1, o.x+12,  o.y+2, o.x+6,  o.y+2, o.x+7,  o.y+2, o.x+8,  o.y+2, o.x+9,  o.y+2, o.x+10,  o.y+2, o.x+11,  o.y+3, o.x+9,  o.y+3, o.x+10];
+            inputmux = {0x1FE:0, 0x19F:1, 0x13F:2, 0x1BB:3, 0x0BF:4, 0x1AF:5, 0x1B7:6, 0x1BD:7, 0x1FF:8};
+        }
+
+        var bits = 0;
+        for (var i = 0; i < inputbits.length; i+=2)
+        {
+            var bit = curBitstream.data[inputbits[i]][inputbits[i+1]];
+            bits |= (bit << (i>>1));
+        }
+
+        var mux = inputmux[bits];
+        if (typeof mux == 'undefined')
+        {
+            console.log(this.name+': bad mux I=' + bits);
+            return;
+        }
+
+        // enable the corresponding PIP
+        this.iPath.setPipStatus(mux, 1);
     }
 
     renderBackground(ctx)
@@ -298,7 +329,13 @@ class ClockOsc
 
     decode()
     {
-        //
+        var offset = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
+
+        var x0 = curBitstream.data[offset.y+1][offset.x+9];
+        var x1 = curBitstream.data[offset.y+1][offset.x+10];
+
+        if (!x0) this.oPath.setPipStatus(0, 1);
+        if (!x1) this.oPath.setPipStatus(1, 1);
     }
 
     renderBackground(ctx)

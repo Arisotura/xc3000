@@ -37,7 +37,7 @@ class PipDecoder {
             if (col == 0 || col == fam.cols)
             {
                 if (row == fam.rows)
-                    vbidi = 0;
+                    vbidi = 0; // TODO position is just different!!
                 else
                     vbidi = [3, 0, 5][row % 3];
             }
