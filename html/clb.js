@@ -9,7 +9,7 @@ class ClbDecoder {
     this.W = 20;
     this.H = 32;
 
-    console.log(this);
+    //console.log(this);
 
     // determine neighboring tiles
     this.tileLeft = (col == 0) ? null : letters[row]+letters[col-1];

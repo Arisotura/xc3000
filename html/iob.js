@@ -40,7 +40,7 @@ class IobDecoders {
       p = createIOBs(p, fam.cols*2, ['bottomleft','bottomright'], true);
       p = createIOBs(p, fam.rows*2, ['leftupper','leftlower'], true);
 
-      console.log(this.iobs);
+      //console.log(this.iobs);
   }
 
   reset() {
@@ -122,7 +122,9 @@ class Iob
 
         this.gPt = getGCoords(pad);
         this.screenPt = getSCoords(this.gPt);
-console.log(this);
+
+        //console.log(this);
+
         // point to the CLB this IOB might have direct connections to
         if (style == 'topleft' || style == 'topright')
         {

@@ -5,7 +5,7 @@ class ClockDecoders
     {
         this.clocks = {};
         this.clocksFromG = {};
-        this.clockLines = [];
+        this.clockLines = {};
 
         this.clocks['GCLK'] = new ClockBuf('GCLK');
         this.clocks['ACLK'] = new ClockBuf('ACLK');
@@ -30,19 +30,19 @@ class ClockDecoders
 
         path = new Path(null, null, 'dest', 'col.A.local.4:row.A.local.6', 'H');
         pips = ['col.A.local.4:0', 'col.A.local.5:1', ['col.A.local.11', 'row.A.long.2:2'],
-            'T:+0', 'row.A.local.2:3', 'row.A.local.10:4', 'T:+0'
+            'T:+0', 'row.A.local.2:3', 'row.A.local.10:4', 'T:+0', '+1:5'
         ];
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath('col.A.local.11:row.A.local.10', this.genCoords('col.*.local.1:row.A.local.10'), path);
-        this.clockLines.push(path);
+        this.clockLines['topleft'] = path;
 
         path = new Path(null, null, 'dest', this.genCoords('col.*.local.9:row.A.local.3'), 'V');
-        pips = ['row.A.local.3:0', 'row.A.local.5:1', 'T:row.A.local.7',
-            'col.*.long.1:2', 'col.*.local.5:3', 'T:+1', 'T:+2', 'T:+9', 'row.A.local.11:4', 'T:+0', '-8:5'
+        pips = ['row.A.local.3:3', 'row.A.local.5:2', 'T:row.A.local.7',
+            'col.*.long.1:1', 'col.*.local.5:0', 'T:+1', 'T:+2', 'T:+9', 'row.A.local.11:4', 'T:+0', '-8:5'
         ];
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.1:row.A.local.11'), 'col.A.long.6:row.A.local.11', path);
-        this.clockLines.push(path);
+        this.clockLines['topright'] = path;
 
         // bottom side
 
@@ -55,18 +55,18 @@ class ClockDecoders
         pips.push('T:+0');
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.A.local.7:row.*.local.7'), this.genCoords('col.*.local.1:row.*.local.7'), path);
-        this.clockLines.push(path);
+        this.clockLines['bottomleft'] = path;
 
         path = new Path(null, null, 'dest', this.genCoords('col.*.local.10:row.*.long.2'), 'V');
-        pips = ['row.*.long.2:0', ['row.*.local.8', 'col.*.local.1:1', 'col.*.local.2:2'],
-            'row.*.local.4:3', 'row.*.local.6:4'
+        pips = ['row.*.long.2:3', ['row.*.local.8', 'col.*.local.1:2', 'col.*.local.2:1'],
+            'row.*.local.4:0', 'row.*.local.6:4'
         ];
         if (!curBitstream.family.swapBottomClk)
             pips.push(['+0', '+2:5']);
         pips.push('T:+0');
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.1:row.*.local.6'), this.genCoords('col.A.local.7:row.*.local.6'), path);
-        this.clockLines.push(path);
+        this.clockLines['bottomright'] = path;
 
         // left side
 
@@ -76,43 +76,83 @@ class ClockDecoders
         ];
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath('col.A.local.12:row.A.local.6', this.genCoords('col.A.local.12:row.*.local.5'), path);
-        this.clockLines.push(path);
+        this.clockLines['leftupper'] = path;
 
         path = new Path(null, null, 'dest', this.genCoords('col.A.local.10:row.*.local.2'), 'V');
-        pips = ['row.*.local.2:0', 'row.*.local.1:1', 'T:row.*.local.10', 'col.A.long.2:2', 'col.A.local.2:3', 'col.A.local.13:4'];
+        pips = ['row.*.local.2:3', 'row.*.local.1:2', 'T:row.*.local.10', 'col.A.long.2:1', 'col.A.local.2:0', 'col.A.local.13:4'];
         path.appendPipList(pips, this.genCoords.bind(this));
         path2 = path.appendJunction('+0');
         pipDecoder.addPipsToPath(this.genCoords('col.A.local.13:row.*.local.10'), this.genCoords('col.A.local.13:row.*.local.5'), path2);
+        path2.appendPip('4:5');
         path.appendTurn('+0');
         pipDecoder.addPipsToPath(this.genCoords('col.A.local.13:row.*.local.10'), 'col.A.local.13:row.A.long.2', path);
-        this.clockLines.push(path);
+        this.clockLines['leftlower'] = path;
 
         // right side
 
         path = new Path(null, null, 'dest', this.genCoords('col.*.long.1:row.A.local.9'), 'H');
         pips = ['col.*.long.1:0', ['col.*.local.8', 'row.A.local.5:1', 'row.A.local.4:2'],
-            'col.*.local.4:3', 'T:+2', 'T:-2', 'col.*.local.6:4'
+            'col.*.local.4:3', 'T:+2', 'T:-2', 'col.*.local.6:4',
         ];
         path.appendPipList(pips, this.genCoords.bind(this));
         path2 = path.appendJunction('+0');
+        path2.appendPip('+1:5');
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.6:row.A.local.8'), this.genCoords('col.*.local.6:row.A.local.5'), path2);
         path.appendTurn('+0');
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.6:row.A.local.8'), this.genCoords('col.*.local.6:row.*.local.1'), path);
-        this.clockLines.push(path);
+        this.clockLines['rightupper'] = path;
 
         path = new Path(null, null, 'dest', this.genCoords('col.*.local.3:row.*.local.9'), 'H');
-        pips = ['col.*.local.3:0', 'col.*.local.1:1', 'T:col.*.local.9',
-            'row.*.long.2:2', 'row.*.local.5:3', 'T:row.*.local.7', 'col.*.local.7:4', 'T:+0',
+        pips = ['col.*.local.3:3', 'col.*.local.1:2', 'T:col.*.local.9',
+            'row.*.long.2:1', 'row.*.local.5:0', 'T:row.*.local.7', 'col.*.local.7:4', 'T:+0',
             '+4:5'
         ];
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.7:row.*.local.5'), this.genCoords('col.*.local.7:row.A.local.5'), path);
-        this.clockLines.push(path);
+        this.clockLines['rightlower'] = path;
     }
 
     decode()
     {
         Object.entries(this.clocks).forEach(([name, obj]) => obj.decode());
+
+        // decode input muxes for clock lines
+        // the muxes are split in two parts:
+        // first two bits determine which input connects to the clock line
+        // - 00: branch + PIP#4  01: branch alone  10: PIP#5 (direct input)  11: none
+
+        var o = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
+
+        var inputmux = {0x5:0, 0x3:1, 0x6:2, 0xF:3};
+        var inputbits = {};
+        inputbits['topleft'] = [3+2, 4,  3+2, 5,  3+3, 7+1,  3, 7+1,  3+3, 7+4,  3+3, 7+7];
+        inputbits['topright'] = [3+3, o.x+5,  3+3, o.x+4,  3+3, o.x+6,  3+4, o.x+8,  3+4, o.x+6,  3+3, o.x+9];
+        inputbits['bottomleft'] = [o.y+3, 6,  o.y+3, 1,  o.y+3, 2,  o.y+3, 3,  o.y+3, 4,  o.y+3, 5];
+        inputbits['bottomright'] = [o.y+4, o.x+2,  o.y+3, o.x+4,  o.y+3, o.x+6,  o.y+3, o.x+7,  o.y+3, o.x+5,  o.y+3, o.x+8];
+        inputbits['leftupper'] = [3+2, 0,  3+2, 3,  3+2, 7+1,  3+2, 7+3,  3+3, 7+3,  3+3, 7+6];
+        inputbits['leftlower'] = [o.y, 0,  o.y, 1,  o.y, 2,  o.y, 3,  o.y, 4,  o.y, 5];
+        inputbits['rightupper'] = [3+3, o.x+12,  3+3, o.x+11,  3+4, o.x+10,  3+3, o.x+8,  3+3, o.x+7,  3+3, o.x+10];
+        inputbits['rightlower'] = [o.y, o.x+13,  o.y, o.x+12,  o.y, o.x+8,  o.y, o.x+7,  o.y, o.x+9,  o.y, o.x+10];
+
+        Object.entries(inputbits).forEach(([k,v]) =>
+        {
+            var ibits = inputbits[k];
+            var bits = 0;
+            for (var i = 0; i < ibits.length; i+=2)
+            {
+                var bit = curBitstream.data[ibits[i]][ibits[i+1]];
+                bits |= (bit << (i>>1));
+            }
+
+            var muxval = inputmux[bits >> 2];
+            if (typeof muxval != 'undefined')
+                this.clockLines[k].setPipStatus(muxval, 1);
+            else
+                console.log('clock line '+k+': bad mux '+bits.toString(2));
+
+            if (!(bits & 0x2))
+                this.clockLines[k].setPipStatus((bits&0x1) ? 5:4, 1);
+        });
     }
 
     getFromG(name) {
@@ -126,7 +166,8 @@ class ClockDecoders
     renderBackground(ctx)
     {
         Object.entries(this.clocks).forEach(([name, obj]) => obj.renderBackground(ctx));
-        this.clockLines.forEach((line) => line.draw(ctx));
+        //this.clockLines.forEach((line) => line.draw(ctx));
+        Object.entries(this.clockLines).forEach(([key, line]) => line.draw(ctx));
     }
 
     render(ctx)
