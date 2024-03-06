@@ -182,9 +182,65 @@ class TriBuf
     decode()
     {
         // T inputs: #0 on local lines, #1 on long lines
-        // TODO: extra interconnects for XC31xx family
 
-        //
+        var row, num;
+        if (this.row == 0 || this.num == 2)
+        {
+            row = this.row;
+            num = 0;
+        }
+        else
+        {
+            row = this.row - 1;
+            num = 1;
+        }
+
+        var offset = getTileOffset(this.col, row);
+
+        var enable, tsel, isel;
+        if (!num)
+        {
+            if (this.col == curBitstream.family.cols)
+            {
+                enable = curBitstream.data[offset.y + 2][offset.x + 1];
+                tsel = curBitstream.data[offset.y + 2][offset.x + 2];
+                isel = 1;
+            }
+            else
+            {
+                enable = curBitstream.data[offset.y + 2][offset.x + 1];
+                tsel = curBitstream.data[offset.y + 2][offset.x + 4];
+                isel = curBitstream.data[offset.y + 2][offset.x + 3];
+            }
+        }
+        else
+        {
+            if (this.col == curBitstream.family.cols)
+            {
+                enable = curBitstream.data[offset.y + 5][offset.x + 3];
+                tsel = curBitstream.data[offset.y + 5][offset.x + 2];
+                isel = 1;
+            }
+            else
+            {
+                enable = curBitstream.data[offset.y + 2][offset.x + 11];
+                tsel = curBitstream.data[offset.y + 2][offset.x + 8];
+                isel = curBitstream.data[offset.y + 2][offset.x + 13];
+            }
+        }
+
+        if (!curBitstream.family.extraInter)
+            isel = 1;
+
+        if (!num || this.col==0)
+            tsel = tsel?0:1;
+
+        if (enable == 0)
+        {
+            this.oPath.setPipStatus(0, 1);
+            this.iPath.setPipStatus(isel?0:1, 1);
+            this.tPath.setPipStatus(tsel, 1);
+        }
     }
 
     renderBackground(ctx)
