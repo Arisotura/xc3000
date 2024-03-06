@@ -237,6 +237,7 @@ class Path
         if (!elem)
         {
             console.log('element '+id+' not found');
+            console.log(this);
             return;
         }
         if (elem.type != 'pip')

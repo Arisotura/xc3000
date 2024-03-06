@@ -1,5 +1,6 @@
 
-class PipDecoder {
+class PipDecoder
+{
     constructor() {
         this.entries = {};
 
@@ -20,33 +21,53 @@ class PipDecoder {
 
         // generate stand-alone PIPs, they will later be added to line paths
 
-        var hbidi = 0, vbidi = 0;
+        // the pattern for bidi PIPs starts at the bottom right corner
+        var bidi_pos = ((fam.cols-col) - (fam.rows-row) + 99) % 3;
+        var hbidi, vbidi;
 
-        if (col != fam.cols)
+        if (col == fam.cols && (row == 0 || row == fam.rows))
         {
-            if (row == 0)
-                hbidi = [3, 5, 1][col % 3];
-            else if (row == fam.rows)
-                hbidi = [3, 1, 5][col % 3];
-            else
-                hbidi = [5, 1, 3][(col - row + 99) % 3];
+            hbidi = 0;
+            vbidi = 0;
         }
-
-        if (row != 0)
+        else if (col == fam.cols && row == 1)
         {
-            if (col == 0 || col == fam.cols)
-            {
-                if (row == fam.rows)
-                    vbidi = 0; // TODO position is just different!!
-                else
-                    vbidi = [3, 0, 5][row % 3];
-            }
-            else
-                vbidi = [1, 0, 3][(row - col + 99) % 3];
+            hbidi = 0;
+            vbidi = [0, 0, 3][bidi_pos];
+        }
+        else if (col == fam.cols)
+        {
+            hbidi = 0;
+            vbidi = [0, 5, 3][bidi_pos];
+        }
+        else if (row == fam.rows && col == 0)
+        {
+            hbidi = [1, 3, 5][bidi_pos];
+            vbidi = [0, 0, 5][bidi_pos];
+        }
+        else if (row == fam.rows)
+        {
+            hbidi = [1, 3, 5][bidi_pos];
+            vbidi = [1, 0, 3][bidi_pos];
+        }
+        else if (row == 0)
+        {
+            hbidi = [3, 1, 5][bidi_pos];
+            vbidi = 0;
+        }
+        else if (col == 0)
+        {
+            hbidi = [5, 3, 1][bidi_pos];
+            vbidi = [3, 0, 5][bidi_pos];
+        }
+        else
+        {
+            hbidi = [5, 3, 1][bidi_pos];
+            vbidi = [1, 0, 3][bidi_pos];
         }
 
         if (hbidi) pips.push('bidiH:col.*.local.'+(col==0?(row==0||row==fam.rows?6:7):8)+':row.*.local.'+hbidi);
-        if (vbidi) pips.push('bidiV:col.*.local.'+vbidi+':row.*.local.'+(row==fam.rows?11:0));
+        if (vbidi) pips.push('bidiV:col.*.local.'+vbidi+':row.*.local.'+(row==fam.rows&&col!=0?11:0));
 
         if (row == (fam.rows/2))
         {
@@ -218,6 +239,7 @@ class PipDecoder {
         // ND    : bit0=H->V bit1=V->H
         // bidiH : bit0=left->right bit1=right->left
         // bidiV : bit0=bottom->top bit1=top->bottom
+        // split : bit0=active
 
         var key = gPt.x+'G'+gPt.y;
         this.entries[key] = {
