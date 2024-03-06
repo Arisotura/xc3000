@@ -112,8 +112,12 @@ class ClbDecoder {
             ['-3', 'row.*.local.3:2', 'row.*.local.1:1'],
             'col.*.local.3:5', 'col.*.local.1:4');
 
+        var ecbranch = ['-4', 'T:-4'];
+        if (curBitstream.family.extraInter)
+          ecbranch.push('col.*.long.4:4');
+        ecbranch.push('col.*.long.3:3', 'col.*.local.3:2');
         ecpips.push('T:+3', 'T:+1', 'T:+6',
-            ['-4', 'T:-4', 'col.*.long.3:3', 'col.*.local.3:2'],
+            ecbranch,
             'T:-5', 'row.*.local.5:1', 'row.*.local.2:0');
       }
       else
@@ -122,7 +126,11 @@ class ClbDecoder {
             ['+5', 'col.*.local.3:5', 'col.*.local.1:4'],
             '+1:0', 'row.*.local.3:2', 'row.*.local.1:1');
 
-        ecpips.push(['+5', 'col.*.long.1:3', 'col.*.local.3:2']);
+        var ecbranch = ['+5'];
+        if (curBitstream.family.extraInter)
+          ecbranch.push('col.*.long.2:4');
+        ecbranch.push('col.*.long.1:3', 'col.*.local.3:2');
+        ecpips.push(ecbranch);
         if (this.col == maxcol)
           ecpips.push('T:+0', 'T:+1', 'T:+7', 'T:-9');
         else
@@ -146,8 +154,10 @@ class ClbDecoder {
           'col.*.local.4:1', 'col.*.local.1:0');
 
       ecpips.push('T:+6',
-          ['-1', 'row.*.local.5:1', 'row.*.local.2:0'],
-          this.col==0?'col.*.long.3:3':'col.*.long.1:3', 'col.*.local.3:2');
+          ['-1', 'row.*.local.5:1', 'row.*.local.2:0']);
+      if (curBitstream.family.extraInter)
+        ecpips.push(this.col==0?'col.*.long.4:4':'col.*.long.2:4');
+      ecpips.push(this.col==0?'col.*.long.3:3':'col.*.long.1:3', 'col.*.local.3:2');
 
       if (this.col == 0)
       {
@@ -229,8 +239,16 @@ class ClbDecoder {
 
     if (this.col == 0)
     {
-      if (this.row == 0) xpips.push(['+1', 'T:+9', '-12']);
-      else               xpips.push(['+1', 'T:+6', 'T:-1', 'T:+1', '-11']);
+      if (curBitstream.family.extraInter)
+      {
+        if (this.row == 0) xpips.push(['+1', 'row.*.long.3:4', '+3', 'T:+2', '-12']);
+        else               xpips.push(['+1', 'T:+6', 'T:-1', 'T:+1', ['-9', 'row.*.long.2:4'], '-2']);
+      }
+      else
+      {
+        if (this.row == 0) xpips.push(['+1', 'T:+9', '-12']);
+        else               xpips.push(['+1', 'T:+6', 'T:-1', 'T:+1', '-11']);
+      }
       xpips.push('col.+.local.1:0', 'col.+.local.4:1');
       if (this.row == maxrow) xpips.push('T:+3', '-1', 'T:row.+.local.8', 'T:+12', 'row.+.local.1:2', 'row.+.local.5:3');
       else                    xpips.push('T:+11', '-1', 'row.+.local.1:2', 'row.+.local.5:3');
@@ -244,8 +262,16 @@ class ClbDecoder {
     }
     else
     {
-      if (this.row == 0) xpips.push(['+1', 'T:+5', 'T:-17', 'T:-2', 'T:-16', '-5']);
-      else               xpips.push(['+1', 'T:+4', 'T:-17', 'T:-1', 'T:-16', '-5']);
+      if (curBitstream.family.extraInter)
+      {
+        if (this.row == 0) xpips.push(['+1', 'row.*.long.3:4', 'T:+1', '-2', 'T:-15', 'T:-2', 'T:-16', '-5']);
+        else               xpips.push(['+1', 'T:+4', '-2', ['-5', 'row.*.long.2:4'], 'T:-10', 'T:-1', 'T:-16', '-5']);
+      }
+      else
+      {
+        if (this.row == 0) xpips.push(['+1', 'T:+5', 'T:-17', 'T:-2', 'T:-16', '-5']);
+        else               xpips.push(['+1', 'T:+4', 'T:-17', 'T:-1', 'T:-16', '-5']);
+      }
       xpips.push('col.+.local.1:0', 'col.+.local.4:1');
       if (this.row == maxrow) xpips.push('T:+3', '-1', 'T:row.+.local.8', (this.col==maxcol-1?'T:+8':'T:+12'), 'row.+.local.1:2', 'row.+.local.5:3');
       else                    xpips.push('T:+11', '-1', 'row.+.local.1:2', 'row.+.local.5:3');
@@ -253,8 +279,16 @@ class ClbDecoder {
 
     if (this.col == 0)
     {
-      if (this.row == maxrow) ypips.push(['+1', '-11']);
-      else                    ypips.push(['+1', 'T:-8', '-3']);
+      if (curBitstream.family.extraInter)
+      {
+        if (this.row == maxrow) ypips.push(['+1', 'row.+.long.1:4', '-3', '-2']);
+        else                    ypips.push(['+1', '-4', 'row.+.long.1:4', 'T:-1', '-3']);
+      }
+      else
+      {
+        if (this.row == maxrow) ypips.push(['+1', '-11']);
+        else                    ypips.push(['+1', 'T:-8', '-3']);
+      }
       if (this.row == 0) ypips.push(['+1', '+16']);
       else               ypips.push(['+1', 'T:+10', 'T:-1', 'T:+11', '-5']);
       ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
@@ -271,8 +305,16 @@ class ClbDecoder {
     }
     else
     {
-      if (this.row == maxrow) ypips.push(['+1', '-11']);
-      else                    ypips.push(['+1', 'T:-4', '-3']);
+      if (curBitstream.family.extraInter)
+      {
+        if (this.row == maxrow) ypips.push(['+1', 'row.+.long.1:4', '-3', '-2']);
+        else                    ypips.push(['+1', '-3', 'T:-1', ['+0', 'row.+.long.1:4'], '-3']);
+      }
+      else
+      {
+        if (this.row == maxrow) ypips.push(['+1', '-11']);
+        else                    ypips.push(['+1', 'T:-4', '-3']);
+      }
       if (this.row == 0) ypips.push(['+1', '+16']);
       else               ypips.push(['+1', 'T:+9', 'T:-1', 'T:+12', '-5']);
       ypips.push('col.+.local.2:0', 'col.+.local.3:1', 'col.+.local.5:2');
@@ -318,7 +360,7 @@ class ClbDecoder {
 
     var inputmux = {
       'A': {0x2:0, 0x5:1, 0xA:2, 0xB:2, 0x1:3, 0x6:4, 0xF:5},
-      'EC': {0xA:0, 0x9:1, 0xF:2, 0x3:3},
+      'EC': {0xA:0, 0x9:1, 0xF:2, 0x3:3, 0xD:4},
       'DI': {0xB:0, 0xA:0, 0xF:1, 0x9:2, 0x3:3},
       'B': {0x1B:0, 0x0D:1, 0x0E:2, 0x03:3, 0x07:4, 0x09:5, 0x1F:6, 0x0A:7},
       'C': {0x1F:0, 0x0E:1, 0x0D:2, 0x09:3, 0x03:4, 0x0A:5, 0x07:6, 0x1B:7},
@@ -398,6 +440,25 @@ class ClbDecoder {
           this[key.toLowerCase()+'Path'].setPipStatus(i>>1, 1);
       }
     });
+
+    if (fam.extraInter && this.col != fam.cols-1)
+    {
+      // extra interconnects for X and Y
+      // these can only be enabled if the neighboring tristate buffers are disabled
+      // the last column also doesn't have them
+
+      var offset1 = getTileOffset(this.col+1, this.row);
+
+      var tb2enable = curBitstream.data[offset1.y+2][offset1.x+1];
+      var xinput = curBitstream.data[offset1.y+2][offset1.x+3];
+      var tb1enable = curBitstream.data[offset1.y+2][offset1.x+11];
+      var yinput = curBitstream.data[offset1.y+2][offset1.x+13];
+
+      if (tb2enable==1 && xinput==0)
+        this.xPath.setPipStatus(4, 1);
+      if (tb1enable==1 && yinput==0)
+        this.yPath.setPipStatus(4, 1);
+    }
   }
 
   renderBackground(ctx)

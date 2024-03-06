@@ -169,10 +169,51 @@ function parseBitstream(type, contents)
             chk4 == 0xE &&
             chk5 == 0xE &&
             chk6 == 0xF)
-        {
           family = i;
+        else
+          continue;
+
+        // check for XC31xxA extra interconnects
+        // if any of these are used, we set the family to XC31xxA, otherwise it is XC30xx
+        // only exception is the XC3195A, which has no XC30xx counterpart
+        let fam = chipFamilies[family];
+        if (fam.extraInter == 2)
           break;
+
+        for (var c = 0; c < fam.cols; c++)
+        {
+          for (var r = 0; r < fam.rows; r++)
+          {
+            var extraint = false;
+
+            var basex = 7 + (c * 22);
+            var basey = 3+2 + (r * 8);
+            if ((r >= (fam.rows/2)) && (!fam.noMidBuffers))
+              basey++;
+
+            pos = startpos + ((fnum-1-(basex+7)) * flen) + (flen-1-(basey+3));
+            var ec = readbits(1);
+            pos = startpos + ((fnum-1-(basex+6)) * flen) + (flen-1-(basey+4));
+            ec |= (readbits(3) << 1);
+
+            pos = startpos + ((fnum-1-(basex+13)) * flen) + (flen-1-(basey+2));
+            var tb1 = readbits(1);
+            pos = startpos + ((fnum-1-(basex+3)) * flen) + (flen-1-(basey+2));
+            var tb2 = readbits(1);
+
+            if (ec == 0xB || tb1 == 0 || tb2 == 0)
+            {
+              extraint = true;
+              break;
+            }
+          }
+          if (extraint) break;
         }
+
+        if (!(extraint ^ (fam.extraInter==1)))
+          break;
+
+        family = -1;
       }
 
       if (family == -1)
@@ -218,7 +259,7 @@ function parseBitstream(type, contents)
 function selectBitstream(bsid, pkgid)
 {
   curBitstream = bitstreams[bsid];
-  curPackage = chipPackages[curBitstream.family.name][pkgid];
+  curPackage = chipPackages[curBitstream.family.base][pkgid];
 
   initParser();
 }

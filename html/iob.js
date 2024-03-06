@@ -439,9 +439,22 @@ class Iob
             if (this.row != 0)
                 qpips.push('T:+17', 'row.*.local.4:2', 'row.*.local.2:3');
 
+            if (curBitstream.family.extraInter)
+            {
+                ipips.push('+2');
+                if (this.row != 0)
+                    ipips.push(['+2', 'row.*.long.2:4']);
+            }
+
             if (this.row == 0)
-                ipips.push('col.*.local.1:0', 'col.*.local.3:1', 'col.*.local.4:2',
-                    '+9', 'T:+6', 'T:-7', 'T:+2', '-7');
+            {
+                ipips.push('col.*.local.1:0', 'col.*.local.3:1', 'col.*.local.4:2');
+
+                if (curBitstream.family.extraInter)
+                    ipips.push(['+3', 'row.*.long.3:4'], '+6', 'T:+6', 'T:-7', 'T:+2', '-7');
+                else
+                    ipips.push('+9', 'T:+6', 'T:-7', 'T:+2', '-7');
+            }
             else
                 ipips.push('col.*.local.1:0', 'col.*.local.4:1',
                     ['+17', '-7'], 'T:+0', 'row.*.local.5:2', 'row.*.local.3:3');
@@ -470,11 +483,23 @@ class Iob
             if (this.row != maxrow)
                 qpips.push('T:+15', 'row.+.local.3:2', 'row.+.local.5:3');
 
+            if (curBitstream.family.extraInter && this.row != maxrow)
+                ipips.push('+2');
+
             if (this.row == maxrow)
+            {
                 ipips.push('col.*.local.2:0', 'col.*.local.3:1', 'col.*.local.5:2');
+                if (curBitstream.family.extraInter)
+                    ipips.push('T:+1', '+1', 'row.+.long.1:4');
+            }
             else
-                ipips.push('col.*.local.2:0', 'col.*.local.5:1',
-                    'T:+15', 'row.+.local.2:2', 'row.+.local.4:3');
+            {
+                ipips.push('col.*.local.2:0', 'col.*.local.5:1');
+                if (curBitstream.family.extraInter)
+                    ipips.push(['+1', 'row.+.long.1:4'], 'T:+14', 'row.+.local.2:2', 'row.+.local.4:3');
+                else
+                    ipips.push('T:+15', 'row.+.local.2:2', 'row.+.local.4:3');
+            }
 
             tpips.push('col.*.local.2:0', 'col.*.local.3:1', 'col.*.long.1:2', 'col.*.long.2:3');
         }
@@ -637,7 +662,6 @@ class Iob
 
             if (this.col == 0)
             {
-                // TODO!!
                 inputbits['O'] = [3, offset.x+0,  3+1, offset.x+0,  3+1, offset.x+1,  3+1, offset.x+2];
                 inputmux['O'] = {0xF:0, 0xE:1, 0x4:2, 0x2:3, 0x3:4, 0x5:5};
 
@@ -776,6 +800,17 @@ class Iob
 
             inputbits['T'] = [offset.y+5, 2,  offset.y+4, 3];
             inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+
+            if (fam.extraInter)
+            {
+                // extra input interconnect
+                // can only be enabled if the neighboring tristate buffer is disabled
+
+                var tbenable = curBitstream.data[offset.y+2][offset.x+1];
+                var input = curBitstream.data[offset.y+2][offset.x+3];
+                if (tbenable==1 && input==0)
+                    this.iPath.setPipStatus(4, 1);
+            }
         }
         else if (this.style == 'leftlower')
         {
@@ -805,6 +840,17 @@ class Iob
 
             inputbits['T'] = [offset.y+7, 1,  offset.y+6, 2];
             inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+
+            if (fam.extraInter)
+            {
+                // extra input interconnect
+                // can only be enabled if the neighboring tristate buffer is disabled
+
+                var tbenable = curBitstream.data[offset.y+2][offset.x+11];
+                var input = curBitstream.data[offset.y+2][offset.x+13];
+                if (tbenable==1 && input==0)
+                    this.iPath.setPipStatus(4, 1);
+            }
         }
         else if (this.style == 'rightupper')
         {

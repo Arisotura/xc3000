@@ -109,10 +109,53 @@ class TriBuf
 
         opips.push('row.*.long.'+(this.row==0 ? 3:this.num)+':0');
 
-        if (this.col == 0 && this.num == 1 && this.row != 0 && this.row != curBitstream.family.rows)
-            ipips.push('T:+11');
+        if (curBitstream.family.extraInter)
+        {
+            if (this.col == 0)
+            {
+                if (this.num == 1 && this.row == 0)
+                    ipips.push('T:+1', ['+0', '+6:1']);
+                else if (this.num == 1 && this.row == curBitstream.family.rows)
+                    ipips.push('T:-1', '-14:1');
+                else if (this.num == 1)
+                    ipips.push('+8:1', 'T:+3');
+                else
+                    ipips.push('T:-1', ['+0', '-2:1']);
+            }
+            else if (this.col == 1)
+            {
+                if (this.row == 0)
+                    ipips.push('T:+1', '+6:1');
+                else if (this.row == curBitstream.family.rows)
+                    ipips.push(['-1', '-1:1'], 'T:+0');
+                else
+                {
+                    if (this.ydir) ipips.push('T:-1', '+2:1');
+                    else           ipips.push('T:+1', '+2:1');
+                }
+            }
+            else if (this.col != curBitstream.family.cols)
+            {
+                if (this.row == 0)
+                    ipips.push(['+1', 'T:-4', '-2:1'], 'T:+0');
+                else if (this.row == curBitstream.family.rows)
+                    ipips.push(['-1', '-2:1'], 'T:+0');
+                else
+                {
+                    if (this.ydir) ipips.push(['-1', 'T:-3', '-4:1'], 'T:+0');
+                    else           ipips.push('T:+1', ['+0', 'T:+1', '-1:1']);
+                }
+            }
+            else
+                ipips.push(this.ydir ? 'T:-1' : 'T:+1');
+        }
         else
-            ipips.push(this.ydir ? 'T:-1' : 'T:+1');
+        {
+            if (this.col == 0 && this.num == 1 && this.row != 0 && this.row != curBitstream.family.rows)
+                ipips.push('T:+11');
+            else
+                ipips.push(this.ydir ? 'T:-1' : 'T:+1');
+        }
         if (this.row == 0 || this.num == 2)
             ipips.push('col.*.local.2:0');
         else
@@ -138,7 +181,10 @@ class TriBuf
 
     decode()
     {
-        // TODO
+        // T inputs: #0 on local lines, #1 on long lines
+        // TODO: extra interconnects for XC31xx family
+
+        //
     }
 
     renderBackground(ctx)

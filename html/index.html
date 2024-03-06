@@ -92,7 +92,7 @@ $(document).ready(function() {
     $('#bs_sel').on('change', function()
     {
       var bs = bitstreams[this.value];
-      var family = bs.family.name;
+      var family = bs.family.base;
       var pkglist = chipPackages[family];
       var opts = '';
       var first = null;
