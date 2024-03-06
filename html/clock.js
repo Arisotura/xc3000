@@ -120,6 +120,7 @@ class ClockDecoders
         // the muxes are split in two parts:
         // first two bits determine which input connects to the clock line
         // - 00: branch + PIP#4  01: branch alone  10: PIP#5 (direct input)  11: none
+        // then 4 bits that determine which input of the branch is active
 
         var o = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
 
@@ -223,14 +224,14 @@ class ClockBuf
 
         if (this.name == 'GCLK')
         {
-            var kbranch = ['-3', 'col.A.long.6:2', ['+3', 'T:+7', '-1']];
+            var kbranch = ['-3', 'col.A.long.6:0', ['+3', 'T:+7', '-1']];
             for (var i = 1; i < curBitstream.family.cols; i++)
-                kbranch.push('col.'+letters[i]+'.long.0:'+(i+2));
-            kbranch.push('+17', 'col.K.local.6:1');
+                kbranch.push('col.'+letters[i]+'.long.0:'+i);
+            kbranch.push('+17', 'col.*.local.6');
 
             opips.push(['+9', 'T:-16', ['-6', 'col.A.local.12'], '-7', kbranch, 'T:5', 'T:+3',
                     curBitstream.family.swapBottomClk?'row.*.local.6':'row.*.local.7'],
-                'row.A.local.10:0');
+                'row.A.local.10');
 
             ipips.push('-1:4', ['-1', '+8:5', 'T:+2', 'row.A.long.2:6', 'row.A.local.2:7'],
                 '-3:3', ['-4', 'col.A.long.1:1', 'col.A.local.4:0'], 'row.A.long.3:2');
@@ -238,7 +239,7 @@ class ClockBuf
         else if (this.name == 'ACLK')
         {
             opips.push(['4', ['+4', curBitstream.family.swapBottomClk?'row.*.local.7':'row.*.local.6'],
-                ['+11', '+14',  'row.A.local.11'], 'col.K.local.7'], 'T:+0', '-4');
+                ['+11', '+14',  'row.A.local.11'], 'col.*.local.7'], 'T:+0', '-4');
             for (var i = curBitstream.family.cols-1; i >= 1; i--)
                 opips.push('col.'+letters[i]+'.long.3:'+i);
             opips.push('-27', 'col.A.long.5:0', 'col.A.local.13');
@@ -254,20 +255,39 @@ class ClockBuf
 
     decode()
     {
-        var inputbits;
-        var inputmux;
+        var outputbits = [];
+        var inputbits, inputmux;
 
         if (this.name == 'GCLK')
         {
+            for (var i = 0; i < curBitstream.family.cols; i++)
+            {
+                var o = getTileOffset(i, 0);
+                outputbits.push(3+1, o.x+4);
+            }
+
             inputbits = [3+2, 7,  3+3, 7,  3+3, 7+2,  3+3, 7+5,  3+3, 7+8,  3+3, 7+9,  3+4, 7,  3+5, 3];
             inputmux = {0xDD:0, 0xDE:1, 0x9F:2, 0x7F:3, 0xD7:4, 0xCF:5, 0xDB:6, 0xFF:7};
         }
         else if (this.name == 'ACLK')
         {
+            for (var i = 0; i < curBitstream.family.cols; i++)
+            {
+                var o = getTileOffset(i, curBitstream.family.rows);
+                outputbits.push(o.y+3, o.x+4);
+            }
+
             var o = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
 
             inputbits = [o.y+1, o.x+12,  o.y+2, o.x+6,  o.y+2, o.x+7,  o.y+2, o.x+8,  o.y+2, o.x+9,  o.y+2, o.x+10,  o.y+2, o.x+11,  o.y+3, o.x+9,  o.y+3, o.x+10];
             inputmux = {0x1FE:0, 0x19F:1, 0x13F:2, 0x1BB:3, 0x0BF:4, 0x1AF:5, 0x1B7:6, 0x1BD:7, 0x1FF:8};
+        }
+
+        for (var i = 0; i < outputbits.length; i+=2)
+        {
+            var bit = curBitstream.data[outputbits[i]][outputbits[i+1]];
+            if (!bit)
+                this.oPath.setPipStatus(i>>1, 1);
         }
 
         var bits = 0;
