@@ -12,9 +12,13 @@ function formula3(n, v0, v1, v2) {
   return formulaString((n << 8) | n, labels);
 }
 
-function formula4(n, v0, v1, v2, v3) {
+function _formula4(n, v0, v1, v2, v3) {
   //return formulaString(n).replaceAll('0', v0).replaceAll('1', v1).replaceAll('2', v2).replaceAll('3', v3);
   var labels = {0:v0, 1:v1, 2:v2, 3:v3};
+  return formulaString(n, labels);
+}
+
+function formula4(n, labels) {
   return formulaString(n, labels);
 }
 

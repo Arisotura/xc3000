@@ -27,6 +27,18 @@ class ClbDecoder {
 
     this.levels = {A:0, B:0, C:0, D:0, Q:0, K:0, F:0, G:0, X:0, Y:0};
     //this.dirty = {A:false, B:false, C:false, D:false, K:false};*/
+
+    this.xEnable = false;
+    this.yEnable = false;
+    this.fgMux = false;
+    this.lut = {'F':0, 'G':0};
+    this.lutInput = {'F':['A','B','C','D'], 'G':['A','B','C','D']};
+    this.dataInput = {'X':'F', 'Y':'G'};
+    this.output = {'X':'F', 'Y':'G'};
+    this.ecEnable = false;
+    this.kInvert = false;
+
+    this.lutEquation = {'F':'0', 'G':'0'};
   }
 
   reset()
@@ -459,11 +471,131 @@ class ClbDecoder {
       if (tb1enable==1 && yinput==0)
         this.yPath.setPipStatus(4, 1);
     }
+
+    this.fgMux = curBitstream.data[offset.y+7][offset.x+11] == 1;
+
+    this.lut['F'] = 0; this.lut['G'] = 0;
+    var bitorder = [3, 2, 0, 1, 5, 4, 6, 7];
+    for (var i = 0; i < 8; i++)
+    {
+      var b = curBitstream.data[offset.y+6][offset.x+i];
+      this.lut['F'] |= (b << bitorder[i]);
+      b = curBitstream.data[offset.y+6][offset.x+21-i];
+      this.lut['G'] |= (b << bitorder[i]);
+    }
+    bitorder = [10, 11, 9, 8, 12, 13, 15, 14];
+    for (var i = 0; i < 8; i++)
+    {
+      var b = curBitstream.data[offset.y+7][offset.x+i];
+      this.lut['F'] |= (b << bitorder[i]);
+      b = curBitstream.data[offset.y+7][offset.x+21-i];
+      this.lut['G'] |= (b << bitorder[i]);
+    }
+
+    // the bits in the bitstream are inverted
+    this.lut['F'] ^= 0xFFFF;
+    this.lut['G'] ^= 0xFFFF;
+
+    var mux = curBitstream.data[offset.y+6][offset.x+9] | (curBitstream.data[offset.y+7][offset.x+9] << 1);
+    this.lutInput['F'][1] = ['', 'QX', 'B', 'QY'][mux];
+    mux = curBitstream.data[offset.y+5][offset.x+8] | (curBitstream.data[offset.y+6][offset.x+8] << 1);
+    this.lutInput['F'][2] = ['', 'C', 'QX', 'QY'][mux];
+    mux = curBitstream.data[offset.y+6][offset.x+12] | (curBitstream.data[offset.y+7][offset.x+12] << 1);
+    this.lutInput['G'][1] = ['', 'QX', 'B', 'QY'][mux];
+    mux = curBitstream.data[offset.y+5][offset.x+13] | (curBitstream.data[offset.y+6][offset.x+13] << 1);
+    this.lutInput['G'][2] = ['', 'C', 'QX', 'QY'][mux];
+
+    if (this.fgMux)
+    {
+      this.lutInput['F'][3] = 'D';
+      this.lutInput['G'][3] = 'D';
+    }
+    else
+    {
+      mux = curBitstream.data[offset.y+7][offset.x+8];
+      this.lutInput['F'][3] = ['D', 'E'][mux];
+      mux = curBitstream.data[offset.y+7][offset.x+13];
+      this.lutInput['G'][3] = ['D', 'E'][mux];
+    }
+
+    mux = curBitstream.data[offset.y+5][offset.x+9] | (curBitstream.data[offset.y+5][offset.x+10] << 1);
+    this.dataInput['X'] = ['G', '', 'DI', 'F'][mux];
+    mux = curBitstream.data[offset.y+5][offset.x+11] | (curBitstream.data[offset.y+5][offset.x+12] << 1);
+    this.dataInput['Y'] = ['F', '', 'DI', 'G'][mux];
+
+    mux = curBitstream.data[offset.y+4][offset.x+2] | (curBitstream.data[offset.y+4][offset.x+5] << 1);
+    this.output['X'] = ['F', '', '', 'QX'][mux];
+    mux = curBitstream.data[offset.y+4][offset.x+16] | (curBitstream.data[offset.y+4][offset.x+19] << 1);
+    this.output['X'] = ['G', '', '', 'QY'][mux];
+
+    this.ecEnable = curBitstream.data[offset.y+4][offset.x+9] == 0;
+    this.kInvert = curBitstream.data[offset.y+4][offset.x+11] == 1;
+
+    // check which inputs are used
+
+    function chkinput(lut, inp)
+    {
+      var mask = [0x5555, 0x3333, 0x0F0F, 0x00FF][inp];
+      return ((lut & mask) != ((lut >> (1<<inp)) & mask));
+    }
+
+    this.inputUsed = {'F':[], 'G':[]};
+    for (var i = 0; i < 4; i++)
+    {
+      this.inputUsed['F'][i] = chkinput(this.lut['F'], i);
+      this.inputUsed['G'][i] = chkinput(this.lut['G'], i);
+    }
+
+    this.aEnable = this.inputUsed['F'][0] || this.inputUsed['G'][0];
+    this.bEnable = false;
+    if (this.lutInput['F'][1] == 'B') this.bEnable ||= this.inputUsed['F'][1];
+    if (this.lutInput['G'][1] == 'B') this.bEnable ||= this.inputUsed['G'][1];
+    this.cEnable = false;
+    if (this.lutInput['F'][2] == 'C') this.cEnable ||= this.inputUsed['F'][2];
+    if (this.lutInput['G'][2] == 'C') this.cEnable ||= this.inputUsed['G'][2];
+
+    if (this.fgMux)
+    {
+      this.dEnable = this.inputUsed['F'][3] || this.inputUsed['G'][3];
+      this.eEnable = true;
+    }
+    else
+    {
+      this.dEnable = false;
+      if (this.lutInput['F'][3] == 'D') this.dEnable ||= this.inputUsed['F'][3];
+      if (this.lutInput['G'][3] == 'D') this.dEnable ||= this.inputUsed['G'][3];
+      this.eEnable = false;
+      if (this.lutInput['F'][3] == 'E') this.eEnable ||= this.inputUsed['F'][3];
+      if (this.lutInput['G'][3] == 'E') this.eEnable ||= this.inputUsed['G'][3];
+    }
+
+    this.dataUsed = {};
+    this.dataUsed['X'] = (this.output['X'] == 'QX') ||
+        (this.lutInput['F'][1] == 'QX') || (this.lutInput['F'][2] == 'QX') ||
+        (this.lutInput['G'][1] == 'QX') || (this.lutInput['G'][2] == 'QX');
+    this.dataUsed['Y'] = (this.output['Y'] == 'QY') ||
+        (this.lutInput['F'][1] == 'QY') || (this.lutInput['F'][2] == 'QY') ||
+        (this.lutInput['G'][1] == 'QY') || (this.lutInput['G'][2] == 'QY');
+
+    this.diEnable = this.dataUsed['X'] || this.dataUsed['Y'];
+    this.ecEnable &&= this.diEnable;
+    this.kEnable = this.diEnable;
+    this.rdEnable = this.diEnable;
+
+    this.lutEquation['F'] = formula4(this.lut['F'], this.lutInput['F']);
+    this.lutEquation['G'] = formula4(this.lut['G'], this.lutInput['G']);
+
+    console.log(this);
+    //console.log(this.tile, this.fgMux, 'F', this.lutEquation['F'], 'G', this.lutEquation['G']);
   }
 
-  signalConnection()
+  signalConnection(pin)
   {
-    // TODO
+    switch (pin)
+    {
+      case 'X': this.xEnable = true; break;
+      case 'Y': this.yEnable = true; break;
+    }
   }
 
   renderBackground(ctx)
@@ -573,17 +705,6 @@ class ClbDecoders {
 ClbDecoders.gToName = {};
 ClbDecoders.tileToG = {};
 
-const XXXmuxB = [
-["col.X.local.2:==.B", "CLK.AA.O:==.B", "1"],
-["col.X.long.1:==.B", "col.X.long.2:==.B", "2"],
-["col.X.local.5:==.B", "col.X.local.4:==.B", "3"],
-["=-.X:==.B", "col.X.local.1:==.B", "4"],
-["-=.X:==.B", "col.X.local.3:==.B", "!5"],
-"0"];
-
-// Indices into the bitmamp
-var tileToBitmapX = {A: 3, B: 21, C: 39, D: 57, E: 77, F: 95, G: 113, H: 133, I: 151, J: 169, K: 187};
-var tileToBitmapY = {A: 1, B: 9, C: 17, D: 25, E: 34, F: 42, G: 50, H: 59, I: 67, J: 75, K: 83};
 
 class ClbInternal {
     // bitPt is the index into the config bitmap
