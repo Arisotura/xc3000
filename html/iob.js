@@ -71,6 +71,49 @@ class IobDecoders {
       Object.entries(this.iobs).forEach(([name, obj]) => obj.decode());
   }
 
+  setClockInvert(line, val)
+  {
+      // the IK/OK invert option is configured for the entire clock line
+
+      var s1, s2, num;
+      switch (line)
+      {
+          case 'topleft':
+          case 'topright':
+              s1 = 'topleft';
+              s2 = 'topright';
+              num = (line=='topleft') ? 0:1;
+              break;
+
+          case 'bottomleft':
+          case 'bottomright':
+              s1 = 'bottomleft';
+              s2 = 'bottomright';
+              num = (line=='bottomleft') ? 1:0;
+              break;
+
+          case 'leftupper':
+          case 'leftlower':
+              s1 = 'leftupper';
+              s2 = 'leftlower';
+              num = (line=='leftupper') ? 1:0;
+              break;
+
+          case 'rightupper':
+          case 'rightlower':
+              s1 = 'rightupper';
+              s2 = 'rightlower';
+              num = (line=='rightupper') ? 0:1;
+              break;
+      }
+
+      Object.entries(this.iobs).forEach(([name, obj]) =>
+      {
+          if (obj.style != s1 && obj.style != s2) return;
+          obj.setClockInvert(num, val);
+      });
+  }
+
   routeFromInput() {
     /*const self = this;
     pads.forEach(function([pin, tile, style, pad]) {
@@ -165,6 +208,24 @@ class Iob
 
         this.generateIobPips();
 
+        this.ikSel = 0;
+        this.okSel = 0;
+
+        this.ikEnable = false;
+        this.okEnable = false;
+        this.ikInvert = [false, false];
+        this.okInvert = [false, false];
+        this.oEnable = false;
+        this.oInvert = false;
+        this.oLatch = false;
+        this.oFast = false;
+        this.iLatch = false; // latch or FF
+        this.iPullup = false;
+        this.tEnable = false;
+        this.tInvert = false;
+        this.iEnable = false;
+        this.qEnable = false;
+
         this.input = 2;
         this.levels = {I: 1, O: 0, T: 0};
         this.dirty = true;
@@ -240,17 +301,12 @@ class Iob
         });
     }
 
-    decode()
+    setClockInvert(num, val)
     {
-        this.data = [];
-        this.muxo = 0; // Mux bits converted to binary
-        this.muxk = 0;
-        this.muxt = 0;
-        this.latch = 0; // Pad/latch (Q) bit. Note that the PAD state is not visible in the bitstream.
-        this.label = "";
-        this.tmode = ""; // Or ON or TRI
-
-        // TODO
+        // IK: 0=normal 1=inverted
+        // OK: 1=normal 0=inverted
+        this.ikInvert[num] = val==1;
+        this.okInvert[num] = val==0;
     }
 
     genCoords(name)
@@ -563,7 +619,7 @@ class Iob
 
     renderBackground(ctx)
     {
-        // TODO: select different color if CLB is used
+        // TODO: select different color if IOB is used
         ctx.strokeStyle = '#aaa';
         ctx.fillStyle = '#aaa';
         ctx.font = '8px Arial';
@@ -679,6 +735,15 @@ class Iob
 
             inputbits['T'] = [3, offset.x+8,  3+1, offset.x+8];
             inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+
+            this.oEnable = curBitstream.data[3][offset.x+8] == 0;
+            this.oLatch = curBitstream.data[3][offset.x+3] == 0;
+            this.oInvert = curBitstream.data[3][offset.x+2] == 0;
+            this.oFast = curBitstream.data[3][offset.x+6] == 1;
+            this.tEnable = curBitstream.data[3+1][offset.x+10] == 1;
+            this.tInvert = curBitstream.data[3+1][offset.x+9] == 1;
+            this.iLatch = curBitstream.data[3][offset.x+9] == 1;
+            this.iPullup = curBitstream.data[3+1][offset.x+8] == 0;
         }
         else if (this.style == 'topright')
         {
@@ -716,6 +781,15 @@ class Iob
 
             inputbits['T'] = [3, offset.x+11,  3+1, offset.x+12];
             inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+
+            this.oEnable = curBitstream.data[3][offset.x+11] == 0;
+            this.oLatch = curBitstream.data[3][offset.x+18] == 0;
+            this.oInvert = curBitstream.data[3][offset.x+19] == 0;
+            this.oFast = curBitstream.data[3][offset.x+15] == 1;
+            this.tEnable = curBitstream.data[3+1][offset.x+14] == 1;
+            this.tInvert = curBitstream.data[3+1][offset.x+13] == 1;
+            this.iLatch = curBitstream.data[3][offset.x+12] == 1;
+            this.iPullup = curBitstream.data[3+1][offset.x+12] == 0;
         }
         else if (this.style == 'bottomleft')
         {
@@ -743,6 +817,15 @@ class Iob
 
             inputbits['T'] = [offset.y+4, offset.x+8,  offset.y+3, offset.x+8];
             inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+
+            this.oEnable = curBitstream.data[offset.y+4][offset.x+8] == 0;
+            this.oLatch = curBitstream.data[offset.y+4][offset.x+3] == 0;
+            this.oInvert = curBitstream.data[offset.y+4][offset.x+2] == 0;
+            this.oFast = curBitstream.data[offset.y+4][offset.x+6] == 1;
+            this.tEnable = curBitstream.data[offset.y+3][offset.x+10] == 1;
+            this.tInvert = curBitstream.data[offset.y+3][offset.x+9] == 1;
+            this.iLatch = curBitstream.data[offset.y+4][offset.x+9] == 1;
+            this.iPullup = curBitstream.data[offset.y+3][offset.x+8] == 0;
         }
         else if (this.style == 'bottomright')
         {
@@ -772,6 +855,15 @@ class Iob
 
             inputbits['T'] = [offset.y+4, offset.x+11,  offset.y+3, offset.x+12];
             inputmux['T'] = {0x3:0, 0x2:1, 0x1:2, 0x0:3};
+
+            this.oEnable = curBitstream.data[offset.y+4][offset.x+11] == 0;
+            this.oLatch = curBitstream.data[offset.y+4][offset.x+18] == 0;
+            this.oInvert = curBitstream.data[offset.y+4][offset.x+19] == 0;
+            this.oFast = curBitstream.data[offset.y+4][offset.x+15] == 1;
+            this.tEnable = curBitstream.data[offset.y+3][offset.x+14] == 1;
+            this.tInvert = curBitstream.data[offset.y+3][offset.x+13] == 1;
+            this.iLatch = curBitstream.data[offset.y+4][offset.x+12] == 1;
+            this.iPullup = curBitstream.data[offset.y+3][offset.x+12] == 0;
         }
         else if (this.style == 'leftupper')
         {
@@ -811,6 +903,19 @@ class Iob
                 if (tbenable==1 && input==0)
                     this.iPath.setPipStatus(4, 1);
             }
+
+            // topmost IOB is slightly different
+            if (this.row == 0)
+                this.oFast = curBitstream.data[offset.y+1][2] == 1;
+            else
+                this.oFast = curBitstream.data[offset.y][3] == 1;
+            this.oEnable = curBitstream.data[offset.y+5][2] == 0;
+            this.oLatch = curBitstream.data[offset.y+2][1] == 0;
+            this.oInvert = curBitstream.data[offset.y+2][0] == 0;
+            this.tEnable = curBitstream.data[offset.y+4][5] == 1;
+            this.tInvert = curBitstream.data[offset.y+4][4] == 1;
+            this.iLatch = curBitstream.data[offset.y+4][2] == 1;
+            this.iPullup = curBitstream.data[offset.y+4][3] == 0;
         }
         else if (this.style == 'leftlower')
         {
@@ -851,6 +956,15 @@ class Iob
                 if (tbenable==1 && input==0)
                     this.iPath.setPipStatus(4, 1);
             }
+
+            this.oEnable = curBitstream.data[offset.y+7][1] == 0;
+            this.oLatch = curBitstream.data[offset.y+7][0] == 0;
+            this.oInvert = curBitstream.data[offset.y+7][2] == 0;
+            this.oFast = curBitstream.data[offset.y+6][1] == 1;
+            this.tEnable = curBitstream.data[offset.y+7][4] == 1;
+            this.tInvert = curBitstream.data[offset.y+6][3] == 1;
+            this.iLatch = curBitstream.data[offset.y+5][3] == 1;
+            this.iPullup = curBitstream.data[offset.y+6][2] == 0;
         }
         else if (this.style == 'rightupper')
         {
@@ -878,6 +992,15 @@ class Iob
 
             inputbits['T'] = [offset.y+5, offset.x+5,  offset.y+4, offset.x+5];
             inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+
+            this.oEnable = curBitstream.data[offset.y+5][offset.x+5] == 0;
+            this.oLatch = curBitstream.data[offset.y+4][offset.x+12] == 0;
+            this.oInvert = curBitstream.data[offset.y+4][offset.x+13] == 0;
+            this.oFast = curBitstream.data[offset.y+5][offset.x+11] == 1;
+            this.tEnable = curBitstream.data[offset.y+5][offset.x+7] == 1;
+            this.tInvert = curBitstream.data[offset.y+5][offset.x+6] == 1;
+            this.iLatch = curBitstream.data[offset.y+5][offset.x+10] == 1;
+            this.iPullup = curBitstream.data[offset.y+4][offset.x+5] == 0;
         }
         else if (this.style == 'rightlower')
         {
@@ -907,10 +1030,23 @@ class Iob
 
             inputbits['T'] = [offset.y+6, offset.x+2,  offset.y+6, offset.x+1];
             inputmux['T'] = {0x2:0, 0x3:1, 0x0:2, 0x1:3};
+
+            this.oEnable = curBitstream.data[offset.y+6][offset.x+2] == 0;
+            this.oLatch = curBitstream.data[offset.y+7][offset.x+11] == 0;
+            this.oInvert = curBitstream.data[offset.y+7][offset.x+12] == 0;
+            this.oFast = curBitstream.data[offset.y+6][offset.x+12] == 1;
+            this.tEnable = curBitstream.data[offset.y+6][offset.x+3] == 1;
+            this.tInvert = curBitstream.data[offset.y+7][offset.x+3] == 1;
+            this.iLatch = curBitstream.data[offset.y+5][offset.x+13] == 1;
+            this.iPullup = curBitstream.data[offset.y+6][offset.x+1] == 0;
         }
+
+        this.okEnable = this.oEnable && this.oLatch;
 
         Object.entries(inputbits).forEach(([key, val]) =>
         {
+            //if (!this[key.toLowerCase() + 'Enable']) return;
+
             var bits = 0;
             for (var i = 0; i < val.length; i+=2)
             {
@@ -926,7 +1062,10 @@ class Iob
             }
 
             // enable the corresponding PIP
-            this[key.toLowerCase()+'Path'].setPipStatus(mux, 1);
+            this[key.toLowerCase() + 'Path'].setPipStatus(mux, 1);
+
+            if (key == 'IK') this.ikSel = mux;
+            if (key == 'OK') this.okSel = mux;
         });
 
         Object.entries(outputbits).forEach(([key, val]) =>
@@ -935,9 +1074,24 @@ class Iob
             {
                 var bit = curBitstream.data[val[i]][val[i+1]];
                 if (!bit)
-                    this[key.toLowerCase()+'Path'].setPipStatus(i>>1, 1);
+                    this[key.toLowerCase() + 'Path'].setPipStatus(i >> 1, 1);
             }
         });
+    }
+
+    signalConnection(pin)
+    {
+        switch (pin)
+        {
+            case 'Q':
+                this.qEnable = true;
+                this.ikEnable = true;
+                break;
+
+            case 'I':
+                this.iEnable = true;
+                break;
+        }
     }
 
     isInside(x, y)
@@ -954,7 +1108,14 @@ class Iob
 
 // Draw the representation of an IOB for the popup
 let iobPopup = undefined;
-function iobDrawPopup(iob, x, y) {
+function iobDrawPopup(iob, x, y)
+{
+    /*console.log('IK', iob.ikEnable, iob.ikInvert, iob.ikSel,
+        'OK', iob.okEnable, iob.okInvert, iob.okSel,
+        'O', iob.oEnable, iob.oInvert, iob.oLatch,
+        'I', iob.iEnable, iob.iLatch, iob.iPullup,
+        'T', iob.tEnable, iob.tInvert,
+        'Q', iob.qEnable);*/
   iobPopup = $("<canvas/>", {class: "popup"}).css("left", x * SCALE).css("top", y * SCALE)[0];
   iobPopup.width = 300;
   iobPopup.height = 300;
@@ -978,9 +1139,29 @@ function iobDrawPopup(iob, x, y) {
   context.fillStyle = "yellow";
   context.fillText("PAD", 16, 177);
 
-  if (iob.latch || true /* PAD */) {
+  if (!iob.oEnable && iob.iPullup)
+  {
+      context.strokeStyle = "yellow";
+      context.beginPath();
+      context.moveTo(69, 170);
+      context.lineTo(79, 170);
+      context.lineTo(79, 120);
+      for (var i = 0; i < 4; i++)
+      {
+          context.lineTo(79-4, 120-4-(8*i));
+          context.lineTo(79+4, 120-8-(8*i));
+      }
+      context.lineTo(79, 84);
+      context.lineTo(79, 80);
+      context.stroke();
+      context.fillStyle = "white";
+      context.fillText("Vcc", 60, 78);
+  }
+
+  if (iob.iEnable || iob.qEnable) {
     // draw input buffer
     context.strokeStyle = "white";
+      context.beginPath();
     context.moveTo(86, 188);
     context.lineTo(86 + 14, 188 + 14);
     context.lineTo(86, 188 + 28);
@@ -988,69 +1169,159 @@ function iobDrawPopup(iob, x, y) {
     context.stroke();
 
     context.strokeStyle = "yellow";
+      context.beginPath();
     context.moveTo(69, 170);
     context.lineTo(79, 170);
     context.lineTo(79, 188 + 14);
     context.lineTo(86, 188 + 14);
+    context.stroke();
 
-    if (!iob.latch) {
+    if (iob.iEnable)
+    {
       // Input line
+        context.beginPath();
       context.moveTo(86 + 14, 188 + 14);
       context.lineTo(167, 188 + 14);
+      context.stroke();
       context.fillStyle = "white";
       context.fillText("I", 172, 210);
-    } else {
+    }
+    if (iob.qEnable)
+    {
       // Input flip flop
+        context.beginPath();
       context.moveTo(86 + 14, 188 + 14);
       context.lineTo(111, 188 + 14);
       context.lineTo(111, 235);
       context.lineTo(121, 235);
-      context.moveTo(105, 299);
-      context.lineTo(121, 299);
+      if (iob.ikInvert[iob.ikSel])
+      {
+          context.moveTo(105, 299);
+          context.lineTo(115, 299);
+          context.stroke();
+          context.beginPath();
+          context.arc(118, 299, 3, 0, 2 * Math.PI);
+      }
+      else
+      {
+          context.moveTo(105, 299);
+          context.lineTo(121, 299);
+      }
       context.moveTo(151, 267);
       context.lineTo(167, 267);
       context.rect(121, 229, 29, 76);
-      context.moveTo(121, 229 + 76); // clock triangle
-      context.lineTo(121 + 7, 229 + 76 - 7); // clock triangle
-      context.lineTo(121, 229 + 76 - 14); // clock triangle
+      context.stroke();
+      if (!iob.iLatch)
+      {
+          context.beginPath();
+          context.moveTo(121, 229 + 76); // clock triangle
+          context.lineTo(121 + 7, 229 + 76 - 7); // clock triangle
+          context.lineTo(121, 229 + 76 - 14); // clock triangle
+          context.stroke();
+      }
+      else
+      {
+          context.fillStyle = "red";
+          context.fillText("E", 122, 229 + 76 - 7);
+      }
       context.fillStyle = "white";
-      context.fillText("I", 172, 210);
-      context.fillText("K", 88, 307);
+      context.fillText("IK", 85, 307);
+      context.fillText("Q", 172, 270);
       context.fillStyle = "yellow";
-      context.fillText("Q", 132, 263);
+      context.fillText("IQ", 128, 263);
     }
   }
 
-  if (iob.tmode == "ON" || iob.tmode == "TRI") {
+  if (iob.oEnable)
+  {
     // draw output buffer
     context.strokeStyle = "white";
+      context.beginPath();
     context.moveTo(118, 125);
     context.lineTo(118 - 14, 125 + 14);
     context.lineTo(118, 125 + 28);
     context.lineTo(118, 125);
+    if (iob.oInvert && !iob.oLatch)
+    {
+        context.stroke();
+        context.beginPath();
+        context.arc(118-14-3, 125+14, 3, 0, 2 * Math.PI);
+    }
     context.stroke();
 
     context.strokeStyle = "yellow";
+    context.beginPath();
     context.moveTo(69, 170);
     context.lineTo(79, 170);
     context.lineTo(79, 125 + 14);
-    context.lineTo(118 - 14, 125 + 14);
+    context.lineTo(118 - 14 - (iob.oInvert&&!iob.oLatch?6:0), 125 + 14);
 
     context.moveTo(118, 125 + 14);
     context.lineTo(135, 125 + 14);
-    context.fillStyle = "white";
-    context.fillText("O", 138, 148);
-  }
+    context.stroke();
+    if (!iob.oLatch)
+    {
+        context.fillStyle = "white";
+        context.fillText("O", 138, 148);
+    }
+    else
+    {
+        context.beginPath();
+        context.rect(135, 105, 29, 76);
+        context.moveTo(135+29, 105 + 76); // clock triangle
+        context.lineTo(135+29-7, 105 + 76 - 7); // clock triangle
+        context.lineTo(135+29, 105 + 76 - 14); // clock triangle
+        if (iob.oInvert)
+        {
+            context.stroke();
+            context.beginPath();
+            context.arc(135+32, 125+14, 3, 0, 2 * Math.PI);
+        }
+        context.moveTo(135+29+(iob.oInvert?6:0), 125 + 14);
+        context.lineTo(180, 125 + 14);
+        context.stroke();
+        context.fillStyle = "white";
+        context.fillText("O", 183, 148);
 
-  if (iob.tmode == "TRI") {
-    context.moveTo(118 - 7, 125 + 7);
-    context.lineTo(118 - 7, 74);
-    context.lineTo(135, 74);
-    context.fillStyle = "white";
-    context.fillText("T", 138, 84);
-  }
+        if (iob.okInvert[iob.okSel])
+        {
+            context.beginPath();
+            context.moveTo(180, 105+76-7);
+            context.lineTo(135+29+6, 105+76-7);
+            context.stroke();
+            context.beginPath();
+            context.arc(135+32, 105+76-7, 3, 0, 2 * Math.PI);
+        }
+        else
+        {
+            context.beginPath();
+            context.moveTo(180, 105+76-7);
+            context.lineTo(135+29, 105+76-7);
+            context.stroke();
+        }
+        context.fillStyle = "white";
+        context.fillText("OK", 183, 105+78);
+        context.fillStyle = "yellow";
+        context.fillText("OQ", 135, 125+14);
+    }
 
-  context.stroke();
+    if (iob.tEnable)
+    {
+        context.beginPath();
+      context.moveTo(118 - 7, 125 + 7 - (iob.tInvert?6:0));
+      context.lineTo(118 - 7, 74);
+      context.lineTo(135, 74);
+      context.stroke();
+      context.fillStyle = "white";
+      context.fillText("T", 138, 84);
+        if (iob.tInvert)
+        {
+            context.beginPath();
+            context.arc(118 - 7, 125 + 4, 3, 0, 2 * Math.PI);
+            context.stroke();
+        }
+    }
+  }
 
 }
 

@@ -119,6 +119,11 @@ class PullUp
             this.oPath.setPipStatus(0, 1);
     }
 
+    signalConnection()
+    {
+        // TODO
+    }
+
     renderBackground(ctx)
     {
         ctx.strokeRect(this.screenPt.x, this.screenPt.y, this.W, this.H);

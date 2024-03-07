@@ -461,6 +461,11 @@ class ClbDecoder {
     }
   }
 
+  signalConnection()
+  {
+    // TODO
+  }
+
   renderBackground(ctx)
   {
     // TODO: select different color if CLB is used

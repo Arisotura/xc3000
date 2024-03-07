@@ -247,6 +247,28 @@ class Path
         }
 
         elem.obj.status = status;
+
+        if (status)
+        {
+            // go through the objects connected to this PIP
+            // to notify them that this path is active
+
+            Object.entries(elem.obj.paths).forEach(([k, path]) =>
+            {
+                path.path.signalConnection();
+            });
+        }
+    }
+
+    signalConnection()
+    {
+        if (this.rootPath != this)
+            return this.rootPath.signalConnection();
+
+        if (!this.origin.obj)
+            return;
+
+        this.origin.obj.signalConnection(this.origin.pin);
     }
 
     draw(ctx, level=0)

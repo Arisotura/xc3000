@@ -243,6 +243,11 @@ class TriBuf
         }
     }
 
+    signalConnection()
+    {
+        // TODO
+    }
+
     renderBackground(ctx)
     {
         ctx.beginPath();

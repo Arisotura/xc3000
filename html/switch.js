@@ -355,6 +355,11 @@ class Switch
         });
     }
 
+    signalConnection()
+    {
+        // TODO
+    }
+
     /**
      * Draws the internal wire between pin1 and pin2.
      */

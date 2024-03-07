@@ -118,9 +118,9 @@ class ClockDecoders
 
         // decode input muxes for clock lines
         // the muxes are split in two parts:
-        // first two bits determine which input connects to the clock line
-        // - 00: branch + PIP#4  01: branch alone  10: PIP#5 (direct input)  11: none
-        // then 4 bits that determine which input of the branch is active
+        // first bit determines whether the clock is flipped
+        // second bit determines whether the direct input (PIP #5) or the mux branch (PIP #4) is used
+        // then 4 final bits that determine which input of the branch is active
 
         var o = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
 
@@ -151,8 +151,8 @@ class ClockDecoders
             else
                 console.log('clock line '+k+': bad mux '+bits.toString(2));
 
-            if (!(bits & 0x2))
-                this.clockLines[k].setPipStatus((bits&0x1) ? 5:4, 1);
+            this.clockLines[k].setPipStatus((bits&0x2) ? 5:4, 1);
+            iobDecoders.setClockInvert(k, bits&0x1);
         });
     }
 
@@ -308,6 +308,11 @@ class ClockBuf
         this.iPath.setPipStatus(mux, 1);
     }
 
+    signalConnection()
+    {
+        // TODO
+    }
+
     renderBackground(ctx)
     {
         ctx.beginPath();
@@ -397,6 +402,11 @@ class ClockOsc
 
         if (!x0) this.oPath.setPipStatus(0, 1);
         if (!x1) this.oPath.setPipStatus(1, 1);
+    }
+
+    signalConnection()
+    {
+        // TODO
     }
 
     renderBackground(ctx)

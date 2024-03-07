@@ -149,9 +149,9 @@ $(document).ready(function() {
       var offset = $(this).offset();
       var x = e.pageX - offset.left;
       var y = e.pageY - offset.top;
-      if (canvasMode() == 'layout') {
+      //if (canvasMode() == 'layout') {
         layoutClick(x, y, 0);
-      }
+      //}
     });
 
     $("#canvas").on('contextmenu', function(e) {
@@ -159,9 +159,9 @@ $(document).ready(function() {
       var offset = $(this).offset();
       var x = e.pageX - offset.left;
       var y = e.pageY - offset.top;
-      if (canvasMode() == 'layout') {
+      //if (canvasMode() == 'layout') {
         layoutClick(x, y, 1);
-      }
+      //}
     });
 
     $("#demo").click(function() {
