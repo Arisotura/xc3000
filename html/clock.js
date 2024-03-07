@@ -48,22 +48,18 @@ class ClockDecoders
 
         path = new Path(null, null, 'dest', this.genCoords('col.A.local.1:row.*.local.9'), 'H');
         pips = ['col.A.local.1:0', 'T:col.A.local.7', ['+0', 'col.A.long.2:1'],
-            'row.*.local.1:2', 'row.*.local.3:3', 'row.*.local.7:4'
+            'row.*.local.1:2', 'row.*.local.3:3', 'row.*.local.7:4',
+            ['+0', '-7:5'], 'T:+0'
         ];
-        if (!curBitstream.family.swapBottomClk)
-            pips.push(['+0', '-7:5']);
-        pips.push('T:+0');
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.A.local.7:row.*.local.7'), this.genCoords('col.*.local.1:row.*.local.7'), path);
         this.clockLines['bottomleft'] = path;
 
         path = new Path(null, null, 'dest', this.genCoords('col.*.local.10:row.*.long.2'), 'V');
         pips = ['row.*.long.2:3', ['row.*.local.8', 'col.*.local.1:2', 'col.*.local.2:1'],
-            'row.*.local.4:0', 'row.*.local.6:4'
+            'row.*.local.4:0', 'row.*.local.6:4',
+            ['+0', '+2:5'], 'T:+0'
         ];
-        if (!curBitstream.family.swapBottomClk)
-            pips.push(['+0', '+2:5']);
-        pips.push('T:+0');
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.1:row.*.local.6'), this.genCoords('col.A.local.7:row.*.local.6'), path);
         this.clockLines['bottomright'] = path;
@@ -229,8 +225,7 @@ class ClockBuf
                 kbranch.push('col.'+letters[i]+'.long.0:'+i);
             kbranch.push('+17', 'col.*.local.6');
 
-            opips.push(['+9', 'T:-16', ['-6', 'col.A.local.12'], '-7', kbranch, 'T:5', 'T:+3',
-                    curBitstream.family.swapBottomClk?'row.*.local.6':'row.*.local.7'],
+            opips.push(['+9', 'T:-16', ['-6', 'col.A.local.12'], '-7', kbranch, 'T:5', 'T:+3', 'row.*.local.7'],
                 'row.A.local.10');
 
             ipips.push('-1:4', ['-1', '+8:5', 'T:+2', 'row.A.long.2:6', 'row.A.local.2:7'],
@@ -238,7 +233,7 @@ class ClockBuf
         }
         else if (this.name == 'ACLK')
         {
-            opips.push(['4', ['+4', curBitstream.family.swapBottomClk?'row.*.local.7':'row.*.local.6'],
+            opips.push(['4', ['+4', 'row.*.local.6'],
                 ['+11', '+14',  'row.A.local.11'], 'col.*.local.7'], 'T:+0', '-4');
             for (var i = curBitstream.family.cols-1; i >= 1; i--)
                 opips.push('col.'+letters[i]+'.long.3:'+i);

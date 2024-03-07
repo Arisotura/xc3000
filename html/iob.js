@@ -89,7 +89,10 @@ class IobDecoders {
           case 'bottomright':
               s1 = 'bottomleft';
               s2 = 'bottomright';
-              num = (line=='bottomleft') ? 1:0;
+              if (curBitstream.family.swapBottomClk)
+                  num = (line=='bottomleft') ? 0:1;
+              else
+                  num = (line=='bottomleft') ? 1:0;
               break;
 
           case 'leftupper':
@@ -794,9 +797,9 @@ class Iob
         else if (this.style == 'bottomleft')
         {
             inputbits['OK'] = [offset.y+4, offset.x+5];
-            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputmux['OK'] = fam.swapBottomClk ? {0x1:0, 0x0:1} : {0x0:0, 0x1:1};
             inputbits['IK'] = [offset.y+4, offset.x+7];
-            inputmux['IK'] = {0x1:0, 0x0:1};
+            inputmux['IK'] = fam.swapBottomClk ? {0x0:0, 0x1:1} : {0x1:0, 0x0:1};
 
             if (this.col == 0)
             {
@@ -832,9 +835,9 @@ class Iob
             var offset1 = getTileOffset(this.col+1, this.row);
 
             inputbits['OK'] = [offset.y+4, offset.x+16];
-            inputmux['OK'] = {0x0:0, 0x1:1};
+            inputmux['OK'] = fam.swapBottomClk ? {0x1:0, 0x0:1} : {0x0:0, 0x1:1};
             inputbits['IK'] = [offset.y+4, offset.x+14];
-            inputmux['IK'] = {0x1:0, 0x0:1};
+            inputmux['IK'] = fam.swapBottomClk ? {0x0:0, 0x1:1} : {0x1:0, 0x0:1};
 
             if (this.col == fam.cols-1)
             {
@@ -1291,6 +1294,7 @@ function iobDrawPopup(iob, x, y)
             context.stroke();
             context.beginPath();
             context.arc(135+32, 105+76-7, 3, 0, 2 * Math.PI);
+            context.stroke();
         }
         else
         {
