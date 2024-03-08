@@ -497,13 +497,13 @@ class ClbDecoder {
     this.lut['G'] ^= 0xFFFF;
 
     var mux = curBitstream.data[offset.y+6][offset.x+9] | (curBitstream.data[offset.y+7][offset.x+9] << 1);
-    this.lutInput['F'][1] = ['', 'QX', 'B', 'QY'][mux];
+    this.lutInput['F'][1] = ['', 'B', 'QX', 'QY'][mux];
     mux = curBitstream.data[offset.y+5][offset.x+8] | (curBitstream.data[offset.y+6][offset.x+8] << 1);
-    this.lutInput['F'][2] = ['', 'C', 'QX', 'QY'][mux];
+    this.lutInput['F'][2] = ['', 'QX', 'C', 'QY'][mux];
     mux = curBitstream.data[offset.y+6][offset.x+12] | (curBitstream.data[offset.y+7][offset.x+12] << 1);
-    this.lutInput['G'][1] = ['', 'QX', 'B', 'QY'][mux];
+    this.lutInput['G'][1] = ['', 'B', 'QX', 'QY'][mux];
     mux = curBitstream.data[offset.y+5][offset.x+13] | (curBitstream.data[offset.y+6][offset.x+13] << 1);
-    this.lutInput['G'][2] = ['', 'C', 'QX', 'QY'][mux];
+    this.lutInput['G'][2] = ['', 'QX', 'C', 'QY'][mux];
 
     if (this.fgMux)
     {
@@ -519,14 +519,14 @@ class ClbDecoder {
     }
 
     mux = curBitstream.data[offset.y+5][offset.x+9] | (curBitstream.data[offset.y+5][offset.x+10] << 1);
-    this.dataInput['X'] = ['G', '', 'DI', 'F'][mux];
+    this.dataInput['X'] = ['G', 'DI', '', 'F'][mux];
     mux = curBitstream.data[offset.y+5][offset.x+11] | (curBitstream.data[offset.y+5][offset.x+12] << 1);
-    this.dataInput['Y'] = ['F', '', 'DI', 'G'][mux];
+    this.dataInput['Y'] = ['F', 'DI', '', 'G'][mux];
 
     mux = curBitstream.data[offset.y+4][offset.x+2] | (curBitstream.data[offset.y+4][offset.x+5] << 1);
     this.output['X'] = ['F', '', '', 'QX'][mux];
     mux = curBitstream.data[offset.y+4][offset.x+16] | (curBitstream.data[offset.y+4][offset.x+19] << 1);
-    this.output['X'] = ['G', '', '', 'QY'][mux];
+    this.output['Y'] = ['G', '', '', 'QY'][mux];
 
     this.ecEnable = curBitstream.data[offset.y+4][offset.x+9] == 0;
     this.kInvert = curBitstream.data[offset.y+4][offset.x+11] == 1;
