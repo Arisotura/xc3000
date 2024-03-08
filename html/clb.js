@@ -644,7 +644,7 @@ class ClbDecoder {
     this.lutEquation['F'] = formula4(this.lut['F'], this.lutInput['F']);
     this.lutEquation['G'] = formula4(this.lut['G'], this.lutInput['G']);
 
-    console.log(this);
+    //console.log(this);
     //console.log(this.tile, this.fgMux, 'F', this.lutEquation['F'], 'G', this.lutEquation['G']);
   }
 
@@ -1026,16 +1026,8 @@ function clbDrawPopup(clb, x, y) {
     context.fillText("s" + clb.clbInternal.configSet + " r" + clb.clbInternal.configRes + " c" + clb.clbInternal.configClk + " q" + clb.clbInternal.configQ, 20, 20);
   }*/
   context.strokeStyle = "#888";
-  /*if (info.configBase == 'F') {
-    drawClbF(info, context);
-  } else if (info.configBase == 'FG') {
-    drawClbFG(info, context);
-  } else if (info.configBase == 'FGM') {
-    drawClbFGM(info, context);
-  } else {
-    throw("Bad config base" + info.configBase);
-  }*/
-  /*if (clb.fgMux)
+
+  if (clb.fgMux)
   {
     if (clb.lutInput['F'][1] == clb.lutInput['G'][1] && clb.lutInput['F'][2] == clb.lutInput['G'][2])
       drawClbF(clb, context);
@@ -1043,7 +1035,7 @@ function clbDrawPopup(clb, x, y) {
       drawClbFGM(clb, context);
   }
   else
-    drawClbFG(clb, context);*/
+    drawClbFG(clb, context);
 
   drawClbOutput(clb, context);
 }
@@ -1052,477 +1044,311 @@ function clbDrawPopup(clb, x, y) {
 function drawClbF(info, context) {
   context.strokeStyle = "white";
   context.fillStyle = "white";
-  context.font = "10px arial";
-  context.fillText("F = " + info.configFormulaF, 21, 250);
+  context.font = "12px arial";
+  var eq = '~E*(' + info.lutEquation['F'] + ') + E*(' + info.lutEquation['G']+')';
+  context.fillText("F = " + eq, 21, 325);
   context.font = "20px arial";
-  context.beginPath();
-  context.rect(38, 48, 29, 108); // F box
-  context.rect(120, 82, 29, 76); // Q box
-  context.stroke();
-  // Inputs to F
-  context.fillText(info.configF[0], 21, 63);
-  context.fillText(info.configF[2], 21, 95);
-  context.fillText(info.configF[4], 21, 127);
-  context.fillText(info.configF[6], 21, 159);
 
-  // Labels of F and Q boxes
-  context.strokeStyle = "yellow";
-  context.fillStyle = "yellow";
-  context.fillText("F", 51, 96);
-  context.fillText("Q", 130, 126);
+  var fUsed = (info.xEnable && info.output['X'] == 'F') ||
+      (info.dataUsed['X'] && info.dataInput['X'] == 'F') ||
+      (info.dataUsed['Y'] && info.dataInput['Y'] == 'F');
+  var gUsed = (info.yEnable && info.output['Y'] == 'G') ||
+      (info.dataUsed['X'] && info.dataInput['X'] == 'G') ||
+      (info.dataUsed['Y'] && info.dataInput['Y'] == 'G');
 
-  context.beginPath();
-  // Line from F to Q
-  context.moveTo(67, 87);
-  context.lineTo(119, 87);
+  if (fUsed || gUsed)
+  {
+    context.fillStyle = "yellow";
+    context.strokeStyle = "white";
+    context.strokeRect(38, 40, 30, 100);
+    context.fillText("F", 51, 67);
 
-  // Set connection
-  if (!info.configSet) {
-    // No connection
-  } else if (info.configSet == "A") {
-    // Line from A to Q set
-    context.fillText("A", 135, 36);
-    context.moveTo(141, 40);
-    context.lineTo(141, 82);
-  } else if (info.configSet == "F") {
-    // Line from F to Q set
-    context.moveTo(141, 54);
-    context.lineTo(141, 82);
-  } else {
-    throw("Bad set " + info.configSet);
-  }
-  context.stroke();context.beginPath()
-
-  // Reset connection
-  if (!info.configRes) {
-    // No connection
-  } else if (info.configRes == "D") {
-    // Line from D to Q res
-    context.fillText("D", 138, 214);
-    context.moveTo(141, 198);
-    context.lineTo(141, 158);
-  } else if (info.configRes == "F") {
-    // Line from F to Q res
-    context.moveTo(77, 87);
-    context.lineTo(77, 182);
-    context.lineTo(141, 182);
-    context.lineTo(141, 158);
-  } else {
-    throw("Bad reset " + info.configRes);
-  }
-
-  // Clock connection
-  if (!info.configClk || info.configClk == "NOT") {
-    // No connection
-  } else {
-    if (info.configClk[0] == "C" || info.configClk[0] == "K") {
-      // Line from C or K to clock
-      context.fillText(info.configClk[0], 90, 214);
-      context.moveTo(94, 197);
-      context.lineTo(94, 150);
-      context.lineTo(119-6, 150);
-    } else if (info.configClk[0] == "F") {
-      // Line from F to clock
-      context.moveTo(77, 87);
-      context.lineTo(77, 150);
-      context.lineTo(119-6, 150);
-    } else {
-       throw("Bad clock " + info.configClk);
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    if (fUsed)
+    {
+      context.moveTo(68, 60);
+      context.lineTo(130, 60);
     }
-    // Inverter bubble or line on Q input
-    if (info.configClk.indexOf("NOT") >= 0) {
-      context.stroke();
-      context.beginPath();
-      context.arc(119-3, 150, 3, 0, 2 * Math.PI);
-    } else {
-      context.lineTo(119, 150);
+    if (gUsed)
+    {
+      context.moveTo(68, 60);
+      context.lineTo(130, 60);
+      context.lineTo(130, 180);
+      context.lineTo(140, 180);
     }
-  }
+    context.stroke();
 
-  // Mark Q with either an E or a clock input triangle
+    // input labels
+    var y = 40+17;
+    context.fillStyle = "white";
+    for (var i = 0; i < 4; i++)
+    {
+      if (!info.inputUsed['F'][i] && !info.inputUsed['G'][i]) continue;
 
-  if (info.configQ == "LATCH") {
-    context.fillStyle = "red";
-    context.fillText("E", 120, 151);
-  } else if (info.configQ == "FF") {
-    context.moveTo(120, 158);
-    context.lineTo(127, 151);
-    context.lineTo(120, 144);
-  }
+      var label = info.lutInput['F'][i];
+      if (label == 'QX')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(10, y-7);
+        context.lineTo(10, 10);
+        context.stroke();
+      }
+      else if (label == 'QY')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(20, y-7);
+        context.lineTo(20, 315);
+        context.stroke();
+      }
+      else
+        context.fillText(label, 21, y);
 
-  // X connection
-  if (!info.configX || info.configX == "UNDEF") {
-    // No connection
-  } else if (info.configX == "F") {
-    // Line from F to X
-    context.moveTo(77, 87);
-    context.lineTo(77, 54);
-    context.lineTo(188, 54);
-    context.lineTo(188, 87);
-    context.lineTo(197, 87);
-    context.fillText("X", 197, 96);
-  } else if (info.configX == "Q") {
-    // Line from Q to X
-    context.moveTo(148, 118);
-    context.lineTo(174, 118);
-    context.lineTo(174, 87);
-    context.lineTo(197, 87);
-    context.fillText("X", 197, 96);
-  } else {
-    throw("Bad X " + info.configX);
+      y += 20;
+    }
+    context.fillText('E', 21, y);
   }
-
-  // Y output
-  if (!info.configY || info.configY == "UNDEF") {
-    // No output
-  } else if (info.configY == "F") {
-    context.moveTo(77, 87);
-    context.lineTo(77, 54);
-    context.lineTo(188, 54);
-    context.lineTo(188, 151);
-    context.lineTo(195, 151);
-    context.fillText("Y", 197, 159);
-  } else if (info.configY == "Q") {
-    context.moveTo(148, 118);
-    context.lineTo(174, 118);
-    context.lineTo(174, 151);
-    context.lineTo(197, 151);
-    context.fillText("Y", 197, 159);
-  } else {
-     throw("Bad Y " + info.configY);
-  }
-  context.stroke();
 }
 
-// The FG base is the configuration with two 3-input CLBs called "F" and "G".
+// The FG base is the configuration with two 4-input CLBs called "F" and "G".
 function drawClbFG(info, context) {
   context.strokeStyle = "white";
   context.fillStyle = "white";
-  context.font = "10px arial";
-  context.fillText("F = " + info.configFormulaF, 21, 250);
-  context.fillText("G = " + info.configFormulaG, 21, 270);
+  context.font = "12px arial";
+  context.fillText("F = " + info.lutEquation['F'], 21, 325);
+  context.fillText("G = " + info.lutEquation['G'], 21, 340);
   context.font = "20px arial";
-  context.beginPath();
-  context.rect(38, 48, 29, 76);
-  context.rect(38, 144, 29, 76);
-  context.rect(102, 82, 29, 76);
-  context.stroke();
-  context.fillText(info.configF[0], 21, 63);
-  context.fillText(info.configF[2], 21, 95);
-  context.fillText(info.configF[4], 21, 127);
-  context.fillText(info.configG[0], 21, 159);
-  context.fillText(info.configG[2], 21, 191);
-  context.fillText(info.configG[4], 21, 223);
 
-  // Labels of F, G, and Q boxes
-  context.strokeStyle = "yellow";
-  context.fillStyle = "yellow";
-  context.fillText("F", 51, 96);
-  context.fillText("G", 49, 191);
-  context.fillText("Q", 113, 126);
+  var fUsed = (info.xEnable && info.output['X'] == 'F') ||
+      (info.dataUsed['X'] && info.dataInput['X'] == 'F') ||
+      (info.dataUsed['Y'] && info.dataInput['Y'] == 'F');
+  var gUsed = (info.yEnable && info.output['Y'] == 'G') ||
+      (info.dataUsed['X'] && info.dataInput['X'] == 'G') ||
+      (info.dataUsed['Y'] && info.dataInput['Y'] == 'G');
 
-  context.beginPath();
-  // Line from F to Q
-  context.moveTo(67, 87);
-  context.lineTo(102, 87);
+  if (fUsed)
+  {
+    context.fillStyle = "yellow";
+    context.strokeStyle = "white";
+    context.strokeRect(38, 40, 30, 80);
+    context.fillText("F", 51, 67);
 
-  // Set connection
-  if (!info.configSet) {
-    // No connection
-  } else if (info.configSet == "A") {
-    // Line from A to Q set
-    context.fillText("A", 118, 36);
-    context.moveTo(124, 40);
-    context.lineTo(124, 82);
-  } else if (info.configSet == "F") {
-    // Line from F to Q set
-    context.moveTo(77, 87);
-    context.lineTo(77, 54);
-    context.lineTo(124, 54);
-    context.lineTo(124, 82);
-  } else {
-    throw("Bad set " + info.configSet);
-  }
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    context.moveTo(68, 60);
+    context.lineTo(130, 60);
+    context.stroke();
 
-  // Reset connection
-  if (!info.configRes) {
-    // No connection
-  } else if (info.configRes == "D") {
-    // Line from D to Q res
-    context.fillText("D", 118, 216);
-    context.moveTo(124, 198);
-    context.lineTo(124, 158);
-  } else if (info.configRes == "G") {
-    // Line from G to Q res
-    context.moveTo(67, 182);
-    context.lineTo(124, 182);
-    context.lineTo(124, 158);
-  } else {
-    throw("Bad reset " + info.configRes);
-  }
+    // input labels
+    var y = 40+17;
+    context.fillStyle = "white";
+    for (var i = 0; i < 4; i++)
+    {
+      if (!info.inputUsed['F'][i]) continue;
 
-  // Clock connection
-  if (!info.configClk || info.configClk == "NOT") {
-    // No connection
-  } else {
-    if (info.configClk[0] == "C" || info.configClk[0] == "K") {
-      // Line from C or K to clock
-      context.fillText(info.configClk[0], 72, 216);
-      context.moveTo(77, 197);
-      context.lineTo(77, 150);
-      context.lineTo(102-6, 150);
-    } else if (info.configClk[0] == "G") {
-      // Line from G to clock
-      context.moveTo(67, 182);
-      context.lineTo(77, 182);
-      context.lineTo(77, 150);
-      context.lineTo(102-6, 150);
-    } else {
-       throw("Bad clock " + info.configClk);
-    }
-    // Inverter bubble or line on Q input
-    if (info.configClk.indexOf("NOT") >= 0) {
-      context.stroke();
-      context.beginPath();
-      context.arc(102-3, 150, 3, 0, 2 * Math.PI);
-    } else {
-      context.lineTo(102, 150);
+      var label = info.lutInput['F'][i];
+      if (label == 'QX')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(10, y-7);
+        context.lineTo(10, 10);
+        context.stroke();
+      }
+      else if (label == 'QY')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(20, y-7);
+        context.lineTo(20, 315);
+        context.stroke();
+      }
+      else
+        context.fillText(label, 21, y);
+
+      y += 20;
     }
   }
 
-  // Mark Q with either an E or a clock input triangle
-  if (info.configQ == "LATCH") {
-    context.fillStyle = "red";
-    context.fillText("E", 103, 151);
-  } else if (info.configQ == "FF") {
-    context.moveTo(102, 158);
-    context.lineTo(109, 151);
-    context.lineTo(102, 144);
-  }
+  if (gUsed)
+  {
+    context.fillStyle = "yellow";
+    context.strokeStyle = "white";
+    context.strokeRect(38, 160, 30, 80);
+    context.fillText("G", 51, 187);
 
-  // X connection
-  if (!info.configX || info.configX == "UNDEF") {
-    // No connection
-  } else if (info.configX == "F") {
-    // Line from F to X
-    context.moveTo(77, 87);
-    context.lineTo(77, 54);
-    context.lineTo(173, 54);
-    context.lineTo(173, 87);
-    context.lineTo(196, 87);
-    context.fillText("X", 196, 96);
-  } else if (info.configX == "G") {
-    // Line from G to X
-    context.moveTo(67, 182);
-    context.lineTo(188, 182);
-    context.lineTo(188, 87);
-    context.lineTo(196, 87);
-    context.fillText("X", 196, 96);
-  } else if (info.configX == "Q") {
-    // Line from Q to X
-    context.moveTo(131, 118);
-    context.lineTo(157, 118);
-    context.lineTo(157, 87);
-    context.lineTo(196, 87);
-    context.fillText("X", 196, 96);
-  } else {
-    throw("Bad X " + info.configX);
-  }
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    context.moveTo(68, 180);
+    context.lineTo(140, 180);
+    context.stroke();
 
-  // Y connection
-  if (!info.configY || info.configY == "UNDEF") {
-    // No output
-  } else if (info.configY == "F") {
-    context.moveTo(77, 87);
-    context.lineTo(77, 54);
-    context.lineTo(173, 54);
-    context.lineTo(173, 151);
-    context.lineTo(196, 151);
-    context.fillText("Y", 196, 158);
-  } else if (info.configY == "G") {
-    // Line from G to Y
-    context.moveTo(67, 182);
-    context.lineTo(188, 182);
-    context.lineTo(188, 151);
-    context.lineTo(196, 151);
-    context.fillText("Y", 196, 158);
-  } else if (info.configY == "Q") {
-    context.moveTo(131, 118);
-    context.lineTo(157, 118);
-    context.lineTo(157, 151);
-    context.lineTo(196, 151);
-    context.fillText("Y", 196, 158);
-  } else {
-     throw("Bad Y " + info.configY);
+    // input labels
+    var y = 160+17;
+    context.fillStyle = "white";
+    for (var i = 0; i < 4; i++)
+    {
+      if (!info.inputUsed['G'][i]) continue;
+
+      var label = info.lutInput['G'][i];
+      if (label == 'QX')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(10, y-7);
+        context.lineTo(10, 10);
+        context.stroke();
+      }
+      else if (label == 'QY')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(20, y-7);
+        context.lineTo(20, 315);
+        context.stroke();
+      }
+      else
+        context.fillText(label, 21, y);
+
+      y += 20;
+    }
   }
-  context.stroke();
 }
 
-// The FGM base is the configuration with two 3-input CLBs called "F" and "G", with a multiplexer "M" selecting between them
-function drawClbFGM(info, context) {
+// The FGM base is the configuration with two 4-input CLBs called "F" and "G", with a multiplexer "M" selecting between them
+function drawClbFGM(info, context)
+{
   context.strokeStyle = "white";
   context.fillStyle = "white";
-  context.font = "10px arial";
-  context.fillText("F = " + info.configFormulaF, 21, 250);
-  context.fillText("G = " + info.configFormulaG, 21, 270);
+  context.font = "12px arial";
+  var eq = '~E*(' + info.lutEquation['F'] + ') + E*(' + info.lutEquation['G']+')';
+  context.fillText("M = " + eq, 21, 325);
+  //context.fillText("F = " + info.lutEquation['F'], 21, 325);
+  //context.fillText("G = " + info.lutEquation['G'], 21, 340);
   context.font = "20px arial";
-  context.beginPath();
-  context.rect(38, 48, 29, 76);
-  context.rect(38, 144, 29, 76);
-  context.rect(70, 82, 29, 107);
-  context.rect(152, 82, 29, 76);
-  context.stroke();
-  context.fillText(info.configF[0], 21, 63);
-  context.fillText(info.configF[2], 21, 95);
-  context.fillText(info.configF[4], 21, 127);
-  context.fillText(info.configG[0], 21, 159);
-  context.fillText(info.configG[2], 21, 191);
-  context.fillText(info.configG[4], 21, 223);
 
-  // Labels of F, G, and Q boxes
-  context.strokeStyle = "yellow";
-  context.fillStyle = "yellow";
-  context.fillText("B", 85, 38);
-  context.fillText("F", 51, 96);
-  context.fillText("G", 51, 191);
-  context.fillText("M", 81, 126);
-  context.fillText("Q", 161, 126);
+  var fUsed = (info.xEnable && info.output['X'] == 'F') ||
+      (info.dataUsed['X'] && info.dataInput['X'] == 'F') ||
+      (info.dataUsed['Y'] && info.dataInput['Y'] == 'F');
+  var gUsed = (info.yEnable && info.output['Y'] == 'G') ||
+      (info.dataUsed['X'] && info.dataInput['X'] == 'G') ||
+      (info.dataUsed['Y'] && info.dataInput['Y'] == 'G');
 
-  context.beginPath();
-  // Line from F to M
-  context.moveTo(67, 87);
-  context.lineTo(70, 87);
-  // Line from G to M
-  context.moveTo(67, 181);
-  context.lineTo(70, 181);
-  // Line from M to Q
-  context.moveTo(99, 118);
-  context.lineTo(152, 118);
-  // Line from B to M
-  context.moveTo(93, 40);
-  context.lineTo(93, 82);
+  if (fUsed || gUsed)
+  {
+    context.fillStyle = "yellow";
+    context.strokeStyle = "white";
+    context.strokeRect(38, 40, 30, 80);
+    context.fillText("F", 51, 67);
 
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    context.moveTo(68, 60);
+    context.lineTo(80, 60);
+    context.stroke();
 
+    // input labels
+    var y = 40+17;
+    context.fillStyle = "white";
+    for (var i = 0; i < 4; i++)
+    {
+      if (!info.inputUsed['F'][i]) continue;
 
-  // Set connection
-  if (!info.configSet) {
-    // No connection
-  } else if (info.configSet == "A") {
-    // Line from A to Q set
-    context.fillText("A", 166, 36);
-    context.moveTo(172, 40);
-    context.lineTo(172, 82);
-  } else if (info.configSet == "M") {
-    // Line from M to Q set
-    context.moveTo(108, 118);
-    context.moveTo(108, 54);
-    context.moveTo(172, 54);
-    context.lineTo(172, 82);
-  } else {
-    throw("Bad set " + info.configSet);
-  }
+      var label = info.lutInput['F'][i];
+      if (label == 'QX')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(10, y-7);
+        context.lineTo(10, 10);
+        context.stroke();
+      }
+      else if (label == 'QY')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(20, y-7);
+        context.lineTo(20, 315);
+        context.stroke();
+      }
+      else
+        context.fillText(label, 21, y);
 
-  // Reset connection
-  if (!info.configRes) {
-    // No connection
-  } else if (info.configRes == "D") {
-    // Line from D to Q res
-    context.fillText("D", 165, 216);
-    context.moveTo(172, 198);
-    context.lineTo(172, 158);
-  } else if (info.configRes == "M") {
-    // Line from M to Q res
-    context.moveTo(108, 118);
-    context.lineTo(108, 182);
-    context.lineTo(172, 182);
-    context.lineTo(172, 158);
-  } else {
-    throw("Bad reset " + info.configRes);
-  }
-
-  // Clock connection
-  if (!info.configClk || info.configClk == "NOT") {
-    // No connection
-  } else {
-    if (info.configClk[0] == "C" || info.configClk[0] == "K") {
-      // Line from C or K to clock
-      context.fillText(info.configClk[0], 118, 211);
-      context.moveTo(125, 197);
-      context.lineTo(125, 150);
-      context.lineTo(150-6, 150);
-    } else if (info.configClk[0] == "M") {
-      // Line from M to clock
-      context.moveTo(108, 118);
-      context.lineTo(108, 182);
-      context.lineTo(125, 182);
-      context.lineTo(125, 150);
-      context.lineTo(150-6, 150);
-    } else {
-       throw("Bad clock " + info.configClk);
+      y += 20;
     }
-    // Inverter bubble or line on Q input
-    if (info.configClk.indexOf("NOT") >= 0) {
-      context.stroke();
-      context.beginPath();
-      context.arc(150-3, 150, 3, 0, 2 * Math.PI);
-    } else {
-      context.lineTo(150, 150);
+
+    context.fillStyle = "yellow";
+    context.strokeStyle = "white";
+    context.strokeRect(38, 160, 30, 80);
+    context.fillText("G", 51, 187);
+
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    context.moveTo(68, 180);
+    context.lineTo(80, 180);
+    context.stroke();
+
+    // input labels
+    var y = 160+17;
+    context.fillStyle = "white";
+    for (var i = 0; i < 4; i++)
+    {
+      if (!info.inputUsed['G'][i]) continue;
+
+      var label = info.lutInput['G'][i];
+      if (label == 'QX')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(10, y-7);
+        context.lineTo(10, 10);
+        context.stroke();
+      }
+      else if (label == 'QY')
+      {
+        context.beginPath();
+        context.moveTo(38, y-7);
+        context.lineTo(20, y-7);
+        context.lineTo(20, 315);
+        context.stroke();
+      }
+      else
+        context.fillText(label, 21, y);
+
+      y += 20;
     }
-  }
 
-  // Mark Q with either an E or a clock input triangle
+    context.fillStyle = "yellow";
+    context.strokeStyle = "white";
+    context.strokeRect(80, 40, 30, 160);
+    context.fillText("M", 90, 67);
 
-  if (info.configQ == "LATCH") {
-    context.fillStyle = "red";
-    context.fillText("E", 151, 151);
-  } else if (info.configQ == "FF") {
-    context.moveTo(150, 158);
-    context.lineTo(157, 151);
-    context.lineTo(150, 144);
-  }
+    context.fillStyle = "white";
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    context.moveTo(95, 200);
+    context.lineTo(95, 290);
+    context.stroke();
+    context.fillText('E', 87, 303);
 
-  // X connection
-  if (!info.configX || info.configX == "UNDEF") {
-    // No connection
-  } else if (info.configX == "M") {
-    // Line from M to X
-    context.moveTo(108, 118);
-    context.lineTo(108, 54);
-    context.lineTo(220, 54);
-    context.lineTo(220, 87);
-    context.lineTo(229, 87);
-    context.fillText("X", 229, 91);
-  } else if (info.configX == "Q") {
-    // Line from Q to X
-    context.moveTo(181, 118);
-    context.lineTo(205, 118);
-    context.lineTo(205, 87);
-    context.lineTo(229, 87);
-    context.fillText("X", 229, 91);
-  } else {
-    throw("Bad X " + info.configX);
+    context.strokeStyle = "yellow";
+    context.beginPath();
+    if (fUsed)
+    {
+      context.moveTo(110, 60);
+      context.lineTo(130, 60);
+    }
+    if (gUsed)
+    {
+      context.moveTo(110, 60);
+      context.lineTo(130, 60);
+      context.lineTo(130, 180);
+      context.lineTo(140, 180);
+    }
+    context.stroke();
   }
-
-  // Y output
-  if (!info.configY || info.configY == "UNDEF") {
-    // No output
-  } else if (info.configY == "M") {
-    context.moveTo(208, 87);
-    context.lineTo(208, 54);
-    context.lineTo(220, 54);
-    context.lineTo(220, 151);
-    context.lineTo(229, 151);
-    context.fillText("Y", 229, 160);
-  } else if (info.configY == "Q") {
-    context.moveTo(181, 118);
-    context.lineTo(205, 118);
-    context.lineTo(205, 151);
-    context.lineTo(229, 151);
-    context.fillText("Y", 229, 160);
-  } else {
-     throw("Bad Y " + info.configY);
-  }
-  context.stroke();
 }
 
 // draw the flip-flops and outputs of the CLB
@@ -1533,7 +1359,7 @@ function drawClbOutput(info, context)
   context.strokeStyle = 'yellow';
   context.fillStyle = 'white';
 
-  //if (info.xEnable)
+  if (info.xEnable)
   {
     context.beginPath();
     context.moveTo(250, 60);
@@ -1557,7 +1383,7 @@ function drawClbOutput(info, context)
       context.stroke();
     }
   }
-  //if (info.yEnable)
+  if (info.yEnable)
   {
     context.beginPath();
     context.moveTo(250, 180);
@@ -1593,6 +1419,8 @@ function drawClbOutput(info, context)
 
   if (info.dataUsed['X'])
   {
+    context.strokeStyle = "white";
+    context.fillStyle = "white";
     context.strokeRect(190, 80, 40, 60);
     context.fillText('QX', 195, 113, 35);
     context.beginPath();
@@ -1600,6 +1428,8 @@ function drawClbOutput(info, context)
     context.lineTo(190 + 7, 140 - 7); // clock triangle
     context.lineTo(190, 140 - 14); // clock triangle
     context.stroke();
+    context.fillStyle = "yellow";
+    context.strokeStyle = "yellow";
 
     if (info.diEnable && (info.dataInput['X'] == 'DI'))
     {
@@ -1674,6 +1504,8 @@ function drawClbOutput(info, context)
 
   if (info.dataUsed['Y'])
   {
+    context.strokeStyle = "white";
+    context.fillStyle = "white";
     context.strokeRect(190, 200, 40, 60);
     context.fillText('QY', 195, 233, 35);
     context.beginPath();
@@ -1681,6 +1513,8 @@ function drawClbOutput(info, context)
     context.lineTo(190 + 7, 260 - 7); // clock triangle
     context.lineTo(190, 260 - 14); // clock triangle
     context.stroke();
+    context.strokeStyle = "yellow";
+    context.fillStyle = "yellow";
 
     if (info.diEnable && (info.dataInput['Y'] == 'DI'))
     {
@@ -1747,8 +1581,8 @@ function drawClbOutput(info, context)
       context.beginPath();
       context.moveTo(230, 230);
       context.lineTo(250, 230);
-      context.lineTo(250, 320);
-      context.lineTo(20, 320);
+      context.lineTo(250, 315);
+      context.lineTo(20, 315);
       context.stroke();
     }
   }
