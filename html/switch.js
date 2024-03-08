@@ -76,6 +76,9 @@ class Switch
         this.screenPt = getSCoords(this.gPt);
         this.W = 24;
         this.H = 24;
+
+        this.wires = [];
+        this.connected = {};
     }
 
     getPinCoords(pin)
@@ -104,6 +107,7 @@ class Switch
     {
         var coord = this.getPinCoords(pin);
         path.terminate(this, pin, path.curDir=='H' ? coord.x : coord.y);
+        this.paths[pin] = path;
     }
 
     generateLocalLines()
@@ -288,6 +292,7 @@ class Switch
         var swbits;
 
         this.wires = [];
+        this.connected = {};
 
         if (this.row == 0)
         {
@@ -351,13 +356,84 @@ class Switch
         swbits.forEach((b) =>
         {
             var bit = curBitstream.data[offset.y+b[0]][offset.x+b[1]];
-            if (!bit) self.wires.push([b[2], b[3]]);
+            if (!bit)
+            {
+                self.wires.push([b[2], b[3]]);
+                self.connected[b[2]] = true;
+                self.connected[b[3]] = true;
+            }
         });
+    }
+
+    describePin(pin)
+    {
+        return this.name + '.' + pin;
+    }
+
+    pinEnabled(pin)
+    {
+        return (typeof this.connected[pin] != 'undefined');
     }
 
     signalConnection()
     {
-        // TODO
+    }
+
+    routeThrough(pin, net, level)
+    {
+        var chk = [pin];
+        var done = [];
+console.log('Switch.routeThrough() start', pin);
+        var inpath = this.paths[pin];
+        console.log(this.paths);
+        var inPt = this.getPinCoords(pin);
+        net.pushJunction(inpath.pathByG[inPt.x+'G'+inPt.y]);
+
+        for (var i = 0; i < this.wires.length; i++) done[i] = false;
+
+        for (var it = 0; it < 300; it++)
+        {
+            var chknext = [];
+            for (var i = 0; i < this.wires.length; i++)
+            {
+                if (done[i]) continue;
+                var w = this.wires[i];
+
+                if (chk.indexOf(w[0]) != -1)
+                {
+                    done[i] = true;
+                    chknext.push(w[1]);
+
+                    let gPt = this.getPinCoords(w[1]);
+                    let path = this.paths[w[1]];
+                    console.log('POPO starting from pin '+w[0], path, gPt, path.pathByG[gPt.x+'G'+gPt.y]);
+
+                    net.pushJunction(path.pathByG[gPt.x+'G'+gPt.y]);
+                    net.appendPoint(gPt);
+                    net.appendEndpoint(path.pathByG[gPt.x+'G'+gPt.y]);
+                    path.traceFrom(gPt, net, level+1);
+                    net.popJunction();
+                }
+                if (chk.indexOf(w[1]) != -1)
+                {
+                    done[i] = true;
+                    chknext.push(w[0]);
+
+                    let gPt = this.getPinCoords(w[0]);
+                    let path = this.paths[w[0]];
+                    console.log('starting from pin '+w[0], path, gPt, path.pathByG[gPt.x+'G'+gPt.y]);
+                    net.pushJunction(path.pathByG[gPt.x+'G'+gPt.y]);
+                    net.appendPoint(gPt);
+                    net.appendEndpoint(path.pathByG[gPt.x+'G'+gPt.y]);
+                    path.traceFrom(gPt, net, level+1);
+                    net.popJunction();
+                }
+            }
+            if (chknext.length == 0) break;
+            chk = chknext;
+        }
+        net.popJunction();
+        console.log('Switch.routeThrough() done');
     }
 
     /**

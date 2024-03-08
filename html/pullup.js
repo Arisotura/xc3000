@@ -119,6 +119,11 @@ class PullUp
             this.oPath.setPipStatus(0, 1);
     }
 
+    describePin(pin)
+    {
+        return this.name + '.' + pin;
+    }
+
     signalConnection()
     {
         // TODO

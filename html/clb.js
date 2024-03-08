@@ -9,9 +9,6 @@ class ClbDecoders {
         this.clbDecoders[tile] = new ClbDecoder(j, i, tile);
       }
     }
-    // These are in the config as CLBs.
-    //this.clbDecoders["CLK.AA.I"] = new ClkDecoder("CLK.AA.I");
-    //this.clbDecoders["CLK.KK.I"] = new ClkDecoder("CLK.KK.I");
   }
 
   reset() {
@@ -35,8 +32,10 @@ class ClbDecoders {
     Object.entries(this.clbDecoders).forEach(([k, c]) => c.decode());
   }
 
-  routeFromOutputs() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.routeFromOutputs());
+  traceFromOutputs() {
+    //Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
+    //this.clbDecoders['AC'].traceFromOutputs(); // TEST
+    this.clbDecoders['BD'].traceFromOutputs(); // TEST
   }
 
   renderBackground(ctx) {
@@ -403,10 +402,6 @@ class ClbDecoder {
   // Decoded the received data
   decode()
   {
-    //this.clbInternal.decode(bitstreamTable);
-
-    // TODO: exclude inputs that aren't used
-
     var fam = curBitstream.family;
     var offset = getTileOffset(this.col, this.row);
     const self = this;
@@ -648,6 +643,16 @@ class ClbDecoder {
     //console.log(this.tile, this.fgMux, 'F', this.lutEquation['F'], 'G', this.lutEquation['G']);
   }
 
+  describePin(pin)
+  {
+    return this.tile + '.' + pin;
+  }
+
+  pinEnabled(pin)
+  {return true;
+    return this[pin.toLowerCase() + 'Enable'];
+  }
+
   signalConnection(pin)
   {
     switch (pin)
@@ -655,6 +660,14 @@ class ClbDecoder {
       case 'X': this.xEnable = true; break;
       case 'Y': this.yEnable = true; break;
     }
+  }
+
+  traceFromOutputs()
+  {
+    // TEST
+    var net = this.yPath.traceFrom();
+    console.log(net);
+    this.test = net;
   }
 
   renderBackground(ctx)
@@ -707,7 +720,8 @@ class ClbDecoder {
 
   render(ctx)
   {
-    //
+    if (typeof this.test != 'undefined')
+      this.test.draw(ctx);
   }
 
   info() {
@@ -1100,7 +1114,7 @@ function drawClbF(info, context) {
         context.beginPath();
         context.moveTo(38, y-7);
         context.lineTo(20, y-7);
-        context.lineTo(20, 315);
+        context.lineTo(20, 310);
         context.stroke();
       }
       else
@@ -1162,7 +1176,7 @@ function drawClbFG(info, context) {
         context.beginPath();
         context.moveTo(38, y-7);
         context.lineTo(20, y-7);
-        context.lineTo(20, 315);
+        context.lineTo(20, 310);
         context.stroke();
       }
       else
@@ -1206,7 +1220,7 @@ function drawClbFG(info, context) {
         context.beginPath();
         context.moveTo(38, y-7);
         context.lineTo(20, y-7);
-        context.lineTo(20, 315);
+        context.lineTo(20, 310);
         context.stroke();
       }
       else
@@ -1270,7 +1284,7 @@ function drawClbFGM(info, context)
         context.beginPath();
         context.moveTo(38, y-7);
         context.lineTo(20, y-7);
-        context.lineTo(20, 315);
+        context.lineTo(20, 310);
         context.stroke();
       }
       else
@@ -1311,7 +1325,7 @@ function drawClbFGM(info, context)
         context.beginPath();
         context.moveTo(38, y-7);
         context.lineTo(20, y-7);
-        context.lineTo(20, 315);
+        context.lineTo(20, 310);
         context.stroke();
       }
       else
@@ -1420,7 +1434,7 @@ function drawClbOutput(info, context)
   if (info.dataUsed['X'])
   {
     context.strokeStyle = "white";
-    context.fillStyle = "white";
+    context.fillStyle = "yellow";
     context.strokeRect(190, 80, 40, 60);
     context.fillText('QX', 195, 113, 35);
     context.beginPath();
@@ -1505,7 +1519,7 @@ function drawClbOutput(info, context)
   if (info.dataUsed['Y'])
   {
     context.strokeStyle = "white";
-    context.fillStyle = "white";
+    context.fillStyle = "yellow";
     context.strokeRect(190, 200, 40, 60);
     context.fillText('QY', 195, 233, 35);
     context.beginPath();
@@ -1581,8 +1595,8 @@ function drawClbOutput(info, context)
       context.beginPath();
       context.moveTo(230, 230);
       context.lineTo(250, 230);
-      context.lineTo(250, 315);
-      context.lineTo(20, 315);
+      context.lineTo(250, 310);
+      context.lineTo(20, 310);
       context.stroke();
     }
   }

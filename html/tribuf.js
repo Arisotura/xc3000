@@ -243,6 +243,11 @@ class TriBuf
         }
     }
 
+    describePin(pin)
+    {
+        return this.name + '.' + pin;
+    }
+
     signalConnection()
     {
         // TODO

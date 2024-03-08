@@ -228,6 +228,7 @@ class Iob
         this.tInvert = false;
         this.iEnable = false;
         this.qEnable = false;
+        this.clkiEnable = false;
 
         this.input = 2;
         this.levels = {I: 1, O: 0, T: 0};
@@ -1082,6 +1083,17 @@ class Iob
         });
     }
 
+    describePin(pin)
+    {
+        if (pin == 'CLKI') return this.clkin + '.I';
+        return this.pad + '.' + pin;
+    }
+
+    pinEnabled(pin)
+    {return true;
+        return this[pin.toLowerCase() + 'Enable'];
+    }
+
     signalConnection(pin)
     {
         switch (pin)
@@ -1093,6 +1105,10 @@ class Iob
 
             case 'I':
                 this.iEnable = true;
+                break;
+
+            case 'CLKI':
+                this.clkiEnable = true;
                 break;
         }
     }

@@ -368,6 +368,8 @@ function initDecoders() {
   pipDecoder.generateLongLines();
   switchDecoders.generateLocalLines();
   decoders.forEach(d => d.decode());
+
+  clbDecoders.traceFromOutputs();
 }
 
 

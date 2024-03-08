@@ -39,6 +39,13 @@ class Path
         this.originType = originType;
     }
 
+    isEnabled()
+    {
+        let obj = this.origin.obj;
+        if (!obj) return true;
+        return obj.pinEnabled(this.origin.pin);
+    }
+
     parseCoords(name)
     {
         var ret;
@@ -271,6 +278,187 @@ class Path
         this.origin.obj.signalConnection(this.origin.pin);
     }
 
+    traceFrom(gPt=null, net=null, level=0)
+    {
+        if (level > 300)
+        {
+            console.log('too much recursion');
+            return undefined;
+        }
+
+        if (level == 0)
+        {
+            var src = this.origin.obj;
+            if (src)
+            {
+                net = new Net(this.origin);
+            }
+            else
+            {
+                console.log('Path.traceFrom(): origin not defined');
+                return undefined;
+            }
+        }
+        else
+        {
+            if (!gPt || !net)
+            {
+                console.log('Path.traceFrom(): invalid parameters');
+                console.log(gPt, net, level);
+                return undefined;
+            }
+        }
+
+        if (this.path.length == 0)
+            return net;
+
+        function handleNode(prev, cur, dir)
+        {
+            //if (net.checkVisited(cur.gPt))
+            //    return false;
+
+            net.appendPoint(cur.gPt);
+
+            if (cur.type == 'pip')
+            {
+                let pip = cur.obj;
+console.log(' - got PIP ', dir, pip);
+                switch (pip.type)
+                {
+                    case 'splitH':
+                    case 'splitV':
+                        if (dir == (pip.type=='splitH' ? 'V':'H')) return false;
+                        if (!pip.status) return false;
+                        net.appendPip(cur.gPt);
+                        break;
+
+                    case 'bidiH':
+                    {
+                        if (dir == 'V') return false;
+                        let mask = (prev.gPt.x < cur.gPt.x) ? 1 : 2;
+                        if (!(pip.status & mask)) return false;
+                        net.appendPip(cur.gPt);
+                        break;
+                    }
+
+                    case 'bidiV':
+                    {
+                        if (dir == 'H') return false;
+                        let mask = (prev.gPt.y < cur.gPt.y) ? 1 : 2;
+                        if (!(pip.status & mask)) return false;
+                        net.appendPip(cur.gPt);
+                        break;
+                    }
+
+                    case 'H->V':
+                    case 'V->H':
+                    {
+                        if (dir == (pip.type == 'H->V' ? 'V' : 'H')) break;
+                        if (pip.status)
+                        {
+                            let otherpath = pip.paths[dir == 'H' ? 'V' : 'H'].path;
+                            //if (!otherpath.isEnabled()) break;
+console.log('TRACING FROM PIP ', cur);
+                            net.appendPip(cur.gPt);
+                            net.pushJunction(cur);
+                            otherpath.traceFrom(cur.gPt, net, level + 1);
+                            net.popJunction();
+                        }
+                        break;
+                    }
+
+                    case 'ND':
+                    {
+                        let mask = (dir == 'H') ? 1 : 2;
+                        if (pip.status & mask)
+                        {
+                            let otherpath = pip.paths[dir == 'H' ? 'V' : 'H'].path;
+                            //if (!otherpath.isEnabled()) break;
+
+                            net.appendPip(cur.gPt);
+                            net.pushJunction(cur);
+                            otherpath.traceFrom(cur.gPt, net, level + 1);
+                            net.popJunction();
+                        }
+                        break;
+                    }
+                }
+            }
+            else if (cur.type == 'junction')
+            {
+                let junc = cur.obj;
+
+                net.pushJunction(cur);
+                junc.traceFrom(cur.gPt, net, level+1);
+                net.popJunction();
+            }
+            else if (cur.type == 'endpoint')
+            {console.log('GOT ENDPOINT!', cur);
+                if (!cur.obj) return false;
+
+                if (cur.obj.type == 'junction')
+                {
+                    let junc = cur.obj.path;
+
+                    net.pushJunction(cur);
+                    junc.traceFrom(cur.gPt, net, level+1);
+                    net.popJunction();
+                }
+                else
+                {
+                    if (!cur.obj.pinEnabled(cur.pin)) return false;
+
+                    if (cur.obj instanceof Switch)
+                        cur.obj.routeThrough(cur.pin, net, level + 1);
+
+                    net.appendEndpoint(cur);
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        var origin;
+        if (level == 0)
+            origin = this.origin;
+        else
+            origin = this.pathByG[gPt.x+'G'+gPt.y];
+if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, gPt, this);
+        if (this.originType == 'dest' || this.originType == 'both')
+        {
+            var prev = origin;
+            var cur = prev.prev;
+            while (cur)
+            {
+                if (!handleNode(prev, cur, cur.dirNext))
+                    break;
+
+                prev = cur;
+                cur = cur.prev;
+            }
+            net.clearPathStack();
+        }
+        if (this.originType == 'source' || this.originType == 'both')
+        {
+            var prev = origin;
+            var cur = prev.next;
+            while (cur)
+            {
+                if (!handleNode(prev, cur, prev.dirNext)) break;
+
+                prev = cur;
+                cur = cur.next;
+            }
+            net.clearPathStack();
+        }
+
+        if (level == 0)
+            net.optimize();
+
+        return net;
+    }
+
     draw(ctx, level=0)
     {
         if (level > 300)
@@ -300,5 +488,183 @@ class Path
 
         if (level == 0)
             ctx.stroke();
+    }
+}
+
+// class representing a net -- source, destinations, and interconnects
+// closely related to Path in that it is produced by Path.traceFrom()
+
+class Net
+{
+    constructor(origin)
+    {
+        var src = origin.obj;
+
+        this.sourcePoint = origin.gPt;
+        this.sourceObj = src;
+        this.sourcePin = src.describePin(origin.pin);
+
+        this.pathData = []; // visual path data
+        this.netList = []; // net list, including interconnections
+        this.destList = []; // list of just the destinations
+
+        this.lastElem = origin;
+        this.elemStack = [];
+
+        this.lastPoint = origin.gPt;
+        this.pointStack = [];
+        this.pointTraced = {};
+
+        this.visited = {};
+
+        this.color = 'hsl(60 100% 83.3%)';
+        this.color = 'hsl(180 100% 83.3%)';
+    }
+
+    checkVisited(gPt)
+    {
+        let key = gPt.x+'G'+gPt.y;
+        if (typeof this.visited[key] != 'undefined') return true;
+        this.visited[key] = true;
+        return false;
+    }
+
+    pushJunction(elem)
+    {
+        this.elemStack.push(this.lastElem);
+        this.lastElem = elem;
+        console.log('pushJunction()', elem);
+    }
+
+    popJunction()
+    {
+        this.lastElem = this.elemStack.pop();
+        console.log('popJunction()');
+        this.clearPathStack();
+    }
+
+    // add point to the stack
+    // the stack is committed to the actual path data upon encountering an active PIP or endpoint
+    appendPoint(gPt)
+    {
+        this.pointStack.push(this.lastPoint);
+        this.lastPoint = gPt;
+        console.log('appendPoint', gPt);
+    }
+
+    clearPathStack()
+    {
+        console.log('clearPathStack()');
+        while (this.lastPoint.x != this.lastElem.gPt.x ||
+            this.lastPoint.y != this.lastElem.gPt.y)
+        {
+            this.lastPoint = this.pointStack.pop();
+            //console.log('pop', this.lastPoint);
+        }
+    }
+
+    commitPath()
+    {
+        var prev = this.sourcePoint;
+
+        this.pointStack.push(this.lastPoint);
+        for (var i = 0; i < this.pointStack.length; i++)
+        {
+            let pt = this.pointStack[i];
+            let key = pt.x+'G'+pt.y;
+            //console.log('trying to commit point '+key);
+            if (typeof this.pointTraced[key] == 'undefined')
+            {
+                console.log('point '+key+' is getting committed');
+                let from = {x: prev.x, y: prev.y};
+                let to = {x: pt.x, y: pt.y};
+                this.pathData.push({from: from, to: to});
+                this.pointTraced[key] = true;
+            }
+
+            prev = pt;
+        }
+        this.pointStack.pop();
+    }
+
+    appendPip(gPt)
+    {
+        this.commitPath();
+        this.netList.push({type:'pip', x:gPt.x, y:gPt.y});
+    }
+
+    appendEndpoint(elem)
+    {
+        this.commitPath();
+
+        var obj = elem.obj;
+        var pin = elem.obj.describePin(elem.pin);
+
+        this.netList.push({type:'endpoint', x:elem.gPt.x, y:elem.gPt.y, obj:elem.obj, pin:pin});
+        if (!(elem.obj instanceof Switch))
+            this.destList.push({obj:elem.obj, pin:pin});
+    }
+
+    optimize()
+    {
+        // merge path items that are in the same direction
+        // TODO
+
+        /*var newdata = [];
+
+        function dir(a, b)
+        {
+            if (a.x > b.x && a.y == b.y) return 'left';
+            if (a.x < b.x && a.y == b.y) return 'right';
+            if (a.x == b.x && a.y > b.y) return 'bottom';
+            if (a.x == b.x && a.y < b.y) return 'top';
+            return 'diagonal??';
+        }
+
+        var cur = this.pathData[0];
+        var curdir = dir(cur.from, cur.to);
+        for (var i = 1; i < this.pathData.length; i++)
+        {
+            let next = this.pathData[i];
+            if (cur.from.x == cur.to.x && cur.from.y == cur.to.y)
+            {
+                cur = next;
+                curdir = dir(cur.from, cur.to);
+                continue;
+            }
+
+            let commit = false;
+            if (cur.to.x != next.from.x || cur.to.y != next.from.y)
+                commit = true;
+            else
+            {
+                //
+            }
+        }*/
+    }
+
+    draw(ctx)
+    {
+        ctx.strokeStyle = this.color;
+
+        ctx.beginPath();
+
+        this.pathData.forEach((p) =>
+        {
+            let from = getSCoords(p.from);
+            let to = getSCoords(p.to);
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+        });
+
+        ctx.stroke();
+
+        this.netList.forEach((n) =>
+        {
+            if (n.type != 'pip') return;
+
+            let coord = getSCoords(n);
+            ctx.strokeRect(coord.x-1, coord.y-1, 2, 2);
+        });
     }
 }

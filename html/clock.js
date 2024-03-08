@@ -303,6 +303,11 @@ class ClockBuf
         this.iPath.setPipStatus(mux, 1);
     }
 
+    describePin(pin)
+    {
+        return this.name + '.' + pin;
+    }
+
     signalConnection()
     {
         // TODO
@@ -397,6 +402,11 @@ class ClockOsc
 
         if (!x0) this.oPath.setPipStatus(0, 1);
         if (!x1) this.oPath.setPipStatus(1, 1);
+    }
+
+    describePin(pin)
+    {
+        return this.name + '.' + pin;
     }
 
     signalConnection()
