@@ -863,36 +863,32 @@ function layoutClick(x, y, btn) {
   y = Math.floor(y / SCALE);
   let col;
   let row;
-  let colv;
-  let rowv;
   Object.entries(colInfo).forEach(function([k, v]) {
-    if (Math.abs(v[1] - x) < 3) {
+    if (Math.abs(v - x) < 3) {
       col = k;
-      colv = v;
     }
   });
   Object.entries(rowInfo).forEach(function([k, v]) {
-    if (Math.abs(v[1] - y) < 3) {
+    if (Math.abs(v - y) < 3) {
       row = k;
-      rowv = v;
     }
   });
-  if (rowv == undefined || colv == undefined) {
+  if (row == undefined || col == undefined) {
     $("#info0").html("");
   } else if (debug) {
-    const gcoord = colv[0] + "G" + rowv[0];
-    let pip = "";
+    const gcoord = col + "G" + row;
+    /*let pip = "";
     if (IobDecoders.gToName[gcoord]) {
       pip = IobDecoders.gToName[gcoord];
     }
     $("#info0").html(col + " " + row + " " + colv[0] + "G" + rowv[0] + "; " + colv[1] + "," + rowv[1] + " " + pip);
     console.log(col, row, colv[0] + "G" + rowv[0] + "; " + colv[1] + "," + rowv[1] + " " + pip);
-    //console.log(iobDecoders.getFromPin(18));
+    //console.log(iobDecoders.getFromPin(18));*/
   }
 
   // 56,56  60,66
   // 754,790 762,796
-  if (x>=56 && x<=66 && y>=56 && y<=66)
+  /*if (x>=56 && x<=66 && y>=56 && y<=66)
   {
     const clk = clbDecoders.get('CLK.AA.I');
     if (clk && btn == 0)
@@ -921,9 +917,9 @@ function layoutClick(x, y, btn) {
       visDestList2 = [];
       updateRoute();
     }
-  }
+  }*/
 
-  const XOFF = 24;
+  /*const XOFF = 24;
   const YOFF = 30;
   let tilex = Math.floor((x - XOFF) / 72);
   let tiley = Math.floor((y - YOFF) / 72);
@@ -947,7 +943,26 @@ function layoutClick(x, y, btn) {
       visDestList2 = clb.destList2;
       updateRoute(); 
     }
-  }
+  }*/
+    let clb = clbDecoders.getFromXY(x, y);
+    if (clb) {
+        console.log(clb);
+        if (btn != 0)
+            clbDrawPopup(clb, x, y);
+        else
+        {
+            /*iob.routeFromInput();
+            visStartPoint = iob.startPoint;
+            visPathInfo = iob.pathInfo;
+            visDestList = iob.destList;
+            visStartPoint2 = '';
+            visPathInfo2 = [];
+            visDestList2 = [];
+            updateRoute();*/
+        }
+        //console.log(clb.info());
+        return;
+    }
   let iob = iobDecoders.getFromXY(x, y);
   if (iob) {
     console.log(iob);
@@ -965,7 +980,7 @@ function layoutClick(x, y, btn) {
       visDestList2 = [];
       updateRoute(); 
     }
-    console.log(iob.info());
+    //console.log(iob.info());
     return;
   }
 }

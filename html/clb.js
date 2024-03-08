@@ -1,3 +1,53 @@
+
+class ClbDecoders {
+  constructor() {
+    this.clbDecoders = {};
+    var fam = curBitstream.family;
+    for (let i = 0; i < fam.rows; i++) {
+      for (let j = 0; j < fam.cols; j++) {
+        let tile = letters[i] + letters[j];
+        this.clbDecoders[tile] = new ClbDecoder(j, i, tile);
+      }
+    }
+    // These are in the config as CLBs.
+    //this.clbDecoders["CLK.AA.I"] = new ClkDecoder("CLK.AA.I");
+    //this.clbDecoders["CLK.KK.I"] = new ClkDecoder("CLK.KK.I");
+  }
+
+  reset() {
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.reset());
+  }
+
+  get(tile) {
+    return this.clbDecoders[tile];
+  }
+
+  getFromXY(x, y) {
+    for (const clb of Object.entries(this.clbDecoders)) {
+      if (clb[1].isInside(x, y)) {
+        return clb[1];
+      }
+    }
+    return undefined;
+  }
+
+  decode() {
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.decode());
+  }
+
+  routeFromOutputs() {
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.routeFromOutputs());
+  }
+
+  renderBackground(ctx) {
+    Object.entries(this.clbDecoders).forEach(([tile, obj]) => obj.renderBackground(ctx));
+  }
+
+  render(ctx) {
+    Object.entries(this.clbDecoders).forEach(([tile, obj]) => obj.render(ctx));
+  }
+}
+
 class ClbDecoder {
   constructor(col, row, tile) { // tile is e.g. AB
     this.col = col;
@@ -35,7 +85,10 @@ class ClbDecoder {
     this.lutInput = {'F':['A','B','C','D'], 'G':['A','B','C','D']};
     this.dataInput = {'X':'F', 'Y':'G'};
     this.output = {'X':'F', 'Y':'G'};
+    this.diEnable = false;
     this.ecEnable = false;
+    this.rdEnable = false;
+    this.kEnable = false;
     this.kInvert = false;
 
     this.lutEquation = {'F':'0', 'G':'0'};
@@ -529,6 +582,7 @@ class ClbDecoder {
     this.output['Y'] = ['G', '', '', 'QY'][mux];
 
     this.ecEnable = curBitstream.data[offset.y+4][offset.x+9] == 0;
+    this.rdEnable = curBitstream.data[offset.y+4][offset.x+17] == 0;
     this.kInvert = curBitstream.data[offset.y+4][offset.x+11] == 1;
 
     // check which inputs are used
@@ -571,16 +625,21 @@ class ClbDecoder {
 
     this.dataUsed = {};
     this.dataUsed['X'] = (this.output['X'] == 'QX') ||
-        (this.lutInput['F'][1] == 'QX') || (this.lutInput['F'][2] == 'QX') ||
-        (this.lutInput['G'][1] == 'QX') || (this.lutInput['G'][2] == 'QX');
+        (this.lutInput['F'][1] == 'QX' && this.inputUsed['F'][1]) ||
+        (this.lutInput['F'][2] == 'QX' && this.inputUsed['F'][2]) ||
+        (this.lutInput['G'][1] == 'QX' && this.inputUsed['G'][1]) ||
+        (this.lutInput['G'][2] == 'QX' && this.inputUsed['G'][2]);
     this.dataUsed['Y'] = (this.output['Y'] == 'QY') ||
-        (this.lutInput['F'][1] == 'QY') || (this.lutInput['F'][2] == 'QY') ||
-        (this.lutInput['G'][1] == 'QY') || (this.lutInput['G'][2] == 'QY');
+        (this.lutInput['F'][1] == 'QY' && this.inputUsed['F'][1]) ||
+        (this.lutInput['F'][2] == 'QY' && this.inputUsed['F'][2]) ||
+        (this.lutInput['G'][1] == 'QY' && this.inputUsed['G'][1]) ||
+        (this.lutInput['G'][2] == 'QY' && this.inputUsed['G'][2]);
 
-    this.diEnable = this.dataUsed['X'] || this.dataUsed['Y'];
-    this.ecEnable &&= this.diEnable;
-    this.kEnable = this.diEnable;
-    this.rdEnable = this.diEnable;
+    var dataenable = this.dataUsed['X'] || this.dataUsed['Y'];
+    this.diEnable = dataenable && ((this.dataInput['X'] == 'DI') || (this.dataInput['Y'] == 'DI'));
+    this.ecEnable &&= dataenable;
+    this.rdEnable &&= dataenable;
+    this.kEnable = dataenable;
 
     this.lutEquation['F'] = formula4(this.lut['F'], this.lutInput['F']);
     this.lutEquation['G'] = formula4(this.lut['G'], this.lutInput['G']);
@@ -659,46 +718,6 @@ class ClbDecoder {
 
   isInside(x, y) {
     return x >= this.screenPt.x && x < this.screenPt.x + this.W && y >= this.screenPt.y && y < this.screenPt.y + this.H;
-  }
-}
-
-class ClbDecoders {
-  constructor() {
-    this.clbDecoders = {};
-    var fam = curBitstream.family;
-    for (let i = 0; i < fam.rows; i++) {
-      for (let j = 0; j < fam.cols; j++) {
-        let tile = letters[i] + letters[j];
-        this.clbDecoders[tile] = new ClbDecoder(j, i, tile);
-      }
-    }
-    // These are in the config as CLBs.
-    //this.clbDecoders["CLK.AA.I"] = new ClkDecoder("CLK.AA.I");
-    //this.clbDecoders["CLK.KK.I"] = new ClkDecoder("CLK.KK.I");
-  }
-
-  reset() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.reset());
-  }
-
-  get(tile) {
-    return this.clbDecoders[tile];
-  }
-
-  decode() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.decode());
-  }
-
-  routeFromOutputs() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.routeFromOutputs());
-  }
-
-  renderBackground(ctx) {
-    Object.entries(this.clbDecoders).forEach(([tile, obj]) => obj.renderBackground(ctx));
-  }
-
-  render(ctx) {
-    Object.entries(this.clbDecoders).forEach(([tile, obj]) => obj.render(ctx));
   }
 }
 
@@ -992,7 +1011,7 @@ let popup = undefined;
 function clbDrawPopup(clb, x, y) {
   popup = $("<canvas/>", {class: "popup"}).css("left", x * SCALE).css("top", y * SCALE)[0];
   popup.width = 300;
-  popup.height = 300;
+  popup.height = 350;
   $('#container').append(popup);
   const context = popup.getContext('2d');
   context.resetTransform();
@@ -1000,14 +1019,14 @@ function clbDrawPopup(clb, x, y) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "black";
   context.fillRect(0, 0, canvas.width, canvas.height);
-  const info = clb.clbInternal;
-  if (debug) {
+  //const info = clb.clbInternal;
+  /*if (debug) {
     context.font = "20px arial";
     context.fillStyle = "red";
     context.fillText("s" + clb.clbInternal.configSet + " r" + clb.clbInternal.configRes + " c" + clb.clbInternal.configClk + " q" + clb.clbInternal.configQ, 20, 20);
-  }
+  }*/
   context.strokeStyle = "#888";
-  if (info.configBase == 'F') {
+  /*if (info.configBase == 'F') {
     drawClbF(info, context);
   } else if (info.configBase == 'FG') {
     drawClbFG(info, context);
@@ -1015,7 +1034,18 @@ function clbDrawPopup(clb, x, y) {
     drawClbFGM(info, context);
   } else {
     throw("Bad config base" + info.configBase);
+  }*/
+  /*if (clb.fgMux)
+  {
+    if (clb.lutInput['F'][1] == clb.lutInput['G'][1] && clb.lutInput['F'][2] == clb.lutInput['G'][2])
+      drawClbF(clb, context);
+    else
+      drawClbFGM(clb, context);
   }
+  else
+    drawClbFG(clb, context);*/
+
+  drawClbOutput(clb, context);
 }
 
 // The F base is the configuration with one 4-input CLB called "F".
@@ -1493,6 +1523,235 @@ function drawClbFGM(info, context) {
      throw("Bad Y " + info.configY);
   }
   context.stroke();
+}
+
+// draw the flip-flops and outputs of the CLB
+// F: X=130 Y=60  G: X=140 Y=180
+function drawClbOutput(info, context)
+{
+  context.font = "20px arial";
+  context.strokeStyle = 'yellow';
+  context.fillStyle = 'white';
+
+  //if (info.xEnable)
+  {
+    context.beginPath();
+    context.moveTo(250, 60);
+    context.lineTo(270, 60);
+    context.stroke();
+    context.fillText('X', 272, 69);
+
+    if (info.output['X'] == 'F')
+    {
+      context.beginPath();
+      context.moveTo(130, 60);
+      context.lineTo(250, 60);
+      context.stroke();
+    }
+    else if (info.output['X'] == 'QX' && info.dataUsed['X'])
+    {
+      context.beginPath();
+      context.moveTo(230, 110);
+      context.lineTo(250, 110);
+      context.lineTo(250, 60);
+      context.stroke();
+    }
+  }
+  //if (info.yEnable)
+  {
+    context.beginPath();
+    context.moveTo(250, 180);
+    context.lineTo(270, 180);
+    context.stroke();
+    context.fillText('Y', 272, 189);
+
+    if (info.output['Y'] == 'G')
+    {
+      context.beginPath();
+      context.moveTo(140, 180);
+      context.lineTo(250, 180);
+      context.stroke();
+    }
+    else if (info.output['Y'] == 'QY' && info.dataUsed['Y'])
+    {
+      context.beginPath();
+      context.moveTo(230, 230);
+      context.lineTo(250, 230);
+      context.lineTo(250, 180);
+      context.stroke();
+    }
+  }
+
+  if (info.diEnable)
+    context.fillText('DI', 135, 27);
+  if (info.ecEnable)
+    context.fillText('EC', 165, 27);
+  if (info.rdEnable)
+    context.fillText('RD', 170, 303);
+  if (info.kEnable)
+    context.fillText('K', 150, 303);
+
+  if (info.dataUsed['X'])
+  {
+    context.strokeRect(190, 80, 40, 60);
+    context.fillText('QX', 195, 113, 35);
+    context.beginPath();
+    context.moveTo(190, 140); // clock triangle
+    context.lineTo(190 + 7, 140 - 7); // clock triangle
+    context.lineTo(190, 140 - 14); // clock triangle
+    context.stroke();
+
+    if (info.diEnable && (info.dataInput['X'] == 'DI'))
+    {
+      context.beginPath();
+      context.moveTo(190, 110);
+      context.lineTo(150, 110);
+      context.lineTo(150, 30);
+      context.stroke();
+    }
+    else if (info.dataInput['X'] == 'F')
+    {
+      context.beginPath();
+      context.moveTo(190, 110);
+      context.lineTo(130, 110);
+      context.lineTo(130, 60);
+      context.stroke();
+    }
+    else if (info.dataInput['X'] == 'G')
+    {
+      context.beginPath();
+      context.moveTo(190, 110);
+      context.lineTo(130, 110);
+      context.lineTo(130, 180);
+      context.stroke();
+    }
+
+    if (info.ecEnable)
+    {
+      context.beginPath();
+      context.moveTo(190, 87);
+      context.lineTo(170, 87);
+      context.lineTo(170, 30);
+      context.stroke();
+    }
+    if (info.rdEnable)
+    {
+      context.beginPath();
+      context.moveTo(210, 140);
+      context.lineTo(210, 150);
+      context.lineTo(180, 150);
+      context.lineTo(180, 290);
+      context.stroke();
+    }
+    if (info.kEnable)
+    {
+      context.beginPath();
+      context.moveTo(190-(info.kInvert?6:0), 133);
+      context.lineTo(160, 133);
+      context.lineTo(160, 290);
+      context.stroke();
+      if (info.kInvert)
+      {
+        context.beginPath();
+        context.arc(190-3, 133, 3, 0, 2 * Math.PI);
+        context.stroke();
+      }
+    }
+
+    if ((info.lutInput['F'][1] == 'QX' && info.inputUsed['F'][1]) ||
+        (info.lutInput['F'][2] == 'QX' && info.inputUsed['F'][2]) ||
+        (info.lutInput['G'][1] == 'QX' && info.inputUsed['G'][1]) ||
+        (info.lutInput['G'][2] == 'QX' && info.inputUsed['G'][2]))
+    {
+      context.beginPath();
+      context.moveTo(230, 110);
+      context.lineTo(250, 110);
+      context.lineTo(250, 10);
+      context.lineTo(10, 10);
+      context.stroke();
+    }
+  }
+
+  if (info.dataUsed['Y'])
+  {
+    context.strokeRect(190, 200, 40, 60);
+    context.fillText('QY', 195, 233, 35);
+    context.beginPath();
+    context.moveTo(190, 260); // clock triangle
+    context.lineTo(190 + 7, 260 - 7); // clock triangle
+    context.lineTo(190, 260 - 14); // clock triangle
+    context.stroke();
+
+    if (info.diEnable && (info.dataInput['Y'] == 'DI'))
+    {
+      context.beginPath();
+      context.moveTo(190, 230);
+      context.lineTo(150, 230);
+      context.lineTo(150, 30);
+      context.stroke();
+    }
+    else if (info.dataInput['Y'] == 'F')
+    {
+      context.beginPath();
+      context.moveTo(190, 230);
+      context.lineTo(140, 230);
+      context.lineTo(140, 60);
+      context.stroke();
+    }
+    else if (info.dataInput['Y'] == 'G')
+    {
+      context.beginPath();
+      context.moveTo(190, 230);
+      context.lineTo(140, 230);
+      context.lineTo(140, 180);
+      context.stroke();
+    }
+
+    if (info.ecEnable)
+    {
+      context.beginPath();
+      context.moveTo(190, 207);
+      context.lineTo(170, 207);
+      context.lineTo(170, 30);
+      context.stroke();
+    }
+    if (info.rdEnable)
+    {
+      context.beginPath();
+      context.moveTo(210, 260);
+      context.lineTo(210, 270);
+      context.lineTo(180, 270);
+      context.lineTo(180, 290);
+      context.stroke();
+    }
+    if (info.kEnable)
+    {
+      context.beginPath();
+      context.moveTo(190-(info.kInvert?6:0), 253);
+      context.lineTo(160, 253);
+      context.lineTo(160, 290);
+      context.stroke();
+      if (info.kInvert)
+      {
+        context.beginPath();
+        context.arc(190-3, 253, 3, 0, 2 * Math.PI);
+        context.stroke();
+      }
+    }
+
+    if ((info.lutInput['F'][1] == 'QY' && info.inputUsed['F'][1]) ||
+        (info.lutInput['F'][2] == 'QY' && info.inputUsed['F'][2]) ||
+        (info.lutInput['G'][1] == 'QY' && info.inputUsed['G'][1]) ||
+        (info.lutInput['G'][2] == 'QY' && info.inputUsed['G'][2]))
+    {
+      context.beginPath();
+      context.moveTo(230, 230);
+      context.lineTo(250, 230);
+      context.lineTo(250, 320);
+      context.lineTo(20, 320);
+      context.stroke();
+    }
+  }
 }
 
 function clbRemovePopup() {
