@@ -264,18 +264,27 @@ class PipDecoder
             var dy = parseInt(data[2]);
             var dx = parseInt(data[3]);
             var o = getTileOffset(data[0], data[1]);
+            var otop = getTileOffset(data[0], data[1]-1);
+
+            function readbit(y, x)
+            {
+                if (y < 0) y += otop.y + 8;
+                else       y += o.y;
+                x += o.x;
+                return curBitstream.data[y][x];
+            }
 
             switch (pip.type)
             {
                 case 'H->V':
                 case 'V->H':
-                    var b0 = curBitstream.data[o.y + dy][o.x + dx];
+                    var b0 = readbit(dy, dx);
                     if (data[4] == 'TBUF')
                     {
                         // PIP can only be enabled if the neighboring tristate buffer is disabled
                         var dy2 = parseInt(data[5]);
                         var dx2 = parseInt(data[6]);
-                        var tri = curBitstream.data[o.y + dy2][o.x + dx2];
+                        var tri = readbit(dy2, dx2);
                         if (!tri) b0 = 1;
                     }
                     pip.status = (b0 ? 0:1);
@@ -286,15 +295,15 @@ class PipDecoder
                 case 'bidiV':
                     var dy2 = parseInt(data[4]);
                     var dx2 = parseInt(data[5]);
-                    var b0 = curBitstream.data[o.y + dy][o.x + dx];
-                    var b1 = curBitstream.data[o.y + dy2][o.x + dx2];
+                    var b0 = readbit(dy, dx);
+                    var b1 = readbit(dy2, dx2);
                     pip.status = (b0 ? 0:1) | (b1 ? 0:2);
                     break;
 
                 case 'splitH':
                 case 'splitV':
                     // bits for splitters are inverted
-                    var b0 = curBitstream.data[o.y + dy][o.x + dx];
+                    var b0 = readbit(dy, dx);
                     pip.status = b0;
                     break;
             }

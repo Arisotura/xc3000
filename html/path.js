@@ -529,9 +529,10 @@ class Net
 
         this.visited = {};
 
-        this.color = 'hsl(60 100% 83.3%)';
-        this.color = 'hsl('+netColor+' 100% 83.3%)';
-        netColor = (netColor + 33) % 360;
+        //this.color = 'hsl(60 100% 83.3%)';
+        //this.color = 'hsl('+netColor+' 100% 83.3%)';
+        this.color = 'hsl('+netColor+' 100% 50%)';
+        netColor = (netColor + 42) % 360;
     }
 
     checkVisited(gPt)
