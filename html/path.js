@@ -321,16 +321,16 @@ class Path
 
         if (this.path.length == 0)
             return (level==0) ? net : numdest;
-
+//console.log('Path.traceFrom()', this);
         function handleNode(prev, cur, dir)
         {
-            net.appendPoint(cur.gPt);
+            //net.appendPoint(cur.gPt);
 
             if (cur.type == 'pip')
             {
                 if (net.checkVisited(cur.gPt))
                 {
-                    net.commitPath();
+                    //net.commitPath();
                     return false;
                 }
 
@@ -373,9 +373,9 @@ class Path
                             //if (!otherpath.isEnabled()) break;
 //console.log('TRACING FROM PIP ', cur);
                             net.appendPip(cur.gPt);
-                            net.pushJunction(cur);
+                            //net.pushJunction(cur);
                             numdest += otherpath.traceFrom(cur.gPt, net, level + 1);
-                            net.popJunction();
+                            //net.popJunction();
                         }
                         break;
                     }
@@ -389,9 +389,9 @@ class Path
                             //if (!otherpath.isEnabled()) break;
 
                             net.appendPip(cur.gPt);
-                            net.pushJunction(cur);
+                            //net.pushJunction(cur);
                             numdest += otherpath.traceFrom(cur.gPt, net, level + 1);
-                            net.popJunction();
+                            //net.popJunction();
                         }
                         break;
                     }
@@ -401,9 +401,12 @@ class Path
             {
                 let junc = cur.obj;
 
-                net.pushJunction(cur);
+                //net.appendPoint(cur.gPt);
+
+                //net.pushJunction(cur);
+                net.appendPoint(cur.gPt);
                 numdest += junc.traceFrom(cur.gPt, net, level+1);
-                net.popJunction();
+                //net.popJunction();
             }
             else if (cur.type == 'endpoint')
             {//console.log('GOT ENDPOINT!', cur);
@@ -413,22 +416,27 @@ class Path
                 {
                     let junc = cur.obj.path;
 
-                    net.pushJunction(cur);
+                    //net.pushJunction(cur);
+                    net.appendPoint(cur.gPt);
                     numdest += junc.traceFrom(cur.gPt, net, level+1);
-                    net.popJunction();
+                    //net.popJunction();
                 }
                 else
                 {
                     if (!cur.obj.pinEnabled(cur.pin)) return false;
 
+                    net.appendEndpoint(cur);
+
                     if (cur.obj instanceof Switch)
                         numdest += cur.obj.routeThrough(cur.pin, net, level + 1);
                     else
                         numdest++;
-
-                    net.appendEndpoint(cur);
                 }
                 return false;
+            }
+            else
+            {
+                net.appendPoint(cur.gPt);
             }
 
             return true;
@@ -442,6 +450,9 @@ class Path
 if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, gPt, this);
         if (this.originType == 'dest' || this.originType == 'both')
         {
+            numdest = 0;
+            net.beginBranch(origin.gPt);
+
             var prev = origin;
             var cur = prev.prev;
             while (cur)
@@ -452,10 +463,14 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
                 prev = cur;
                 cur = cur.prev;
             }
-            net.clearPathStack();
+
+            net.finishBranch();
         }
         if (this.originType == 'source' || this.originType == 'both')
         {
+            numdest = 0;
+            net.beginBranch(origin.gPt);
+
             var prev = origin;
             var cur = prev.next;
             while (cur)
@@ -465,14 +480,17 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
                 prev = cur;
                 cur = cur.next;
             }
-            net.clearPathStack();
-        }
 
-        if (numdest == 0)
-            net.cancelPath(origin.gPt);
+            net.finishBranch();
+        }
+console.log('path traced, numDest='+numdest);
+        //if (numdest == 0)
+        //    net.cancelPath(origin.gPt);
 
         if (level == 0)
             net.optimize();
+
+        console.log(net);
 
         return (level==0) ? net : numdest;
     }
@@ -515,6 +533,247 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
 var netColor = 120;
 
 class Net
+{
+    constructor(origin)
+    {
+        var src = origin.obj;
+
+        this.sourcePoint = origin.gPt;
+        this.sourceObj = src;
+        this.sourcePin = src.describePin(origin.pin);
+
+        this.pathData = []; // visual path data
+        this.netList = []; // net list, including interconnections
+        this.destList = []; // list of just the destinations
+
+        this.curBranch = {x:origin.gPt.x, y:origin.gPt.y, numDest:0};
+        this.branchStack = [];
+        this.elemStack = [];
+        this.visited = {};
+
+        this.numbegin=0; this.numfinish=0;
+
+        //this.color = 'hsl(60 100% 83.3%)';
+        //this.color = 'hsl('+netColor+' 100% 83.3%)';
+        this.color = 'hsl('+netColor+' 100% 50%)';
+        netColor = (netColor + 42) % 360;
+
+        this.appendPoint(origin.gPt);
+        //this.beginBranch(origin.gPt);
+    }
+
+    checkVisited(gPt)
+    {
+        let key = gPt.x+'G'+gPt.y;
+        if (typeof this.visited[key] != 'undefined') return true;
+        return false;
+    }
+
+    beginBranch(gPt)
+    {
+        this.numbegin++;
+        console.log('Net.beginBranch()', gPt);
+        console.log('elemStack='+this.elemStack.length);
+        //var numdest = this.curBranch.numDest;
+        //if (this.curBranch)
+            this.branchStack.push(this.curBranch);
+
+        this.curBranch = {x:gPt.x, y:gPt.y, numDest:0, lastNumDest:0};
+    }
+
+    appendPoint(gPt)
+    {
+        console.log('Net.appendPoint()', gPt);
+        this.elemStack.push({type:'point', x:gPt.x, y:gPt.y, keep:false});
+    }
+
+    appendPip(gPt)
+    {
+        console.log('Net.appendPip()', gPt);
+        this.elemStack.push({type:'pip', x:gPt.x, y:gPt.y, keep:false});
+
+        let key = gPt.x+'G'+gPt.y;
+        this.visited[key] = true;
+    }
+
+    appendEndpoint(elem)
+    {
+        console.log('Net.appendEndpoint()', elem);
+        var obj = elem.obj;
+        var pin = obj.describePin(elem.pin);
+
+        this.elemStack.push({type:'endpoint', x:elem.gPt.x, y:elem.gPt.y, obj:obj, pin:pin, keep:true});
+        if (!(elem.obj instanceof Switch))
+            this.curBranch.numDest++;
+    }
+
+    finishBranch()
+    {
+        this.numfinish++;
+        //if (this.elemStack.length < 2)
+        //    return;
+
+        console.log('Net.finishBranch(): '+this.curBranch.numDest+'/'+this.branchStack[this.branchStack.length-1].numDest);
+
+        var numdest = this.curBranch.numDest;
+        var parentnum = this.branchStack[this.branchStack.length-1].numDest;
+
+        if (numdest)// != this.curBranch.lastNumDest)
+        //if (numdest > this.branchStack[this.branchStack.length-1].numDest)
+        {
+            // this branch reached one or more endpoints: commit it
+            console.log('Net.finishBranch(): committing '+numdest+' items', this.curBranch);
+            /*let prev = this.elemStack.shift();
+            let cur;
+            while (cur = this.elemStack.shift())
+            {
+                let from = {x: prev.x, y: prev.y};
+                let to = {x: cur.x, y: cur.y};
+                this.pathData.push({from: from, to: to});
+
+                if (cur.type != 'point')
+                {
+                    this.netList.push(cur);
+
+                    if (cur.type == 'endpoint')
+                    {
+                        if (!(cur.obj instanceof Switch))
+                            this.destList.push({obj: cur.obj, pin: cur.pin});
+                    }
+                }
+
+                prev = cur;
+            }*/
+            let keep = false;
+            //if (numdest) keep = true;
+
+            let cur;
+            while (cur = this.elemStack.pop())
+            {
+                if (cur.x == this.curBranch.x && cur.y == this.curBranch.y)
+                {
+                    cur.numChildren = numdest;
+                    cur.keep = true;
+                    this.elemStack.push(cur);
+                    break;
+                }
+
+                console.log('committing -> ', cur);
+
+                if (cur.keep)
+                    keep = true;
+
+                if (keep)
+                {
+                    let prev = this.elemStack[this.elemStack.length - 1];
+
+                    let from = {x: prev.x, y: prev.y};
+                    let to = {x: cur.x, y: cur.y};
+                    this.pathData.push({from: from, to: to});
+
+                    if (cur.type != 'point')
+                    {
+                        this.netList.push(cur);
+
+                        if (cur.type == 'endpoint')
+                        {
+                            if (!(cur.obj instanceof Switch))
+                                this.destList.push({obj: cur.obj, pin: cur.pin});
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // this branch went nowhere: delete it
+            console.log('Net.finishBranch(): discarding back to ', this.curBranch);
+            var morp = this.elemStack.length;
+            let cur;
+            while (cur = this.elemStack.pop())
+            {
+                if (cur.x == this.curBranch.x && cur.y == this.curBranch.y)
+                {
+                    cur.numChildren = 0;
+                    this.elemStack.push(cur);
+                    break;
+                }
+            }
+            console.log(morp+' -> '+this.elemStack.length);
+        }
+
+        this.curBranch = this.branchStack.pop();
+        this.curBranch.numDest += numdest;
+        console.log('Net.finishBranch(): back to ', this.curBranch);
+        //this.curBranch.numDest = numdest;
+        //this.curBranch.lastNumDest = this.curBranch.numDest;
+    }
+
+    optimize()
+    {
+        // merge path items that are in the same direction
+        // TODO
+
+        /*var newdata = [];
+
+        function dir(a, b)
+        {
+            if (a.x > b.x && a.y == b.y) return 'left';
+            if (a.x < b.x && a.y == b.y) return 'right';
+            if (a.x == b.x && a.y > b.y) return 'bottom';
+            if (a.x == b.x && a.y < b.y) return 'top';
+            return 'diagonal??';
+        }
+
+        var cur = this.pathData[0];
+        var curdir = dir(cur.from, cur.to);
+        for (var i = 1; i < this.pathData.length; i++)
+        {
+            let next = this.pathData[i];
+            if (cur.from.x == cur.to.x && cur.from.y == cur.to.y)
+            {
+                cur = next;
+                curdir = dir(cur.from, cur.to);
+                continue;
+            }
+
+            let commit = false;
+            if (cur.to.x != next.from.x || cur.to.y != next.from.y)
+                commit = true;
+            else
+            {
+                //
+            }
+        }*/
+    }
+
+    draw(ctx)
+    {
+        ctx.strokeStyle = this.color;
+
+        ctx.beginPath();
+
+        this.pathData.forEach((p) =>
+        {
+            let from = getSCoords(p.from);
+            let to = getSCoords(p.to);
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+        });
+
+        ctx.stroke();
+
+        this.netList.forEach((n) =>
+        {
+            if (n.type != 'pip') return;
+
+            let coord = getSCoords(n);
+            ctx.strokeRect(coord.x-1, coord.y-1, 2, 2);
+        });
+    }
+}
+
+class ____Net
 {
     constructor(origin)
     {
@@ -617,7 +876,7 @@ class Net
     }
 
     cancelPath(gPt)
-    {
+    {console.log('cancelPath() ', gPt);
         var dellist = [];
 
         for (;;)

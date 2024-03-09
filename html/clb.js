@@ -35,7 +35,7 @@ class ClbDecoders {
   traceFromOutputs() {
     Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
     //this.clbDecoders['AF'].traceFromOutputs(); // TEST
-    //this.clbDecoders['BJ'].traceFromOutputs(); // TEST
+    //this.clbDecoders['II'].traceFromOutputs(); // TEST
   }
 
   renderBackground(ctx) {
@@ -674,7 +674,7 @@ class ClbDecoder {
     // TEST
     //var net = this.yPath.traceFrom();
     var net = this.xPath.traceFrom();
-    console.log(net);
+    //console.log(net);
     this.test = net;
 
     var net2 = this.yPath.traceFrom();

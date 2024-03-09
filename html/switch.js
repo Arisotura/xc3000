@@ -457,7 +457,7 @@ console.log('Switch.routeThrough() start', pin);
         var inElem = inpath.pathByG[inPt.x+'G'+inPt.y];
         //net.pushJunction(inpath.pathByG[inPt.x+'G'+inPt.y]);
 
-        //console.log('Switch.routeThrough', this.name, pin, inPt);
+        console.log('Switch.routeThrough', this.name, pin, inPt);
 
         var self = this;
         this.destList[pin].forEach((dest) =>
@@ -468,28 +468,31 @@ console.log('Switch.routeThrough() start', pin);
             let gPt = this.getPinCoords(dest);
             let path = this.paths[dest];
             let startElem = path.pathByG[gPt.x+'G'+gPt.y];
-
+console.log('routing from '+self.name+' '+pin+' to '+dest, gPt);
+            net.beginBranch(inPt);
+            net.appendEndpoint(startElem);
             //net.pushJunction(startElem);
             //net.appendPoint(gPt);
             //net.appendEndpoint(startElem);
             //path.traceFrom(gPt, net, level+1);
-            net.pushJunction(inElem);
-            net.appendPoint(gPt);
+            //net.pushJunction(inElem);
+            //net.appendPoint(gPt);
 
-            net.pushJunction(startElem);
+            //net.pushJunction(startElem);
             var nd = path.traceFrom(gPt, net, level+1);
-            net.popJunction();
-
+            //net.popJunction();
+console.log(' -- path dest: '+nd);
             if (this.destList[dest].length != 0)
                 nd += self.routeThrough(dest, net, level + 1, visited);
-
+            console.log(' -- reroute dest: '+nd);
             //if (nd)
-                net.appendEndpoint(startElem);
+                //net.appendEndpoint(startElem);
 
             numdest += nd;
-            net.popJunction();
+            //net.popJunction();
+            net.finishBranch();
         });
-
+console.log('Switch.routeThrough() -> '+numdest);
         //net.popJunction();
         return numdest;
     }
