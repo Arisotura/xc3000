@@ -321,6 +321,12 @@ class Path
 
             if (cur.type == 'pip')
             {
+                if (net.checkVisited(cur.gPt))
+                {
+                    net.commitPath();
+                    return false;
+                }
+
                 let pip = cur.obj;
 //console.log(' - got PIP ', dir, pip);
                 switch (pip.type)
@@ -532,7 +538,7 @@ class Net
     {
         let key = gPt.x+'G'+gPt.y;
         if (typeof this.visited[key] != 'undefined') return true;
-        this.visited[key] = true;
+        //this.visited[key] = true;
         return false;
     }
 
@@ -582,13 +588,18 @@ class Net
             let pt = this.pointStack[i];
             let key = pt.x+'G'+pt.y;
             //console.log('trying to commit point '+key);
-            if (typeof this.pointTraced[key] == 'undefined')
+            if (typeof this.pointTraced[key] == 'undefined' ||
+                this.pointTraced[key].indexOf(prev.x+'G'+prev.y) == -1)
             {
                 //console.log('point '+key+' is getting committed');
                 let from = {x: prev.x, y: prev.y};
                 let to = {x: pt.x, y: pt.y};
                 this.pathData.push({from: from, to: to});
-                this.pointTraced[key] = true;
+                //this.pointTraced[key] = true;
+
+                if (typeof this.pointTraced[key] == 'undefined')
+                    this.pointTraced[key] = [];
+                this.pointTraced[key].push(prev.x+'G'+prev.y);
             }
 
             prev = pt;
@@ -600,6 +611,9 @@ class Net
     {
         this.commitPath();
         this.netList.push({type:'pip', x:gPt.x, y:gPt.y});
+
+        let key = gPt.x+'G'+gPt.y;
+        this.visited[key] = true;
     }
 
     appendEndpoint(elem)
