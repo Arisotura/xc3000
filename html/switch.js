@@ -54,7 +54,7 @@ class SwitchDecoders
 
 /**
  * A switch matrix.
- * Name is e.g. HA.8.1
+ * Name is e.g. HA.20.1
  * Coordinates: screenPt is the upper left corner of the box. gPt is the coordinate of the upper left corner.
  *
  */
@@ -78,7 +78,7 @@ class Switch
         this.H = 24;
 
         this.wires = [];
-        this.connected = {};
+        this.destList = [];
     }
 
     getPinCoords(pin)
@@ -292,7 +292,9 @@ class Switch
         var swbits;
 
         this.wires = [];
-        this.connected = {};
+        this.destList = [];
+        for (var i = 1; i <= 20; i++)
+            this.destList[i] = [];
 
         if (this.row == 0)
         {
@@ -359,8 +361,8 @@ class Switch
             if (!bit)
             {
                 self.wires.push([b[2], b[3]]);
-                self.connected[b[2]] = true;
-                self.connected[b[3]] = true;
+                self.destList[b[2]].push(b[3]);
+                self.destList[b[3]].push(b[2]);
             }
         });
     }
@@ -372,14 +374,15 @@ class Switch
 
     pinEnabled(pin)
     {
-        return (typeof this.connected[pin] != 'undefined');
+        //return (typeof this.connected[pin] != 'undefined');
+        return this.destList[pin].length != 0;
     }
 
     signalConnection()
     {
     }
 
-    routeThrough(pin, net, level)
+    _routeThrough(pin, net, level)
     {
         var chk = [pin];
         var done = [];
@@ -434,6 +437,56 @@ console.log('Switch.routeThrough() start', pin);
         }
         net.popJunction();
         console.log('Switch.routeThrough() done');
+    }
+
+    routeThrough(pin, net, level, visited=null)
+    {
+        if (level > 300)
+        {
+            console.log('too much recursion');
+            return;
+        }
+
+        if (!visited) visited = {};
+        visited[pin] = true;
+
+        var inpath = this.paths[pin];
+        var inPt = this.getPinCoords(pin);
+        var inElem = inpath.pathByG[inPt.x+'G'+inPt.y];
+        //net.pushJunction(inpath.pathByG[inPt.x+'G'+inPt.y]);
+
+        //console.log('Switch.routeThrough', this.name, pin, inPt);
+
+        var self = this;
+        this.destList[pin].forEach((dest) =>
+        {
+            if (visited[dest]) return;
+            visited[dest] = true;
+
+            let gPt = this.getPinCoords(dest);
+            let path = this.paths[dest];
+            let startElem = path.pathByG[gPt.x+'G'+gPt.y];
+
+            //net.pushJunction(startElem);
+            //net.appendPoint(gPt);
+            //net.appendEndpoint(startElem);
+            //path.traceFrom(gPt, net, level+1);
+            net.pushJunction(inElem);
+            net.appendPoint(gPt);
+
+            net.pushJunction(startElem);
+            path.traceFrom(gPt, net, level+1);
+            net.popJunction();
+
+            if (this.destList[dest].length != 0)
+                self.routeThrough(dest, net, level + 1, visited);
+
+            net.appendEndpoint(startElem);
+
+            net.popJunction();
+        });
+
+        //net.popJunction();
     }
 
     /**
@@ -496,7 +549,7 @@ console.log('Switch.routeThrough() start', pin);
 
     render(ctx)
     {
-        this.drawWires(ctx);
+        //this.drawWires(ctx);
     }
 
     isInside(x, y) {

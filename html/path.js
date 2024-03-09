@@ -322,7 +322,7 @@ class Path
             if (cur.type == 'pip')
             {
                 let pip = cur.obj;
-console.log(' - got PIP ', dir, pip);
+//console.log(' - got PIP ', dir, pip);
                 switch (pip.type)
                 {
                     case 'splitH':
@@ -358,7 +358,7 @@ console.log(' - got PIP ', dir, pip);
                         {
                             let otherpath = pip.paths[dir == 'H' ? 'V' : 'H'].path;
                             //if (!otherpath.isEnabled()) break;
-console.log('TRACING FROM PIP ', cur);
+//console.log('TRACING FROM PIP ', cur);
                             net.appendPip(cur.gPt);
                             net.pushJunction(cur);
                             otherpath.traceFrom(cur.gPt, net, level + 1);
@@ -393,7 +393,7 @@ console.log('TRACING FROM PIP ', cur);
                 net.popJunction();
             }
             else if (cur.type == 'endpoint')
-            {console.log('GOT ENDPOINT!', cur);
+            {//console.log('GOT ENDPOINT!', cur);
                 if (!cur.obj) return false;
 
                 if (cur.obj.type == 'junction')
@@ -409,7 +409,11 @@ console.log('TRACING FROM PIP ', cur);
                     if (!cur.obj.pinEnabled(cur.pin)) return false;
 
                     if (cur.obj instanceof Switch)
+                    {
+                        //net.pushJunction(cur);
                         cur.obj.routeThrough(cur.pin, net, level + 1);
+                        //net.popJunction();
+                    }
 
                     net.appendEndpoint(cur);
                 }
@@ -494,6 +498,8 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
 // class representing a net -- source, destinations, and interconnects
 // closely related to Path in that it is produced by Path.traceFrom()
 
+var netColor = 120;
+
 class Net
 {
     constructor(origin)
@@ -518,7 +524,8 @@ class Net
         this.visited = {};
 
         this.color = 'hsl(60 100% 83.3%)';
-        this.color = 'hsl(180 100% 83.3%)';
+        this.color = 'hsl('+netColor+' 100% 83.3%)';
+        netColor = (netColor + 33) % 360;
     }
 
     checkVisited(gPt)
@@ -533,14 +540,16 @@ class Net
     {
         this.elemStack.push(this.lastElem);
         this.lastElem = elem;
-        console.log('pushJunction()', elem);
+        //console.log('pushJunction()', elem);
     }
 
     popJunction()
     {
-        this.lastElem = this.elemStack.pop();
-        console.log('popJunction()');
         this.clearPathStack();
+        this.lastElem = this.elemStack.pop();
+        //console.log('popJunction()');
+        //this.clearPathStack();
+        //console.log('popJunction(), new lastPoint is ', this.lastPoint);
     }
 
     // add point to the stack
@@ -549,12 +558,12 @@ class Net
     {
         this.pointStack.push(this.lastPoint);
         this.lastPoint = gPt;
-        console.log('appendPoint', gPt);
+        //console.log('appendPoint', gPt);
     }
 
     clearPathStack()
     {
-        console.log('clearPathStack()');
+        //console.log('clearPathStack()');
         while (this.lastPoint.x != this.lastElem.gPt.x ||
             this.lastPoint.y != this.lastElem.gPt.y)
         {
@@ -575,7 +584,7 @@ class Net
             //console.log('trying to commit point '+key);
             if (typeof this.pointTraced[key] == 'undefined')
             {
-                console.log('point '+key+' is getting committed');
+                //console.log('point '+key+' is getting committed');
                 let from = {x: prev.x, y: prev.y};
                 let to = {x: pt.x, y: pt.y};
                 this.pathData.push({from: from, to: to});

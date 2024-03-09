@@ -33,9 +33,9 @@ class ClbDecoders {
   }
 
   traceFromOutputs() {
-    //Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
     //this.clbDecoders['AC'].traceFromOutputs(); // TEST
-    this.clbDecoders['BD'].traceFromOutputs(); // TEST
+    //this.clbDecoders['BJ'].traceFromOutputs(); // TEST
   }
 
   renderBackground(ctx) {
