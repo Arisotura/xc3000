@@ -268,8 +268,8 @@ class PipDecoder
 
             function readbit(y, x)
             {
-                if (y < 0) y += otop.y + 8;
-                else       y += o.y;
+                if (y < 0 && data[1] > 0) y += otop.y + 8;
+                else                      y += o.y;
                 x += o.x;
                 return curBitstream.data[y][x];
             }
