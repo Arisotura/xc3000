@@ -286,9 +286,12 @@ class TriBuf
         }
         ctx.stroke();
 
-        this.oPath.draw(ctx);
-        this.iPath.draw(ctx);
-        this.tPath.draw(ctx);
+        if (viewSettings.showAllPips)
+        {
+            this.oPath.draw(ctx);
+            this.iPath.draw(ctx);
+            this.tPath.draw(ctx);
+        }
     }
 
     render(ctx)

@@ -137,7 +137,10 @@ class PullUp
         ctx.lineTo(this.screenPt.x, this.screenPt.y+6);
         ctx.stroke();
 
-        this.oPath.draw(ctx);
+        if (viewSettings.showAllPips)
+        {
+            this.oPath.draw(ctx);
+        }
     }
 
     render(ctx)

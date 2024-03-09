@@ -4,6 +4,7 @@ const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var bitstreams = [];
 var curBitstream = null;
 var curPackage = null;
+var curNetlist = null;
 
 
 function parseBitstream(type, contents)
@@ -259,9 +260,17 @@ function parseBitstream(type, contents)
 function selectBitstream(bsid, pkgid)
 {
   curBitstream = bitstreams[bsid];
-  curPackage = chipPackages[curBitstream.family.base][pkgid];
+  selectPackage(pkgid);
 
   initParser();
+}
+
+function selectPackage(pkgid)
+{
+  curPackage = chipPackages[curBitstream.family.base][pkgid];
+
+  if (iobDecoders)
+    iobDecoders.onChangePackage();
 }
 
 /*

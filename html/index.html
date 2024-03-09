@@ -104,15 +104,31 @@ $(document).ready(function() {
         opts += '</option>';
       });
 
-      $('#pkg_sel').html(opts).val(first).trigger('change');
+      $('#pkg_sel').html(opts).val(first);
+
+      var bsid = $('#bs_sel').val();
+      var pkgid = $('#pkg_sel').val();
+      selectBitstream(bsid, pkgid);
+      drawBackground(bgctx);
+      redraw(ctx);
     });
 
     $('#pkg_sel').on('change', function()
     {
-      var bsid = $('#bs_sel').val();
       var pkgid = $('#pkg_sel').val();
 
-      selectBitstream(bsid, pkgid);
+      selectPackage(pkgid);
+      drawBackground(bgctx);
+    });
+
+    $('#view_settings input').each(function(item)
+    {
+      this.checked = viewSettings[this.id];
+    });
+
+    $('#view_settings input').on('change', function()
+    {
+      changeViewSettings(this.id, this.checked);
       drawBackground(bgctx);
       redraw(ctx);
     });
@@ -267,8 +283,12 @@ To use, drag-and-drop an .RBT file onto this page, or load a file by clicking: <
     Bitstream: <select id="bs_sel"></select>
     Chip package: <select id="pkg_sel"></select>
   </div>
-Select either the graphical layout display or the raw bitstream:
-<select id="mode"><option value="layout" selected>Layout</option><option value="bitstream">Bitstream</option></select>
+  <div id="view_settings">
+    <label><input type="checkbox" id="showAllPips"> Show all interconnects</label>
+    <label><input type="checkbox" id="debug"> Debug view</label>
+  </div>
+<!--Select either the graphical layout display or the raw bitstream:-->
+<select id="mode" style="display:none;"><option value="layout" selected>Layout</option><option value="bitstream">Bitstream</option></select>
 <br/>
 Click a CLB for more info.
 </div>

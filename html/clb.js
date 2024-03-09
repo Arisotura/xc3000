@@ -33,9 +33,9 @@ class ClbDecoders {
   }
 
   traceFromOutputs() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
+    //Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
     //this.clbDecoders['AC'].traceFromOutputs(); // TEST
-    //this.clbDecoders['BJ'].traceFromOutputs(); // TEST
+    this.clbDecoders['EE'].traceFromOutputs(); // TEST
   }
 
   renderBackground(ctx) {
@@ -665,7 +665,8 @@ class ClbDecoder {
   traceFromOutputs()
   {
     // TEST
-    var net = this.yPath.traceFrom();
+    //var net = this.yPath.traceFrom();
+    var net = this.xPath.traceFrom();
     console.log(net);
     this.test = net;
   }
@@ -705,17 +706,20 @@ class ClbDecoder {
     ctx.lineTo(this.screenPt.x-2, this.screenPt.y+4);
     ctx.stroke();
 
-    this.aPath.draw(ctx);
-    this.ecPath.draw(ctx);
-    this.diPath.draw(ctx);
-    this.bPath.draw(ctx);
-    this.cPath.draw(ctx);
-    this.kPath.draw(ctx);
-    this.ePath.draw(ctx);
-    this.dPath.draw(ctx);
-    this.rdPath.draw(ctx);
-    this.xPath.draw(ctx);
-    this.yPath.draw(ctx);
+    if (viewSettings.showAllPips)
+    {
+      this.aPath.draw(ctx);
+      this.ecPath.draw(ctx);
+      this.diPath.draw(ctx);
+      this.bPath.draw(ctx);
+      this.cPath.draw(ctx);
+      this.kPath.draw(ctx);
+      this.ePath.draw(ctx);
+      this.dPath.draw(ctx);
+      this.rdPath.draw(ctx);
+      this.xPath.draw(ctx);
+      this.yPath.draw(ctx);
+    }
   }
 
   render(ctx)

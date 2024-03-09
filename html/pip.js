@@ -407,16 +407,19 @@ class PipDecoder
 
     renderBackground(ctx)
     {
-        Object.entries(this.entries).forEach(([gpt,pip]) =>
+        if (viewSettings.showAllPips)
         {
-            // DEBUG
-            //if (pip.type=='bidiH' || pip.type=='bidiV')
-            //    ctx.strokeStyle = '#f00';
-            //else
+            Object.entries(this.entries).forEach(([gpt, pip]) =>
+            {
+                // DEBUG
+                //if (pip.type=='bidiH' || pip.type=='bidiV')
+                //    ctx.strokeStyle = '#f00';
+                //else
                 ctx.strokeStyle = '#aaa';
 
-            ctx.strokeRect(pip.screenPt.x-1, pip.screenPt.y-1, 2, 2);
-        });
+                ctx.strokeRect(pip.screenPt.x - 1, pip.screenPt.y - 1, 2, 2);
+            });
+        }
 
         if (false)
         {
@@ -429,12 +432,15 @@ class PipDecoder
 
     render(ctx)
     {
-        // DEBUG VIEW
-        Object.entries(this.entries).forEach(([gpt,pip]) =>
+        if (viewSettings.debug)
         {
-            if (!pip.status) return;
-            ctx.fillStyle = ['', '#f00', '#0f0', '#ff0'][pip.status];
-            ctx.fillRect(pip.screenPt.x-2, pip.screenPt.y-2, 3, 3);
-        });
+            // DEBUG VIEW
+            Object.entries(this.entries).forEach(([gpt, pip]) =>
+            {
+                if (!pip.status) return;
+                ctx.fillStyle = ['', '#f00', '#0f0', '#ff0'][pip.status];
+                ctx.fillRect(pip.screenPt.x - 2, pip.screenPt.y - 2, 3, 3);
+            });
+        }
     }
 }

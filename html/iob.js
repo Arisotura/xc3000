@@ -43,6 +43,11 @@ class IobDecoders {
       //console.log(this.iobs);
   }
 
+    onChangePackage()
+    {
+        Object.entries(this.iobs).forEach(([name, obj]) => obj.setPinName(curPackage[obj.pad]));
+    }
+
   reset() {
     const self = this;
     pads.forEach(function([pin, tile, style, pad]) {
@@ -233,6 +238,11 @@ class Iob
         this.input = 2;
         this.levels = {I: 1, O: 0, T: 0};
         this.dirty = true;
+    }
+
+    setPinName(pin)
+    {
+        this.pin = pin;
     }
 
     reset()
@@ -689,13 +699,16 @@ class Iob
         }
         ctx.stroke();
 
-        this.okPath.draw(ctx);
-        this.ikPath.draw(ctx);
-        this.oPath.draw(ctx);
-        this.qPath.draw(ctx);
-        this.iPath.draw(ctx);
-        this.tPath.draw(ctx);
-        if (this.ciPath) this.ciPath.draw(ctx);
+        if (viewSettings.showAllPips)
+        {
+            this.okPath.draw(ctx);
+            this.ikPath.draw(ctx);
+            this.oPath.draw(ctx);
+            this.qPath.draw(ctx);
+            this.iPath.draw(ctx);
+            this.tPath.draw(ctx);
+            if (this.ciPath) this.ciPath.draw(ctx);
+        }
     }
 
     render(ctx)

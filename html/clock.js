@@ -163,8 +163,11 @@ class ClockDecoders
     renderBackground(ctx)
     {
         Object.entries(this.clocks).forEach(([name, obj]) => obj.renderBackground(ctx));
-        //this.clockLines.forEach((line) => line.draw(ctx));
-        Object.entries(this.clockLines).forEach(([key, line]) => line.draw(ctx));
+
+        if (viewSettings.showAllPips)
+        {
+            Object.entries(this.clockLines).forEach(([key, line]) => line.draw(ctx));
+        }
     }
 
     render(ctx)
@@ -336,8 +339,11 @@ class ClockBuf
         ctx.lineTo(this.screenPt.x+4, this.screenPt.y+6);
         ctx.stroke();
 
-        this.oPath.draw(ctx);
-        this.iPath.draw(ctx);
+        if (viewSettings.showAllPips)
+        {
+            this.oPath.draw(ctx);
+            this.iPath.draw(ctx);
+        }
     }
 
     render(ctx)
@@ -422,7 +428,10 @@ class ClockOsc
         ctx.lineTo(this.screenPt.x+4, this.screenPt.y+14);
         ctx.stroke();
 
-        this.oPath.draw(ctx);
+        if (viewSettings.showAllPips)
+        {
+            this.oPath.draw(ctx);
+        }
     }
 
     render(ctx)

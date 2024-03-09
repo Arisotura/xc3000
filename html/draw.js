@@ -1,4 +1,16 @@
 
+// view settings
+
+var viewSettings = {
+    showAllPips: false,
+    debug: false,
+};
+
+function changeViewSettings(id, val)
+{
+    viewSettings[id] = val;
+}
+
 // coord lists
 
 // from G coords to screen coords
