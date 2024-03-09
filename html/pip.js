@@ -208,25 +208,26 @@ class PipDecoder
         var vlines = [], vlines2 = [], hlines = [];
         this.vLines = []; this.hLines = [];
 
-        vlines.push('col.A.long.1', 'col.A.long.2', 'col.A.long.3', 'col.A.long.4', 'col.A.long.5');
+        vlines.push('col.A.long.1:13:-11', 'col.A.long.2:14:-12', 'col.A.long.3:7:-6', 'col.A.long.4:8:-7', 'col.A.long.5:4:-8');
         for (var i = 1; i < c; i++)
-            vlines.push('col.'+letters[i]+'.long.1', 'col.'+letters[i]+'.long.2', 'col.'+letters[i]+'.long.3');
-        vlines.push('col.'+letters[c]+'.long.1', 'col.'+letters[c]+'.long.2');
+            vlines.push('col.'+letters[i]+'.long.1:7:-6', 'col.'+letters[i]+'.long.2:8:-7', 'col.'+letters[i]+'.long.3:4:-8');
+        vlines.push('col.'+letters[c]+'.long.1:14:-12', 'col.'+letters[c]+'.long.2:13:-11');
 
-        vlines2.push('col.A.long.6');
+        vlines2.push('col.A.long.6:29:-20');
         for (var i = 1; i < c; i++)
-            vlines2.push('col.'+letters[i]+'.long.0');
+            vlines2.push('col.'+letters[i]+'.long.0:29:-20');
 
-        hlines.push('row.A.long.1', 'row.A.long.2', 'row.A.long.3');
+        hlines.push('row.A.long.1:19:-16', 'row.A.long.2:18:-17', 'row.A.long.3:2:-7');
         for (var i = 1; i < r; i++)
-            hlines.push('row.'+letters[i]+'.long.1', 'row.'+letters[i]+'.long.2');
-        hlines.push('row.'+letters[r]+'.long.1', 'row.'+letters[r]+'.long.2', 'row.'+letters[r]+'.long.3');
+            hlines.push('row.'+letters[i]+'.long.1:2:-7', 'row.'+letters[i]+'.long.2:2:-7');
+        hlines.push('row.'+letters[r]+'.long.1:2:-7', 'row.'+letters[r]+'.long.2:20:-17', 'row.'+letters[r]+'.long.3:19:-16');
 
         vlines.forEach((coord) =>
         {
-            var x = colInfo[coord];
-            var gStart = {x:x, y:3};
-            var gEnd = {x:x, y:rmaxG-3};
+            coord = coord.split(':');
+            var x = colInfo[coord[0]];
+            var gStart = {x:x, y:parseInt(coord[1])};
+            var gEnd = {x:x, y:rmaxG+parseInt(coord[2])};
 
             var path = new Path(null, null, 'both', gStart, 'V');
             this.addPipsToPath(gStart, gEnd, path);
@@ -235,9 +236,10 @@ class PipDecoder
 
         vlines2.forEach((coord) =>
         {
-            var x = colInfo[coord];
-            var gStart = {x:x, y:5};
-            var gEnd = {x:x, y:rmaxG-20};
+            coord = coord.split(':');
+            var x = colInfo[coord[0]];
+            var gStart = {x:x, y:parseInt(coord[1])};
+            var gEnd = {x:x, y:rmaxG+parseInt(coord[2])};
 
             var path = new Path(null, null, 'both', gStart, 'V');
             this.addPipsToPath(gStart, gEnd, path);
@@ -246,9 +248,10 @@ class PipDecoder
 
         hlines.forEach((coord) =>
         {
-            var y = rowInfo[coord];
-            var gStart = {x:2, y:y};
-            var gEnd = {x:cmaxG-2, y:y};
+            coord = coord.split(':');
+            var y = rowInfo[coord[0]];
+            var gStart = {x:parseInt(coord[1]), y:y};
+            var gEnd = {x:cmaxG+parseInt(coord[2]), y:y};
 
             var path = new Path(null, null, 'both', gStart, 'H');
             this.addPipsToPath(gStart, gEnd, path);
@@ -431,14 +434,6 @@ class PipDecoder
                 ctx.strokeRect(pip.screenPt.x - 1, pip.screenPt.y - 1, 2, 2);
             });
         }
-
-        if (false)
-        {
-            ctx.strokeStyle = '#ffa';
-            Object.entries(this.vLines).forEach(([key,path]) => path.draw(ctx));
-            Object.entries(this.hLines).forEach(([key,path]) => path.draw(ctx));
-            ctx.strokeStyle = '#aaa';
-        }
     }
 
     render(ctx)
@@ -452,6 +447,14 @@ class PipDecoder
                 ctx.fillStyle = ['', '#f00', '#0f0', '#ff0'][pip.status];
                 ctx.fillRect(pip.screenPt.x - 2, pip.screenPt.y - 2, 3, 3);
             });
+        }
+
+        if (false)
+        {
+            ctx.strokeStyle = '#ffa';
+            Object.entries(this.vLines).forEach(([key,path]) => path.draw(ctx));
+            Object.entries(this.hLines).forEach(([key,path]) => path.draw(ctx));
+            ctx.strokeStyle = '#aaa';
         }
     }
 }

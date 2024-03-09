@@ -444,8 +444,10 @@ console.log('Switch.routeThrough() start', pin);
         if (level > 300)
         {
             console.log('too much recursion');
-            return;
+            return 0;
         }
+
+        var numdest = 0;
 
         if (!visited) visited = {};
         visited[pin] = true;
@@ -475,18 +477,21 @@ console.log('Switch.routeThrough() start', pin);
             net.appendPoint(gPt);
 
             net.pushJunction(startElem);
-            path.traceFrom(gPt, net, level+1);
+            var nd = path.traceFrom(gPt, net, level+1);
             net.popJunction();
 
             if (this.destList[dest].length != 0)
-                self.routeThrough(dest, net, level + 1, visited);
+                nd += self.routeThrough(dest, net, level + 1, visited);
 
-            net.appendEndpoint(startElem);
+            //if (nd)
+                net.appendEndpoint(startElem);
 
+            numdest += nd;
             net.popJunction();
         });
 
         //net.popJunction();
+        return numdest;
     }
 
     /**

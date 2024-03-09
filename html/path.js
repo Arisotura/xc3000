@@ -267,6 +267,14 @@ class Path
         }
     }
 
+    disableAllPips()
+    {
+        this.pathById.forEach((elem) =>
+        {
+            elem.obj.status = 0;
+        });
+    }
+
     signalConnection()
     {
         if (this.rootPath != this)
@@ -309,14 +317,13 @@ class Path
             }
         }
 
+        var numdest = 0;
+
         if (this.path.length == 0)
-            return net;
+            return (level==0) ? net : numdest;
 
         function handleNode(prev, cur, dir)
         {
-            //if (net.checkVisited(cur.gPt))
-            //    return false;
-
             net.appendPoint(cur.gPt);
 
             if (cur.type == 'pip')
@@ -367,7 +374,7 @@ class Path
 //console.log('TRACING FROM PIP ', cur);
                             net.appendPip(cur.gPt);
                             net.pushJunction(cur);
-                            otherpath.traceFrom(cur.gPt, net, level + 1);
+                            numdest += otherpath.traceFrom(cur.gPt, net, level + 1);
                             net.popJunction();
                         }
                         break;
@@ -383,7 +390,7 @@ class Path
 
                             net.appendPip(cur.gPt);
                             net.pushJunction(cur);
-                            otherpath.traceFrom(cur.gPt, net, level + 1);
+                            numdest += otherpath.traceFrom(cur.gPt, net, level + 1);
                             net.popJunction();
                         }
                         break;
@@ -395,7 +402,7 @@ class Path
                 let junc = cur.obj;
 
                 net.pushJunction(cur);
-                junc.traceFrom(cur.gPt, net, level+1);
+                numdest += junc.traceFrom(cur.gPt, net, level+1);
                 net.popJunction();
             }
             else if (cur.type == 'endpoint')
@@ -407,7 +414,7 @@ class Path
                     let junc = cur.obj.path;
 
                     net.pushJunction(cur);
-                    junc.traceFrom(cur.gPt, net, level+1);
+                    numdest += junc.traceFrom(cur.gPt, net, level+1);
                     net.popJunction();
                 }
                 else
@@ -415,11 +422,9 @@ class Path
                     if (!cur.obj.pinEnabled(cur.pin)) return false;
 
                     if (cur.obj instanceof Switch)
-                    {
-                        //net.pushJunction(cur);
-                        cur.obj.routeThrough(cur.pin, net, level + 1);
-                        //net.popJunction();
-                    }
+                        numdest += cur.obj.routeThrough(cur.pin, net, level + 1);
+                    else
+                        numdest++;
 
                     net.appendEndpoint(cur);
                 }
@@ -463,10 +468,13 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
             net.clearPathStack();
         }
 
+        if (numdest == 0)
+            net.cancelPath(origin.gPt);
+
         if (level == 0)
             net.optimize();
 
-        return net;
+        return (level==0) ? net : numdest;
     }
 
     draw(ctx, level=0)
@@ -606,6 +614,37 @@ class Net
             prev = pt;
         }
         this.pointStack.pop();
+    }
+
+    cancelPath(gPt)
+    {
+        var dellist = [];
+
+        for (;;)
+        {
+            if (this.pathData.length == 0)
+                break;
+
+            var pt = this.pathData.pop();
+            if (pt.to.x == gPt.x && pt.to.y == gPt.y)
+            {
+                this.pathData.push(pt);
+                break;
+            }
+
+            let prevkey = pt.from.x+'G'+pt.from.y;
+            let key = pt.to.x+'G'+pt.to.y;
+            if (typeof this.pointTraced[key] != 'undefined')
+                this.pointTraced[key] = this.pointTraced[key].filter((item) => item != prevkey);
+
+            dellist.push(key);
+        }
+
+        this.netList = this.netList.filter((item) =>
+        {
+            let key = item.x+'G'+item.y;
+            return dellist.indexOf(key) == -1;
+        });
     }
 
     appendPip(gPt)

@@ -1094,6 +1094,13 @@ class Iob
                     this[key.toLowerCase() + 'Path'].setPipStatus(i >> 1, 1);
             }
         });
+
+        var inputs = ['o', 't', 'ik', 'ok'];
+        inputs.forEach((inp) =>
+        {
+            if (!self[inp+'Enable'])
+                self[inp+'Path'].disableAllPips();
+        });
     }
 
     describePin(pin)
@@ -1103,7 +1110,7 @@ class Iob
     }
 
     pinEnabled(pin)
-    {return true;
+    {
         return this[pin.toLowerCase() + 'Enable'];
     }
 

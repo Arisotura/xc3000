@@ -33,9 +33,9 @@ class ClbDecoders {
   }
 
   traceFromOutputs() {
-    //Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
-    //this.clbDecoders['AC'].traceFromOutputs(); // TEST
-    this.clbDecoders['CC'].traceFromOutputs(); // TEST
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.traceFromOutputs());
+    //this.clbDecoders['AF'].traceFromOutputs(); // TEST
+    //this.clbDecoders['BJ'].traceFromOutputs(); // TEST
   }
 
   renderBackground(ctx) {
@@ -639,6 +639,13 @@ class ClbDecoder {
     this.lutEquation['F'] = formula4(this.lut['F'], this.lutInput['F']);
     this.lutEquation['G'] = formula4(this.lut['G'], this.lutInput['G']);
 
+    var inputs = ['a', 'ec', 'di', 'b', 'c', 'k', 'e', 'd', 'rd'];
+    inputs.forEach((inp) =>
+    {
+      if (!self[inp+'Enable'])
+        self[inp+'Path'].disableAllPips();
+    });
+
     //console.log(this);
     //console.log(this.tile, this.fgMux, 'F', this.lutEquation['F'], 'G', this.lutEquation['G']);
   }
@@ -649,7 +656,7 @@ class ClbDecoder {
   }
 
   pinEnabled(pin)
-  {return true;
+  {
     return this[pin.toLowerCase() + 'Enable'];
   }
 
@@ -669,6 +676,9 @@ class ClbDecoder {
     var net = this.xPath.traceFrom();
     console.log(net);
     this.test = net;
+
+    var net2 = this.yPath.traceFrom();
+    this.test2 = net2;
   }
 
   renderBackground(ctx)
@@ -726,6 +736,8 @@ class ClbDecoder {
   {
     if (typeof this.test != 'undefined')
       this.test.draw(ctx);
+    if (typeof this.test2 != 'undefined')
+      this.test2.draw(ctx);
   }
 
   info() {
