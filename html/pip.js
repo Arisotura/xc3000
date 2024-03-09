@@ -89,18 +89,18 @@ class PipDecoder
             if (fam.noMidBuffers)
             {
                 if (col == 0)
-                    pips.push('splitV:col.*.long.1:row.*.local.6:4:-7');
+                    pips.push('splitV:col.*.long.1:row.*.local.6:-3:-7');
                 else if (col == fam.cols)
-                    pips.push('splitV:col.*.long.2:row.*.local.6:7:0');
+                    pips.push('splitV:col.*.long.2:row.*.local.6:-1:0');
             }
             else
             {
                 if (col == 0)
-                    pips.push('splitV:col.*.long.1:row.*.local.6:8:-1', 'splitV:col.*.long.3:row.*.local.6:8:0', 'splitV:col.*.long.4:row.*.local.6:8:21');
+                    pips.push('splitV:col.*.long.1:row.*.local.6:-1:-1', 'splitV:col.*.long.3:row.*.local.6:-1:0', 'splitV:col.*.long.4:row.*.local.6:-1:21');
                 else if (col == fam.cols)
-                    pips.push('splitV:col.*.long.2:row.*.local.6:8:13');
+                    pips.push('splitV:col.*.long.2:row.*.local.6:-1:13');
                 else
-                    pips.push('splitV:col.*.long.1:row.*.local.6:8:0', 'splitV:col.*.long.2:row.*.local.6:8:21');
+                    pips.push('splitV:col.*.long.1:row.*.local.6:-1:0', 'splitV:col.*.long.2:row.*.local.6:-1:21');
             }
         }
 
@@ -268,8 +268,10 @@ class PipDecoder
 
             function readbit(y, x)
             {
-                if (y < 0 && data[1] > 0) y += otop.y + 8;
-                else                      y += o.y;
+                if (y < 0 && data[1] > 0 && pip.type != 'splitV')
+                    y += otop.y + 8;
+                else
+                    y += o.y;
                 x += o.x;
                 return curBitstream.data[y][x];
             }
