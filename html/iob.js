@@ -827,8 +827,8 @@ class Iob
                 inputbits['O'] = [offset.y+3, offset.x,  offset.y+3, offset.x+1,  offset.y+3, offset.x+2,  offset.y+4, offset.x,  offset.y+4, offset.x+1];
                 inputmux['O'] = {0x0B:0, 0x1A:1, 0x12:2, 0x19:3, 0x03:4, 0x17:5, 0x11:6, 0x1F:7};
 
-                outputbits['Q'] = [offset.y, offset.x+21,  offset.y, offset.x+18,  offset.y+1, offset.x+10,  offset.y, offset.x+10];
-                outputbits['I'] = [offset.y+2, offset.x+6,  offset.y+1, offset.x+19,  offset.y+1, offset.x+12,  offset.y+1, offset.x+6];
+                outputbits['Q'] = [offset.y, offset.x+21,  offset.y, offset.x+18,  offset.y, offset.x+10,  offset.y+1, offset.x+10];
+                outputbits['I'] = [offset.y+2, offset.x+6,  offset.y+1, offset.x+19,  offset.y+1, offset.x+6,  offset.y+1, offset.x+12];
             }
 
             inputbits['T'] = [offset.y+4, offset.x+8,  offset.y+3, offset.x+8];
