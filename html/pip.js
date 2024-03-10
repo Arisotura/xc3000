@@ -116,9 +116,9 @@ class PipDecoder
         {
             pips.push('ND:col.*.local.1:row.*.local.1:2:10:2:10', 'ND:col.*.local.2:row.*.local.2:0:10:0:10',
                 'ND:col.*.local.3:row.*.local.3:1:18:1:18', 'ND:col.*.local.4:row.*.local.4:1:19:1:19', 'ND:col.*.local.5:row.*.local.5:3:18:3:18',
-                'ND:col.*.long.1:row.*.long.1:0:7:0:8', 'ND:col.*.long.2:row.*.long.2:-1:17:0:15',
+                'ND:col.*.long.1:row.*.long.1:0:7:0:8', 'ND:col.*.long.2:row.*.long.2:0:13:0:15',
                 'ND:col.*.long.3:row.*.local.2:4:8:2:7', 'ND:col.*.long.4:row.*.local.3:4:13:2:12', 'ND:col.*.long.5:row.*.local.4:0:19:0:18',
-                'ND:col.*.long.3:row.*.long.1:-2:4:-1:3', 'ND:col.*.long.4:row.*.long.2:-1:16:-2:13', 'ND:col.*.long.5:row.*.long.2:0:13:-2:17',
+                'ND:col.*.long.3:row.*.long.1:-2:4:-1:3', 'ND:col.*.long.4:row.*.long.2:-1:16:-2:13', 'ND:col.*.long.5:row.*.long.2:-1:17:-2:17',
                 'H->V:col.*.local.1:row.*.long.3:4:0', 'V->H:col.*.local.2:row.*.long.3:2:4:TBUF:2:1', 'ND:col.*.long.1:row.*.long.3:5:-2:4:-1');
         }
         else if (row == 0 && col == fam.cols)
@@ -130,9 +130,9 @@ class PipDecoder
         }
         else if (row == 0)
         {
-            pips.push('ND:col.*.local.1:row.*.long.1:0:9:0:8', 'ND:col.*.local.4:row.*.long.2:-1:17:0:15',
+            pips.push('ND:col.*.local.1:row.*.long.1:0:9:0:8', 'ND:col.*.local.4:row.*.long.2:0:13:0:15',
                 'ND:col.*.long.1:row.*.local.2:4:8:2:7', 'ND:col.*.long.2:row.*.local.3:4:13:2:12', 'ND:col.*.long.3:row.*.local.4:0:19:0:18',
-                'ND:col.*.long.1:row.*.long.1:-2:4:-1:3', 'ND:col.*.long.2:row.*.long.2:-1:16:-2:13', 'ND:col.*.long.3:row.*.long.2:0:13:-2:17',
+                'ND:col.*.long.1:row.*.long.1:-2:4:-1:3', 'ND:col.*.long.2:row.*.long.2:-1:16:-2:13', 'ND:col.*.long.3:row.*.long.2:-1:17:-2:17',
                 'H->V:col.*.local.1:row.*.long.3:4:0', 'V->H:col.*.local.2:row.*.long.3:2:4:TBUF:2:1');
         }
         else if (row == fam.rows && col == 0)
