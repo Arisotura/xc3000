@@ -487,8 +487,16 @@ class ClbDecoder {
 
       outputbits['Y'].push(offset1.y+4, offset1.x+3);
       outputbits['Y'].push(offset1.y+4, offset1.x+12);
-      outputbits['Y'].push(offset1.y+3, offset1.x+17);
-      outputbits['Y'].push(offset1.y+3, offset1.x+18);
+      if (this.row == 0)
+      {
+        outputbits['Y'].push(offset1.y + 3, offset1.x + 19);
+        outputbits['Y'].push(offset1.y + 4, offset1.x + 18);
+      }
+      else
+      {
+        outputbits['Y'].push(offset1.y + 3, offset1.x + 17);
+        outputbits['Y'].push(offset1.y + 3, offset1.x + 18);
+      }
     }
 
     Object.entries(outputbits).forEach(([key, val]) =>
@@ -646,6 +654,9 @@ class ClbDecoder {
         self[inp+'Path'].disableAllPips();
     });
 
+    var pins = ['a', 'ec', 'di', 'b', 'c', 'k', 'e', 'd', 'rd', 'x', 'y'];
+    pins.forEach((pin) => self[pin+'Net'] = null);
+
     //console.log(this);
     //console.log(this.tile, this.fgMux, 'F', this.lutEquation['F'], 'G', this.lutEquation['G']);
   }
@@ -671,14 +682,8 @@ class ClbDecoder {
 
   traceFromOutputs()
   {
-    // TEST
-    //var net = this.yPath.traceFrom();
-    var net = this.xPath.traceFrom();
-    //console.log(net);
-    this.test = net;
-
-    var net2 = this.yPath.traceFrom();
-    this.test2 = net2;
+    if (this.xEnable) this.xNet = this.xPath.traceFrom();
+    if (this.yEnable) this.yNet = this.yPath.traceFrom();
   }
 
   renderBackground(ctx)
@@ -734,10 +739,8 @@ class ClbDecoder {
 
   render(ctx)
   {
-    if (typeof this.test != 'undefined')
-      this.test.draw(ctx);
-    if (typeof this.test2 != 'undefined')
-      this.test2.draw(ctx);
+    if (this.xNet) this.xNet.draw(ctx);
+    if (this.yNet) this.yNet.draw(ctx);
   }
 
   info() {

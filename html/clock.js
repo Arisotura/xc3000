@@ -160,6 +160,11 @@ class ClockDecoders
         return this.clocks[name];
     }
 
+    traceFromOutputs()
+    {
+        Object.entries(this.clocks).forEach(([name, obj]) => obj.traceFromOutputs());
+    }
+
     renderBackground(ctx)
     {
         Object.entries(this.clocks).forEach(([name, obj]) => obj.renderBackground(ctx));
@@ -304,6 +309,8 @@ class ClockBuf
 
         // enable the corresponding PIP
         this.iPath.setPipStatus(mux, 1);
+
+        this.oNet = null;
     }
 
     describePin(pin)
@@ -311,9 +318,20 @@ class ClockBuf
         return this.name + '.' + pin;
     }
 
+    pinEnabled(pin)
+    {
+        // TODO
+        return true;
+    }
+
     signalConnection()
     {
         // TODO
+    }
+
+    traceFromOutputs()
+    {
+        if (true) this.oNet = this.oPath.traceFrom();
     }
 
     renderBackground(ctx)
@@ -348,6 +366,7 @@ class ClockBuf
 
     render(ctx)
     {
+        if (this.oNet) this.oNet.draw(ctx);
     }
 
     isInside(x, y) {
@@ -408,6 +427,8 @@ class ClockOsc
 
         if (!x0) this.oPath.setPipStatus(0, 1);
         if (!x1) this.oPath.setPipStatus(1, 1);
+
+        this.oNet = null;
     }
 
     describePin(pin)
@@ -415,9 +436,20 @@ class ClockOsc
         return this.name + '.' + pin;
     }
 
+    pinEnabled(pin)
+    {
+        // TODO
+        return true;
+    }
+
     signalConnection()
     {
         // TODO
+    }
+
+    traceFromOutputs()
+    {
+        if (true) this.oNet = this.oPath.traceFrom();
     }
 
     renderBackground(ctx)
@@ -436,6 +468,7 @@ class ClockOsc
 
     render(ctx)
     {
+        if (this.oNet) this.oNet.draw(ctx);
     }
 
     isInside(x, y) {

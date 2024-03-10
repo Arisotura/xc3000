@@ -422,7 +422,7 @@ class Path
                     //net.popJunction();
                 }
                 else
-                {
+                {console.log(cur.obj);
                     if (!cur.obj.pinEnabled(cur.pin)) return false;
 
                     net.appendEndpoint(cur);

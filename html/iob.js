@@ -122,12 +122,10 @@ class IobDecoders {
       });
   }
 
-  routeFromInput() {
-    /*const self = this;
-    pads.forEach(function([pin, tile, style, pad]) {
-      self.iobs[pad].routeFromInput();
-    });*/
-  }
+    traceFromOutputs()
+    {
+        Object.entries(this.iobs).forEach(([name, obj]) => obj.traceFromOutputs());
+    }
 
   getFromPin(pin) {
     return this.iobsFromPin[pin];
@@ -713,7 +711,8 @@ class Iob
 
     render(ctx)
     {
-        //
+        if (this.iNet) this.iNet.draw(ctx);
+        if (this.qNet) this.qNet.draw(ctx);
     }
 
     decode()
@@ -1101,6 +1100,9 @@ class Iob
             if (!self[inp+'Enable'])
                 self[inp+'Path'].disableAllPips();
         });
+
+        var pins = ['o', 't', 'ik', 'ok', 'i', 'q'];
+        pins.forEach((pin) => self[pin+'Net'] = null);
     }
 
     describePin(pin)
@@ -1131,6 +1133,12 @@ class Iob
                 this.clkiEnable = true;
                 break;
         }
+    }
+
+    traceFromOutputs()
+    {
+        if (this.iEnable) this.iNet = this.iPath.traceFrom();
+        if (this.qEnable) this.qNet = this.qPath.traceFrom();
     }
 
     isInside(x, y)

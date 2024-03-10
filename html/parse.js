@@ -379,6 +379,8 @@ function initDecoders() {
   decoders.forEach(d => d.decode());
 
   clbDecoders.traceFromOutputs();
+  iobDecoders.traceFromOutputs();
+  clockDecoders.traceFromOutputs();
 }
 
 
