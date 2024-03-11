@@ -635,6 +635,14 @@ class Net
 
     optimize()
     {
+        if (this.destList.length == 0)
+        {
+            // net doesn't connect to anything
+            this.netList = [];
+            this.pathData = [];
+            return;
+        }
+
         // merge path items that are in the same direction
 
         var newdata = [];

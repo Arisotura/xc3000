@@ -1139,7 +1139,6 @@ class Iob
     {
         if (this.iEnable) this.iNet = this.iPath.traceFrom();
         if (this.qEnable) this.qNet = this.qPath.traceFrom();
-        if (this.pad=='PAD20') console.log(this.iNet);
     }
 
     isInside(x, y)

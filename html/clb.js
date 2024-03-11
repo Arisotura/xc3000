@@ -90,6 +90,7 @@ class ClbDecoder {
     this.kEnable = false;
     this.kInvert = false;
 
+    this.dataUsed = {};
     this.lutEquation = {'F':'0', 'G':'0'};
   }
 
@@ -626,13 +627,12 @@ class ClbDecoder {
       if (this.lutInput['G'][3] == 'E') this.eEnable ||= this.inputUsed['G'][3];
     }
 
-    this.dataUsed = {};
-    this.dataUsed['X'] = (this.output['X'] == 'QX') ||
+    this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) ||
         (this.lutInput['F'][1] == 'QX' && this.inputUsed['F'][1]) ||
         (this.lutInput['F'][2] == 'QX' && this.inputUsed['F'][2]) ||
         (this.lutInput['G'][1] == 'QX' && this.inputUsed['G'][1]) ||
         (this.lutInput['G'][2] == 'QX' && this.inputUsed['G'][2]);
-    this.dataUsed['Y'] = (this.output['Y'] == 'QY') ||
+    this.dataUsed['Y'] = (this.output['Y'] == 'QY' && this.yEnable) ||
         (this.lutInput['F'][1] == 'QY' && this.inputUsed['F'][1]) ||
         (this.lutInput['F'][2] == 'QY' && this.inputUsed['F'][2]) ||
         (this.lutInput['G'][1] == 'QY' && this.inputUsed['G'][1]) ||
@@ -656,9 +656,6 @@ class ClbDecoder {
 
     var pins = ['a', 'ec', 'di', 'b', 'c', 'k', 'e', 'd', 'rd', 'x', 'y'];
     pins.forEach((pin) => self[pin+'Net'] = null);
-
-    //console.log(this);
-    //console.log(this.tile, this.fgMux, 'F', this.lutEquation['F'], 'G', this.lutEquation['G']);
   }
 
   describePin(pin)
@@ -677,6 +674,26 @@ class ClbDecoder {
     {
       case 'X': this.xEnable = true; break;
       case 'Y': this.yEnable = true; break;
+    }
+
+    if (pin == 'X' || pin == 'Y')
+    {
+      this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) ||
+          (this.lutInput['F'][1] == 'QX' && this.inputUsed['F'][1]) ||
+          (this.lutInput['F'][2] == 'QX' && this.inputUsed['F'][2]) ||
+          (this.lutInput['G'][1] == 'QX' && this.inputUsed['G'][1]) ||
+          (this.lutInput['G'][2] == 'QX' && this.inputUsed['G'][2]);
+      this.dataUsed['Y'] = (this.output['Y'] == 'QY' && this.yEnable) ||
+          (this.lutInput['F'][1] == 'QY' && this.inputUsed['F'][1]) ||
+          (this.lutInput['F'][2] == 'QY' && this.inputUsed['F'][2]) ||
+          (this.lutInput['G'][1] == 'QY' && this.inputUsed['G'][1]) ||
+          (this.lutInput['G'][2] == 'QY' && this.inputUsed['G'][2]);
+
+      var dataenable = this.dataUsed['X'] || this.dataUsed['Y'];
+      this.diEnable = dataenable && ((this.dataInput['X'] == 'DI') || (this.dataInput['Y'] == 'DI'));
+      this.ecEnable &&= dataenable;
+      this.rdEnable &&= dataenable;
+      this.kEnable = dataenable;
     }
   }
 
