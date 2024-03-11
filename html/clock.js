@@ -108,7 +108,7 @@ class ClockDecoders
         this.clockLines['rightlower'] = path;
 
         // change the paths' origin types to 'source', for tracing to work
-        Object.entries(this.clockLines).forEach(([name, line]) => line.originType = 'source');
+        //Object.entries(this.clockLines).forEach(([name, line]) => line.originType = 'source');
     }
 
     decode()
