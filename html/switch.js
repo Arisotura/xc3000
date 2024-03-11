@@ -374,7 +374,6 @@ class Switch
 
     pinEnabled(pin)
     {
-        //return (typeof this.connected[pin] != 'undefined');
         return this.destList[pin].length != 0;
     }
 
@@ -382,69 +381,12 @@ class Switch
     {
     }
 
-    _routeThrough(pin, net, level)
-    {
-        var chk = [pin];
-        var done = [];
-console.log('Switch.routeThrough() start', pin);
-        var inpath = this.paths[pin];
-        console.log(this.paths);
-        var inPt = this.getPinCoords(pin);
-        net.pushJunction(inpath.pathByG[inPt.x+'G'+inPt.y]);
-
-        for (var i = 0; i < this.wires.length; i++) done[i] = false;
-
-        for (var it = 0; it < 300; it++)
-        {
-            var chknext = [];
-            for (var i = 0; i < this.wires.length; i++)
-            {
-                if (done[i]) continue;
-                var w = this.wires[i];
-
-                if (chk.indexOf(w[0]) != -1)
-                {
-                    done[i] = true;
-                    chknext.push(w[1]);
-
-                    let gPt = this.getPinCoords(w[1]);
-                    let path = this.paths[w[1]];
-                    console.log('POPO starting from pin '+w[0], path, gPt, path.pathByG[gPt.x+'G'+gPt.y]);
-
-                    net.pushJunction(path.pathByG[gPt.x+'G'+gPt.y]);
-                    net.appendPoint(gPt);
-                    net.appendEndpoint(path.pathByG[gPt.x+'G'+gPt.y]);
-                    path.traceFrom(gPt, net, level+1);
-                    net.popJunction();
-                }
-                if (chk.indexOf(w[1]) != -1)
-                {
-                    done[i] = true;
-                    chknext.push(w[0]);
-
-                    let gPt = this.getPinCoords(w[0]);
-                    let path = this.paths[w[0]];
-                    console.log('starting from pin '+w[0], path, gPt, path.pathByG[gPt.x+'G'+gPt.y]);
-                    net.pushJunction(path.pathByG[gPt.x+'G'+gPt.y]);
-                    net.appendPoint(gPt);
-                    net.appendEndpoint(path.pathByG[gPt.x+'G'+gPt.y]);
-                    path.traceFrom(gPt, net, level+1);
-                    net.popJunction();
-                }
-            }
-            if (chknext.length == 0) break;
-            chk = chknext;
-        }
-        net.popJunction();
-        console.log('Switch.routeThrough() done');
-    }
-
     routeThrough(pin, net, level, visited=null)
     {
         if (level > 300)
         {
             console.log('too much recursion');
-            return 0;
+            return;
         }
 
         var numdest = 0;
@@ -455,9 +397,6 @@ console.log('Switch.routeThrough() start', pin);
         var inpath = this.paths[pin];
         var inPt = this.getPinCoords(pin);
         var inElem = inpath.pathByG[inPt.x+'G'+inPt.y];
-        //net.pushJunction(inpath.pathByG[inPt.x+'G'+inPt.y]);
-
-        //console.log('Switch.routeThrough', this.name, pin, inPt);
 
         var self = this;
         this.destList[pin].forEach((dest) =>
@@ -468,33 +407,16 @@ console.log('Switch.routeThrough() start', pin);
             let gPt = this.getPinCoords(dest);
             let path = this.paths[dest];
             let startElem = path.pathByG[gPt.x+'G'+gPt.y];
-//console.log('routing from '+self.name+' '+pin+' to '+dest, gPt);
+
             net.beginBranch(inPt);
             net.appendEndpoint(startElem);
-            //net.pushJunction(startElem);
-            //net.appendPoint(gPt);
-            //net.appendEndpoint(startElem);
-            //path.traceFrom(gPt, net, level+1);
-            //net.pushJunction(inElem);
-            //net.appendPoint(gPt);
 
-            //net.pushJunction(startElem);
-            var nd = path.traceFrom(gPt, net, level+1);
-            //net.popJunction();
-//console.log(' -- path dest: '+nd);
+            path.traceFrom(gPt, net, level+1);
             if (this.destList[dest].length != 0)
-                nd += self.routeThrough(dest, net, level + 1, visited);
-            //console.log(' -- reroute dest: '+nd);
-            //if (nd)
-                //net.appendEndpoint(startElem);
+                self.routeThrough(dest, net, level + 1, visited);
 
-            numdest += nd;
-            //net.popJunction();
             net.finishBranch();
         });
-//console.log('Switch.routeThrough() -> '+numdest);
-        //net.popJunction();
-        return numdest;
     }
 
     /**

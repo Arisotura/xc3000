@@ -1,7 +1,7 @@
 
 // this class represents a path segment connecting resources together
 // to be used for rendering and also for route tracing
-var schmo=0;
+
 class Path
 {
     // constructs new path starting from the given object and pin
@@ -306,9 +306,6 @@ class Path
                 console.log('Path.traceFrom(): origin not defined');
                 return undefined;
             }
-
-            if (this.origin.obj && this.origin.obj.pad == 'PAD20') console.log('SCHMO');
-            if (this.origin.obj && this.origin.obj.pad == 'PAD20') schmo = 1;
         }
         else
         {
@@ -320,25 +317,20 @@ class Path
             }
         }
 
-        var numdest = 0;
-
         if (this.path.length == 0)
-            return (level==0) ? net : numdest;
-//console.log('Path.traceFrom()', this);
+            return net;
+
         function handleNode(prev, cur, dir)
         {
-            //net.appendPoint(cur.gPt);
-if (schmo) console.log('SHITO', cur);
             if (cur.type == 'pip')
             {
                 if (net.checkVisited(cur.gPt))
                 {
-                    //net.commitPath();
                     return false;
                 }
 
                 let pip = cur.obj;
-//console.log(' - got PIP ', dir, pip);
+
                 switch (pip.type)
                 {
                     case 'splitH':
@@ -373,12 +365,9 @@ if (schmo) console.log('SHITO', cur);
                         if (pip.status)
                         {
                             let otherpath = pip.paths[dir == 'H' ? 'V' : 'H'].path;
-                            //if (!otherpath.isEnabled()) break;
-//console.log('TRACING FROM PIP ', cur);
+
                             net.appendPip(cur.gPt);
-                            //net.pushJunction(cur);
-                            numdest += otherpath.traceFrom(cur.gPt, net, level + 1);
-                            //net.popJunction();
+                            otherpath.traceFrom(cur.gPt, net, level + 1);
                         }
                         break;
                     }
@@ -389,12 +378,9 @@ if (schmo) console.log('SHITO', cur);
                         if (pip.status & mask)
                         {
                             let otherpath = pip.paths[dir == 'H' ? 'V' : 'H'].path;
-                            //if (!otherpath.isEnabled()) break;
 
                             net.appendPip(cur.gPt);
-                            //net.pushJunction(cur);
-                            numdest += otherpath.traceFrom(cur.gPt, net, level + 1);
-                            //net.popJunction();
+                            otherpath.traceFrom(cur.gPt, net, level + 1);
                         }
                         break;
                     }
@@ -404,12 +390,8 @@ if (schmo) console.log('SHITO', cur);
             {
                 let junc = cur.obj;
 
-                //net.appendPoint(cur.gPt);
-
-                //net.pushJunction(cur);
                 net.appendPoint(cur.gPt);
-                numdest += junc.traceFrom(cur.gPt, net, level+1);
-                //net.popJunction();
+                junc.traceFrom(cur.gPt, net, level+1);
             }
             else if (cur.type == 'endpoint')
             {
@@ -419,10 +401,8 @@ if (schmo) console.log('SHITO', cur);
                 {
                     let junc = cur.obj.path;
 
-                    //net.pushJunction(cur);
                     net.appendPoint(cur.gPt);
-                    numdest += junc.traceFrom(cur.gPt, net, level+1);
-                    //net.popJunction();
+                    junc.traceFrom(cur.gPt, net, level+1);
                 }
                 else
                 {
@@ -431,9 +411,7 @@ if (schmo) console.log('SHITO', cur);
                     net.appendEndpoint(cur);
 
                     if (cur.obj instanceof Switch)
-                        numdest += cur.obj.routeThrough(cur.pin, net, level + 1);
-                    else
-                        numdest++;
+                        cur.obj.routeThrough(cur.pin, net, level + 1);
                 }
                 return false;
             }
@@ -450,10 +428,9 @@ if (schmo) console.log('SHITO', cur);
             origin = this.origin;
         else
             origin = this.pathByG[gPt.x+'G'+gPt.y];
-if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, gPt, this);
+
         if (this.originType == 'dest' || this.originType == 'both')
         {
-            numdest = 0;
             net.beginBranch(origin.gPt);
 
             var prev = origin;
@@ -471,7 +448,6 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
         }
         if (this.originType == 'source' || this.originType == 'both')
         {
-            numdest = 0;
             net.beginBranch(origin.gPt);
 
             var prev = origin;
@@ -487,15 +463,10 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
             net.finishBranch();
         }
 
-        //if (numdest == 0)
-        //    net.cancelPath(origin.gPt);
-
         if (level == 0)
             net.optimize();
 
-        if (level==0 && this.origin.obj && this.origin.obj.pad == 'PAD20') schmo=0;
-
-        return (level==0) ? net : numdest;
+        return net;
     }
 
     draw(ctx, level=0)
@@ -554,15 +525,12 @@ class Net
         this.elemStack = [];
         this.visited = {};
 
-        this.numbegin=0; this.numfinish=0;
-
         //this.color = 'hsl(60 100% 83.3%)';
         //this.color = 'hsl('+netColor+' 100% 83.3%)';
         this.color = 'hsl('+netColor+' 100% 50%)';
         netColor = (netColor + 42) % 360;
 
         this.appendPoint(origin.gPt);
-        //this.beginBranch(origin.gPt);
     }
 
     checkVisited(gPt)
@@ -574,25 +542,17 @@ class Net
 
     beginBranch(gPt)
     {
-        this.numbegin++;
-        //console.log('Net.beginBranch()', gPt);
-        //console.log('elemStack='+this.elemStack.length);
-        //var numdest = this.curBranch.numDest;
-        //if (this.curBranch)
-            this.branchStack.push(this.curBranch);
-
+        this.branchStack.push(this.curBranch);
         this.curBranch = {x:gPt.x, y:gPt.y, numDest:0, lastNumDest:0};
     }
 
     appendPoint(gPt)
     {
-        //console.log('Net.appendPoint()', gPt);
         this.elemStack.push({type:'point', x:gPt.x, y:gPt.y, keep:false});
     }
 
     appendPip(gPt)
     {
-        //console.log('Net.appendPip()', gPt);
         this.elemStack.push({type:'pip', x:gPt.x, y:gPt.y, keep:false});
 
         let key = gPt.x+'G'+gPt.y;
@@ -601,7 +561,6 @@ class Net
 
     appendEndpoint(elem)
     {
-        //console.log('Net.appendEndpoint()', elem);
         var obj = elem.obj;
         var pin = obj.describePin(elem.pin);
 
@@ -612,56 +571,24 @@ class Net
 
     finishBranch()
     {
-        this.numfinish++;
-        //if (this.elemStack.length < 2)
-        //    return;
-
-        //console.log('Net.finishBranch(): '+this.curBranch.numDest+'/'+this.branchStack[this.branchStack.length-1].numDest);
-
         var numdest = this.curBranch.numDest;
         var parentnum = this.branchStack[this.branchStack.length-1].numDest;
 
-        if (numdest)// != this.curBranch.lastNumDest)
-        //if (numdest > this.branchStack[this.branchStack.length-1].numDest)
+        if (numdest)
         {
             // this branch reached one or more endpoints: commit it
-            //console.log('Net.finishBranch(): committing '+numdest+' items', this.curBranch);
-            /*let prev = this.elemStack.shift();
-            let cur;
-            while (cur = this.elemStack.shift())
-            {
-                let from = {x: prev.x, y: prev.y};
-                let to = {x: cur.x, y: cur.y};
-                this.pathData.push({from: from, to: to});
 
-                if (cur.type != 'point')
-                {
-                    this.netList.push(cur);
-
-                    if (cur.type == 'endpoint')
-                    {
-                        if (!(cur.obj instanceof Switch))
-                            this.destList.push({obj: cur.obj, pin: cur.pin});
-                    }
-                }
-
-                prev = cur;
-            }*/
             let keep = false;
-            //if (numdest) keep = true;
 
             let cur;
             while (cur = this.elemStack.pop())
             {
                 if (cur.x == this.curBranch.x && cur.y == this.curBranch.y)
                 {
-                    cur.numChildren = numdest;
                     cur.keep = true;
                     this.elemStack.push(cur);
                     break;
                 }
-
-                //console.log('committing -> ', cur);
 
                 if (cur.keep)
                     keep = true;
@@ -690,26 +617,20 @@ class Net
         else
         {
             // this branch went nowhere: delete it
-            //console.log('Net.finishBranch(): discarding back to ', this.curBranch);
-            var morp = this.elemStack.length;
+
             let cur;
             while (cur = this.elemStack.pop())
             {
                 if (cur.x == this.curBranch.x && cur.y == this.curBranch.y)
                 {
-                    cur.numChildren = 0;
                     this.elemStack.push(cur);
                     break;
                 }
             }
-            //console.log(morp+' -> '+this.elemStack.length);
         }
 
         this.curBranch = this.branchStack.pop();
         this.curBranch.numDest += numdest;
-        //console.log('Net.finishBranch(): back to ', this.curBranch);
-        //this.curBranch.numDest = numdest;
-        //this.curBranch.lastNumDest = this.curBranch.numDest;
     }
 
     optimize()
@@ -754,224 +675,6 @@ class Net
         }
 
         this.pathData = newdata;
-    }
-
-    draw(ctx)
-    {
-        ctx.strokeStyle = this.color;
-
-        ctx.beginPath();
-
-        this.pathData.forEach((p) =>
-        {
-            let from = getSCoords(p.from);
-            let to = getSCoords(p.to);
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-        });
-
-        ctx.stroke();
-
-        this.netList.forEach((n) =>
-        {
-            if (n.type != 'pip') return;
-
-            let coord = getSCoords(n);
-            ctx.strokeRect(coord.x-1, coord.y-1, 2, 2);
-        });
-    }
-}
-
-class ____Net
-{
-    constructor(origin)
-    {
-        var src = origin.obj;
-
-        this.sourcePoint = origin.gPt;
-        this.sourceObj = src;
-        this.sourcePin = src.describePin(origin.pin);
-
-        this.pathData = []; // visual path data
-        this.netList = []; // net list, including interconnections
-        this.destList = []; // list of just the destinations
-
-        this.lastElem = origin;
-        this.elemStack = [];
-
-        this.lastPoint = origin.gPt;
-        this.pointStack = [];
-        this.pointTraced = {};
-
-        this.visited = {};
-
-        //this.color = 'hsl(60 100% 83.3%)';
-        //this.color = 'hsl('+netColor+' 100% 83.3%)';
-        this.color = 'hsl('+netColor+' 100% 50%)';
-        netColor = (netColor + 42) % 360;
-    }
-
-    checkVisited(gPt)
-    {
-        let key = gPt.x+'G'+gPt.y;
-        if (typeof this.visited[key] != 'undefined') return true;
-        //this.visited[key] = true;
-        return false;
-    }
-
-    pushJunction(elem)
-    {
-        this.elemStack.push(this.lastElem);
-        this.lastElem = elem;
-        //console.log('pushJunction()', elem);
-    }
-
-    popJunction()
-    {
-        this.clearPathStack();
-        this.lastElem = this.elemStack.pop();
-        //console.log('popJunction()');
-        //this.clearPathStack();
-        //console.log('popJunction(), new lastPoint is ', this.lastPoint);
-    }
-
-    // add point to the stack
-    // the stack is committed to the actual path data upon encountering an active PIP or endpoint
-    appendPoint(gPt)
-    {
-        this.pointStack.push(this.lastPoint);
-        this.lastPoint = gPt;
-        //console.log('appendPoint', gPt);
-    }
-
-    clearPathStack()
-    {
-        //console.log('clearPathStack()');
-        while (this.lastPoint.x != this.lastElem.gPt.x ||
-            this.lastPoint.y != this.lastElem.gPt.y)
-        {
-            this.lastPoint = this.pointStack.pop();
-            //console.log('pop', this.lastPoint);
-        }
-    }
-
-    commitPath()
-    {
-        var prev = this.sourcePoint;
-
-        this.pointStack.push(this.lastPoint);
-        for (var i = 0; i < this.pointStack.length; i++)
-        {
-            let pt = this.pointStack[i];
-            let key = pt.x+'G'+pt.y;
-            //console.log('trying to commit point '+key);
-            if (typeof this.pointTraced[key] == 'undefined' ||
-                this.pointTraced[key].indexOf(prev.x+'G'+prev.y) == -1)
-            {
-                //console.log('point '+key+' is getting committed');
-                let from = {x: prev.x, y: prev.y};
-                let to = {x: pt.x, y: pt.y};
-                this.pathData.push({from: from, to: to});
-                //this.pointTraced[key] = true;
-
-                if (typeof this.pointTraced[key] == 'undefined')
-                    this.pointTraced[key] = [];
-                this.pointTraced[key].push(prev.x+'G'+prev.y);
-            }
-
-            prev = pt;
-        }
-        this.pointStack.pop();
-    }
-
-    cancelPath(gPt)
-    {console.log('cancelPath() ', gPt);
-        var dellist = [];
-
-        for (;;)
-        {
-            if (this.pathData.length == 0)
-                break;
-
-            var pt = this.pathData.pop();
-            if (pt.to.x == gPt.x && pt.to.y == gPt.y)
-            {
-                this.pathData.push(pt);
-                break;
-            }
-
-            let prevkey = pt.from.x+'G'+pt.from.y;
-            let key = pt.to.x+'G'+pt.to.y;
-            if (typeof this.pointTraced[key] != 'undefined')
-                this.pointTraced[key] = this.pointTraced[key].filter((item) => item != prevkey);
-
-            dellist.push(key);
-        }
-
-        this.netList = this.netList.filter((item) =>
-        {
-            let key = item.x+'G'+item.y;
-            return dellist.indexOf(key) == -1;
-        });
-    }
-
-    appendPip(gPt)
-    {
-        this.commitPath();
-        this.netList.push({type:'pip', x:gPt.x, y:gPt.y});
-
-        let key = gPt.x+'G'+gPt.y;
-        this.visited[key] = true;
-    }
-
-    appendEndpoint(elem)
-    {
-        this.commitPath();
-
-        var obj = elem.obj;
-        var pin = elem.obj.describePin(elem.pin);
-
-        this.netList.push({type:'endpoint', x:elem.gPt.x, y:elem.gPt.y, obj:elem.obj, pin:pin});
-        if (!(elem.obj instanceof Switch))
-            this.destList.push({obj:elem.obj, pin:pin});
-    }
-
-    optimize()
-    {
-        // merge path items that are in the same direction
-        // TODO
-
-        /*var newdata = [];
-
-        function dir(a, b)
-        {
-            if (a.x > b.x && a.y == b.y) return 'left';
-            if (a.x < b.x && a.y == b.y) return 'right';
-            if (a.x == b.x && a.y > b.y) return 'bottom';
-            if (a.x == b.x && a.y < b.y) return 'top';
-            return 'diagonal??';
-        }
-
-        var cur = this.pathData[0];
-        var curdir = dir(cur.from, cur.to);
-        for (var i = 1; i < this.pathData.length; i++)
-        {
-            let next = this.pathData[i];
-            if (cur.from.x == cur.to.x && cur.from.y == cur.to.y)
-            {
-                cur = next;
-                curdir = dir(cur.from, cur.to);
-                continue;
-            }
-
-            let commit = false;
-            if (cur.to.x != next.from.x || cur.to.y != next.from.y)
-                commit = true;
-            else
-            {
-                //
-            }
-        }*/
     }
 
     draw(ctx)
