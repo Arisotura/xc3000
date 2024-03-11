@@ -106,6 +106,9 @@ class ClockDecoders
         path.appendPipList(pips, this.genCoords.bind(this));
         pipDecoder.addPipsToPath(this.genCoords('col.*.local.7:row.*.local.5'), this.genCoords('col.*.local.7:row.A.local.5'), path);
         this.clockLines['rightlower'] = path;
+
+        // change the paths' origin types to 'source', for tracing to work
+        Object.entries(this.clockLines).forEach(([name, line]) => line.originType = 'source');
     }
 
     decode()

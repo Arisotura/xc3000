@@ -1,7 +1,7 @@
 
 // this class represents a path segment connecting resources together
 // to be used for rendering and also for route tracing
-
+var schmo=0;
 class Path
 {
     // constructs new path starting from the given object and pin
@@ -306,6 +306,9 @@ class Path
                 console.log('Path.traceFrom(): origin not defined');
                 return undefined;
             }
+
+            if (this.origin.obj && this.origin.obj.pad == 'PAD20') console.log('SCHMO');
+            if (this.origin.obj && this.origin.obj.pad == 'PAD20') schmo = 1;
         }
         else
         {
@@ -325,7 +328,7 @@ class Path
         function handleNode(prev, cur, dir)
         {
             //net.appendPoint(cur.gPt);
-
+if (schmo) console.log('SHITO', cur);
             if (cur.type == 'pip')
             {
                 if (net.checkVisited(cur.gPt))
@@ -409,7 +412,7 @@ class Path
                 //net.popJunction();
             }
             else if (cur.type == 'endpoint')
-            {//console.log('GOT ENDPOINT!', cur);
+            {
                 if (!cur.obj) return false;
 
                 if (cur.obj.type == 'junction')
@@ -422,7 +425,7 @@ class Path
                     //net.popJunction();
                 }
                 else
-                {console.log(cur.obj);
+                {
                     if (!cur.obj.pinEnabled(cur.pin)) return false;
 
                     net.appendEndpoint(cur);
@@ -457,7 +460,7 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
             var cur = prev.prev;
             while (cur)
             {
-                if (!handleNode(prev, cur, cur.dirNext))
+                if (!handleNode(prev, cur, prev.dirPrev))
                     break;
 
                 prev = cur;
@@ -483,14 +486,14 @@ if (typeof origin == 'undefined') console.log('SHITTY UNDEFINED ORIGIN', level, 
 
             net.finishBranch();
         }
-console.log('path traced, numDest='+numdest);
+
         //if (numdest == 0)
         //    net.cancelPath(origin.gPt);
 
         if (level == 0)
             net.optimize();
 
-        console.log(net);
+        if (level==0 && this.origin.obj && this.origin.obj.pad == 'PAD20') schmo=0;
 
         return (level==0) ? net : numdest;
     }
@@ -572,8 +575,8 @@ class Net
     beginBranch(gPt)
     {
         this.numbegin++;
-        console.log('Net.beginBranch()', gPt);
-        console.log('elemStack='+this.elemStack.length);
+        //console.log('Net.beginBranch()', gPt);
+        //console.log('elemStack='+this.elemStack.length);
         //var numdest = this.curBranch.numDest;
         //if (this.curBranch)
             this.branchStack.push(this.curBranch);
@@ -583,13 +586,13 @@ class Net
 
     appendPoint(gPt)
     {
-        console.log('Net.appendPoint()', gPt);
+        //console.log('Net.appendPoint()', gPt);
         this.elemStack.push({type:'point', x:gPt.x, y:gPt.y, keep:false});
     }
 
     appendPip(gPt)
     {
-        console.log('Net.appendPip()', gPt);
+        //console.log('Net.appendPip()', gPt);
         this.elemStack.push({type:'pip', x:gPt.x, y:gPt.y, keep:false});
 
         let key = gPt.x+'G'+gPt.y;
@@ -598,7 +601,7 @@ class Net
 
     appendEndpoint(elem)
     {
-        console.log('Net.appendEndpoint()', elem);
+        //console.log('Net.appendEndpoint()', elem);
         var obj = elem.obj;
         var pin = obj.describePin(elem.pin);
 
@@ -613,7 +616,7 @@ class Net
         //if (this.elemStack.length < 2)
         //    return;
 
-        console.log('Net.finishBranch(): '+this.curBranch.numDest+'/'+this.branchStack[this.branchStack.length-1].numDest);
+        //console.log('Net.finishBranch(): '+this.curBranch.numDest+'/'+this.branchStack[this.branchStack.length-1].numDest);
 
         var numdest = this.curBranch.numDest;
         var parentnum = this.branchStack[this.branchStack.length-1].numDest;
@@ -622,7 +625,7 @@ class Net
         //if (numdest > this.branchStack[this.branchStack.length-1].numDest)
         {
             // this branch reached one or more endpoints: commit it
-            console.log('Net.finishBranch(): committing '+numdest+' items', this.curBranch);
+            //console.log('Net.finishBranch(): committing '+numdest+' items', this.curBranch);
             /*let prev = this.elemStack.shift();
             let cur;
             while (cur = this.elemStack.shift())
@@ -658,7 +661,7 @@ class Net
                     break;
                 }
 
-                console.log('committing -> ', cur);
+                //console.log('committing -> ', cur);
 
                 if (cur.keep)
                     keep = true;
@@ -667,8 +670,8 @@ class Net
                 {
                     let prev = this.elemStack[this.elemStack.length - 1];
 
-                    let from = {x: prev.x, y: prev.y};
-                    let to = {x: cur.x, y: cur.y};
+                    let from = {x: cur.x, y: cur.y};
+                    let to = {x: prev.x, y: prev.y};
                     this.pathData.push({from: from, to: to});
 
                     if (cur.type != 'point')
@@ -687,7 +690,7 @@ class Net
         else
         {
             // this branch went nowhere: delete it
-            console.log('Net.finishBranch(): discarding back to ', this.curBranch);
+            //console.log('Net.finishBranch(): discarding back to ', this.curBranch);
             var morp = this.elemStack.length;
             let cur;
             while (cur = this.elemStack.pop())
@@ -699,12 +702,12 @@ class Net
                     break;
                 }
             }
-            console.log(morp+' -> '+this.elemStack.length);
+            //console.log(morp+' -> '+this.elemStack.length);
         }
 
         this.curBranch = this.branchStack.pop();
         this.curBranch.numDest += numdest;
-        console.log('Net.finishBranch(): back to ', this.curBranch);
+        //console.log('Net.finishBranch(): back to ', this.curBranch);
         //this.curBranch.numDest = numdest;
         //this.curBranch.lastNumDest = this.curBranch.numDest;
     }
@@ -712,39 +715,45 @@ class Net
     optimize()
     {
         // merge path items that are in the same direction
-        // TODO
 
-        /*var newdata = [];
+        var newdata = [];
 
-        function dir(a, b)
+        function dir(it)
         {
-            if (a.x > b.x && a.y == b.y) return 'left';
-            if (a.x < b.x && a.y == b.y) return 'right';
-            if (a.x == b.x && a.y > b.y) return 'bottom';
-            if (a.x == b.x && a.y < b.y) return 'top';
-            return 'diagonal??';
+            if (it.from.x > it.to.x && it.from.y == it.to.y) return 'left';
+            if (it.from.x < it.to.x && it.from.y == it.to.y) return 'right';
+            if (it.from.x == it.to.x && it.from.y > it.to.y) return 'bottom';
+            if (it.from.x == it.to.x && it.from.y < it.to.y) return 'top';
+            return 'diagonal';
         }
 
-        var cur = this.pathData[0];
-        var curdir = dir(cur.from, cur.to);
-        for (var i = 1; i < this.pathData.length; i++)
+        for (var i = 0; i < this.pathData.length;)
         {
-            let next = this.pathData[i];
-            if (cur.from.x == cur.to.x && cur.from.y == cur.to.y)
+            let cur = this.pathData[i++];
+            let curdir = dir(cur);
+
+            let newitem = {from: cur.from, to: cur.to};
+
+            if (curdir != 'diagonal')
             {
-                cur = next;
-                curdir = dir(cur.from, cur.to);
-                continue;
+                for (var j = i; j < this.pathData.length; j++)
+                {
+                    let next = this.pathData[j];
+                    let nextdir = dir(next);
+
+                    if (nextdir == 'diagonal') break;
+                    if (next.from.x != cur.to.x || next.from.y != cur.to.y) break;
+                    if (nextdir != curdir) break;
+
+                    newitem.to = next.to;
+                    i++;
+                }
             }
 
-            let commit = false;
-            if (cur.to.x != next.from.x || cur.to.y != next.from.y)
-                commit = true;
-            else
-            {
-                //
-            }
-        }*/
+            newdata.push(newitem);
+        }
+
+        this.pathData = newdata;
     }
 
     draw(ctx)
