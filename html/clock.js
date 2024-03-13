@@ -6,6 +6,7 @@ class ClockDecoders
         this.clocks = {};
         this.clocksFromG = {};
         this.clockLines = {};
+        this.clockInputs = {};
 
         this.clocks['GCLK'] = new ClockBuf('GCLK');
         this.clocks['ACLK'] = new ClockBuf('ACLK');
@@ -24,91 +25,126 @@ class ClockDecoders
 
     generateClockLines()
     {
-        var path, path2, pips;
+        var path, pips;
+
+        var fam = curBitstream.family;
+
+        var cmaxG = 66 + (26 * (fam.cols-1));
+        var rmaxG = 61 + (30 * (fam.rows-1));
+
+        var kc = letters[fam.cols];
+        var kr = letters[fam.rows];
+
+        // clock lines
+        // PIP #0 is the branch input, PIP #1 is the direct input
+
+        path = new Path(null, null, 'both', 'col.A.local.11:row.A.local.10', 'H');
+        path.appendPip('+0:0', 'V->H');
+        path.appendPip('+1:1', 'V->H');
+        pipDecoder.addPipsToPath('col.A.long.6:row.A.local.10', 'col.'+kc+'.local.9:row.A.local.10', path);
+        this.clockLines['topleft'] = path;
+
+        path = new Path(null, null, 'both', 'col.'+kc+'.local.7:row.A.local.11', 'H');
+        path.appendPip('+0:0', 'V->H');
+        path.appendPip('-8:1', 'V->H');
+        pipDecoder.addPipsToPath('col.'+kc+'.local.9:row.A.local.11', 'col.A.long.6:row.A.local.11', path);
+        this.clockLines['topright'] = path;
+
+        path = new Path(null, null, 'both', '11:row.'+kr+'.local.7', 'H');
+        path.appendPip('+0:1', 'V->H');
+        path.appendPip('+7:0', 'V->H');
+        pipDecoder.addPipsToPath('col.A.long.6:row.'+kr+'.local.7', 'col.'+kc+'.local.10:row.'+kr+'.local.7', path);
+        this.clockLines['bottomleft'] = path;
+
+        path = new Path(null, null, 'both', (cmaxG-19)+':row.'+kr+'.local.6', 'H');
+        path.appendPip('+0:1', 'V->H');
+        path.appendPip('-2:0', 'V->H');
+        pipDecoder.addPipsToPath('col.A.long.6:row.'+kr+'.local.6', 'col.'+kc+'.local.10:row.'+kr+'.local.6', path);
+        this.clockLines['bottomright'] = path;
+
+        path = new Path(null, null, 'both', 'col.A.local.12:row.A.local.11', 'V');
+        path.appendPip('+0:0', 'H->V');
+        path.appendPip('-10:1', 'H->V');
+        pipDecoder.addPipsToPath('col.A.local.12:row.A.long.3', 'col.A.local.12:row.'+kr+'.long.2', path);
+        this.clockLines['leftupper'] = path;
+
+        path = new Path(null, null, 'both', 'col.A.local.13:4', 'V');
+        path.appendPip('+0:0', 'H->V');;
+        pipDecoder.addPipsToPath('col.A.local.13:row.'+kr+'.local.9', 'col.A.local.13:row.'+kr+'.long.1', path);
+        path.appendPip('+6:1', 'H->V');
+        pipDecoder.addPipsToPath('col.A.local.13:28', 'col.A.local.13:row.A.long.1', path);
+        this.clockLines['leftlower'] = path;
+
+        path = new Path(null, null, 'both', 'col.'+kc+'.local.6:'+(rmaxG-15), 'V');
+        pipDecoder.addPipsToPath('col.'+kc+'.local.6:'+(rmaxG-15), 'col.'+kc+'.local.6:'+(rmaxG-17), path);
+        path.appendPip('-3:1', 'H->V');
+        path.appendPip('-1:0', 'H->V');
+        pipDecoder.addPipsToPath('col.'+kc+'.local.6:row.A.long.3', 'col.'+kc+'.local.6:row.'+kr+'.long.2', path);
+        this.clockLines['rightupper'] = path;
+
+        path = new Path(null, null, 'both', 'col.'+kc+'.local.7:row.'+kc+'.local.7', 'V');
+        path.appendPip('+0:0', 'H->V');
+        path.appendPip('+4:1', 'H->V');
+        pipDecoder.addPipsToPath('col.'+kc+'.local.7:row.'+kr+'.long.2', 'col.'+kc+'.local.7:row.A.local.7', path);
+        this.clockLines['rightlower'] = path;
+
+        // branch inputs for clock lines
 
         // top side
 
-        path = new Path(null, null, 'dest', 'col.A.local.4:row.A.local.6', 'H');
-        pips = ['col.A.local.4:0', 'col.A.local.5:1', ['col.A.local.11', 'row.A.long.2:2'],
-            'T:+0', 'row.A.local.2:3', 'row.A.local.10:4', 'T:+0', '+1:5'
-        ];
+        path = new Path(null, null, 'dest', 'col.A.local.11:row.A.local.10', 'V');
+        path.appendPip('+0', 'V->H');
+        pips = ['row.A.local.2:3',  ['row.A.local.6', 'col.A.local.5:1', 'col.A.local.4:0'], 'row.A.long.2:2'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        pipDecoder.addPipsToPath('col.A.local.11:row.A.local.10', this.genCoords('col.*.local.1:row.A.local.10'), path);
-        this.clockLines['topleft'] = path;
+        this.clockInputs['topleft'] = path;
 
-        path = new Path(null, null, 'dest', this.genCoords('col.*.local.9:row.A.local.3'), 'V');
-        pips = ['row.A.local.3:3', 'row.A.local.5:2', 'T:row.A.local.7',
-            'col.*.long.1:1', 'col.*.local.5:0', 'T:+1', 'T:+2', 'T:+9', 'row.A.local.11:4', 'T:+0', '-8:5'
-        ];
+        path = new Path(null, null, 'dest', 'col.'+kc+'.local.7:row.A.local.11', 'V');
+        path.appendPip('+0', 'V->H');
+        pips = ['T:row.A.long.1', 'T:-9', 'T:-2', 'col.*.local.5:0', 'col.*.long.1:1', 'T:-1', 'row.A.local.5:2',  'row.A.local.3:3'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        pipDecoder.addPipsToPath(this.genCoords('col.*.local.1:row.A.local.11'), 'col.A.long.6:row.A.local.11', path);
-        this.clockLines['topright'] = path;
+        this.clockInputs['topright'] = path;
 
         // bottom side
 
-        path = new Path(null, null, 'dest', this.genCoords('col.A.local.1:row.*.local.9'), 'H');
-        pips = ['col.A.local.1:0', 'T:col.A.local.7', ['+0', 'col.A.long.2:1'],
-            'row.*.local.1:2', 'row.*.local.3:3', 'row.*.local.7:4',
-            ['+0', '-7:5'], 'T:+0'
-        ];
+        path = new Path(null, null, 'dest', 'col.A.local.7:row.'+kr+'.local.7', 'V');
+        path.appendPip('+0', 'V->H');
+        pips = ['row.*.local.3:3', 'row.*.local.1:2', ['+7', 'col.A.long.2:1'], 'T:+0', 'col.A.local.1:0'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        pipDecoder.addPipsToPath(this.genCoords('col.A.local.7:row.*.local.7'), this.genCoords('col.*.local.1:row.*.local.7'), path);
-        this.clockLines['bottomleft'] = path;
+        this.clockInputs['bottomleft'] = path;
 
-        path = new Path(null, null, 'dest', this.genCoords('col.*.local.10:row.*.long.2'), 'V');
-        pips = ['row.*.long.2:3', ['row.*.local.8', 'col.*.local.1:2', 'col.*.local.2:1'],
-            'row.*.local.4:0', 'row.*.local.6:4',
-            ['+0', '+2:5'], 'T:+0'
-        ];
+        path = new Path(null, null, 'dest', 'col.'+kc+'.local.10:row.'+kr+'.local.6', 'V');
+        path.appendPip('+0', 'V->H');
+        pips = ['row.*.local.4:0', ['+4', 'col.*.local.1:2', 'col.*.local.2:1'], 'row.*.long.2:3'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        pipDecoder.addPipsToPath(this.genCoords('col.*.local.1:row.*.local.6'), this.genCoords('col.A.local.7:row.*.local.6'), path);
-        this.clockLines['bottomright'] = path;
+        this.clockInputs['bottomright'] = path;
 
         // left side
 
-        path = new Path(null, null, 'dest', 'col.A.local.3:row.A.local.7', 'H');
-        pips = ['col.A.local.3:0', 'col.A.local.5:1', 'T:col.A.local.7', 'row.A.long.2:2',
-            'row.A.local.1:3', 'T:+5', 'col.A.local.12:4', 'T:+0', 'row.A.local.6:5'
-        ];
+        path = new Path(null, null, 'dest', 'col.A.local.12:row.A.local.11', 'H');
+        path.appendPip('+0', 'H->V');
+        pips = ['T:col.A.local.7', 'row.A.local.1:3', 'row.A.long.2:2', 'T:-1', 'col.A.local.5:1', 'col.A.local.3:0'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        pipDecoder.addPipsToPath('col.A.local.12:row.A.local.6', this.genCoords('col.A.local.12:row.*.local.5'), path);
-        this.clockLines['leftupper'] = path;
+        this.clockInputs['leftupper'] = path;
 
-        path = new Path(null, null, 'dest', this.genCoords('col.A.local.10:row.*.local.2'), 'V');
-        pips = ['row.*.local.2:3', 'row.*.local.1:2', 'T:row.*.local.10', 'col.A.long.2:1', 'col.A.local.2:0', 'col.A.local.13:4'];
+        path = new Path(null, null, 'dest', 'col.A.local.13:row.'+kr+'.local.10', 'H');
+        path.appendPip('+0', 'H->V');
+        pips = ['col.A.local.2:0', 'col.A.long.2:1', 'T:+2', 'row.*.local.1:2', 'row.*.local.2:3'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        path2 = path.appendJunction('+0');
-        pipDecoder.addPipsToPath(this.genCoords('col.A.local.13:row.*.local.10'), this.genCoords('col.A.local.13:row.*.local.5'), path2);
-        path2.appendPip('4:5');
-        path.appendTurn('+0');
-        pipDecoder.addPipsToPath(this.genCoords('col.A.local.13:row.*.local.10'), 'col.A.local.13:row.A.long.2', path);
-        this.clockLines['leftlower'] = path;
+        this.clockInputs['leftlower'] = path;
 
         // right side
 
-        path = new Path(null, null, 'dest', this.genCoords('col.*.long.1:row.A.local.9'), 'H');
-        pips = ['col.*.long.1:0', ['col.*.local.8', 'row.A.local.5:1', 'row.A.local.4:2'],
-            'col.*.local.4:3', 'T:+2', 'T:-2', 'col.*.local.6:4',
-        ];
+        path = new Path(null, null, 'dest', 'col.'+kc+'.local.6:row.A.local.8', 'H');
+        path.appendPip('+0', 'H->V');
+        pips = ['T:-8', 'T:+2', 'col.*.local.4:3', ['col.*.local.8', 'row.A.local.5:1', 'row.A.local.4:2'], 'col.*.long.1:0'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        path2 = path.appendJunction('+0');
-        path2.appendPip('+1:5');
-        pipDecoder.addPipsToPath(this.genCoords('col.*.local.6:row.A.local.8'), this.genCoords('col.*.local.6:row.A.local.5'), path2);
-        path.appendTurn('+0');
-        pipDecoder.addPipsToPath(this.genCoords('col.*.local.6:row.A.local.8'), this.genCoords('col.*.local.6:row.*.local.1'), path);
-        this.clockLines['rightupper'] = path;
+        this.clockInputs['rightupper'] = path;
 
-        path = new Path(null, null, 'dest', this.genCoords('col.*.local.3:row.*.local.9'), 'H');
-        pips = ['col.*.local.3:3', 'col.*.local.1:2', 'T:col.*.local.9',
-            'row.*.long.2:1', 'row.*.local.5:0', 'T:row.*.local.7', 'col.*.local.7:4', 'T:+0',
-            '+4:5'
-        ];
+        path = new Path(null, null, 'dest', 'col.'+kc+'.local.7:row.'+kr+'.local.7', 'H');
+        path.appendPip('+0', 'H->V');
+        pips = ['T:col.*.local.9', 'row.*.local.5:0', 'row.*.long.2:1', 'T:+3', 'col.*.local.1:2', 'col.*.local.3:3'];
         path.appendPipList(pips, this.genCoords.bind(this));
-        pipDecoder.addPipsToPath(this.genCoords('col.*.local.7:row.*.local.5'), this.genCoords('col.*.local.7:row.A.local.5'), path);
-        this.clockLines['rightlower'] = path;
-
-        // change the paths' origin types to 'source', for tracing to work
-        //Object.entries(this.clockLines).forEach(([name, line]) => line.originType = 'source');
+        this.clockInputs['rightlower'] = path;
     }
 
     decode()
@@ -118,7 +154,7 @@ class ClockDecoders
         // decode input muxes for clock lines
         // the muxes are split in two parts:
         // first bit determines whether the clock is flipped
-        // second bit determines whether the direct input (PIP #5) or the mux branch (PIP #4) is used
+        // second bit determines whether the direct input (PIP #1) or the mux branch (PIP #0) is used
         // then 4 final bits that determine which input of the branch is active
 
         var o = getTileOffset(curBitstream.family.cols, curBitstream.family.rows);
@@ -145,12 +181,12 @@ class ClockDecoders
             }
 
             var muxval = inputmux[bits >> 2];
-            if (typeof muxval != 'undefined')
-                this.clockLines[k].setPipStatus(muxval, 1);
+            if (typeof muxval != 'undefined' && (bits&0x2) == 0)
+                this.clockInputs[k].setPipStatus(muxval, 1);
             else
                 console.log('clock line '+k+': bad mux '+bits.toString(2));
 
-            this.clockLines[k].setPipStatus((bits&0x2) ? 5:4, 1);
+            this.clockLines[k].setPipStatus((bits&0x2) ? 1:0, 1);
             iobDecoders.setClockInvert(k, bits&0x1);
         });
     }
@@ -175,6 +211,7 @@ class ClockDecoders
         if (viewSettings.showAllPips)
         {
             Object.entries(this.clockLines).forEach(([key, line]) => line.draw(ctx));
+            Object.entries(this.clockInputs).forEach(([key, line]) => line.draw(ctx));
         }
     }
 

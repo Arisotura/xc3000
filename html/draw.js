@@ -419,20 +419,21 @@ function getGCoords(name)
         cname = name[0];
         rname = name[0];
     }
-    else if (typeof colInfo[name[0]] != 'undefined' && typeof rowInfo[name[1]] != 'undefined')
+    else
     {
         cname = name[0];
         rname = name[1];
     }
-    else if (typeof colInfo[name[1]] != 'undefined' && typeof rowInfo[name[0]] != 'undefined')
-    {
-        cname = name[1];
-        rname = name[0];
-    }
-    else
+
+    if (isNaN(cname)) cname = colInfo[cname];
+    else              cname = parseInt(cname);
+    if (isNaN(rname)) rname = rowInfo[rname];
+    else              rname = parseInt(rname);
+
+    if (typeof cname == 'undefined' || typeof rname == 'undefined')
         return undefined;
 
-    return {x: colInfo[cname], y: rowInfo[rname]};
+    return {x: cname, y: rname};
 }
 
 function getSCoords(name)
