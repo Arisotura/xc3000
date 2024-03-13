@@ -713,6 +713,7 @@ class Iob
     {
         if (this.iNet) this.iNet.draw(ctx);
         if (this.qNet) this.qNet.draw(ctx);
+        if (this.ciNet) this.ciNet.draw(ctx);
     }
 
     decode()
@@ -1101,7 +1102,7 @@ class Iob
                 self[inp+'Path'].disableAllPips();
         });
 
-        var pins = ['o', 't', 'ik', 'ok', 'i', 'q'];
+        var pins = ['o', 't', 'ik', 'ok', 'i', 'q', 'ci'];
         pins.forEach((pin) => self[pin+'Net'] = null);
     }
 
@@ -1139,6 +1140,7 @@ class Iob
     {
         if (this.iEnable) this.iNet = this.iPath.traceFrom();
         if (this.qEnable) this.qNet = this.qPath.traceFrom();
+        if (this.clkin) this.ciNet = this.ciPath.traceFrom();
     }
 
     isInside(x, y)

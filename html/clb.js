@@ -616,6 +616,12 @@ class ClbDecoder {
     {
       this.dEnable = this.inputUsed['F'][3] || this.inputUsed['G'][3];
       this.eEnable = true;
+
+      if (this.lutInput['F'][1] == this.lutInput['G'][1] &&
+        this.lutInput['F'][2] == this.lutInput['G'][2])
+      {
+        if (this.lut['F'] == this.lut['G']) this.eEnable = false;
+      }
     }
     else
     {
@@ -1580,6 +1586,7 @@ function drawClbOutput(info, context)
       context.moveTo(190, 230);
       context.lineTo(140, 230);
       context.lineTo(140, 60);
+      context.lineTo(130, 60);
       context.stroke();
     }
     else if (info.dataInput['Y'] == 'G')
