@@ -11,6 +11,8 @@ function changeViewSettings(id, val)
     viewSettings[id] = val;
 }
 
+const SCALE = 2;
+
 // coord lists
 
 // from G coords to screen coords
@@ -290,7 +292,7 @@ function initNames()
         pad++;
     }
 
-    console.log((pad-1)+' pads assigned');
+    //console.log((pad-1)+' pads assigned');
 
     // pull-ups
     for (var i = 0; i <= fam.rows; i++)
@@ -450,176 +452,6 @@ function getSCoords(name)
     return {x: colGtoS[gc.x], y: rowGtoS[gc.y]};
 }
 
-  // Bit position starts for the tiles A through I. Note there is I/O before A and buffers between C-D and F-G.
-  // FOR XC2018: bidi in D/G instead of C/F (along Y only?)
-  // x 18 18 20 18 18 20 18 18
-  // x 18 18 20 18 18 20 18 18 18 18
-  var xTileStarts = [3, 21, 39, 59, 77, 95, 115, 133, 151, 169, 187];
-
-  /**
-   * Take a bit index and return the tile A-I, along with starting bitstream index.
-   */
-  function findTileX(x) {
-    for (var i = 10; i >= 0; i--) {
-      if (x >= xTileStarts[i]) {
-        if (x < xTileStarts[i] + 18) {
-          return ["ABCDEFGHIJK"[i], xTileStarts[i], i];
-        } else {
-          return ["buf", xTileStarts[i] + 18, -1];
-        }
-      }
-    }
-    return ["io", 0, -2];
-  }
-
-  // x 8 8 9 8 8 9 8 8
-  // x 8 8 9 8 8 9 8 8 8 8
-  var yTileStarts = [1, 9, 17, 26, 34, 42, 51, 59, 67, 75, 83];
-
-  /**
-   * Take a bit index and return the tile A-I, along with starting bitstream index.
-   */
-  function findTileY(y) {
-    for (var i = 10; i >= 0; i--) {
-      if (y >= yTileStarts[i]) {
-        if (y < yTileStarts[i] + 8) {
-          return ["ABCDEFGHIJK"[i], yTileStarts[i], i];
-        } else {
-          return ["buf", yTileStarts[i] + 8, -1];
-        }
-      }
-    }
-    return ["io", 0, -2];
-  }
-  
-
-  class Pip {
-    constructor(name, bitPt) {
-      this.name = name;
-      var parts = name.split(':');
-      if (colInfo[parts[0]] == undefined || rowInfo[parts[1]] == undefined) {
-        alert('undefined name ' + name);
-      }
-      this.screenPt = [colInfo[parts[0]][1], rowInfo[parts[1]][1]];
-      if (this.screenPt[0] == 999 || this.screenPt[1] == 999) {
-        alert('Undefined coord ' + name);
-      }
-      this.bitPt = bitPt;
-      if (bitPt[0] >= 196 || bitPt[1] >= 87) {
-        alert('Out of bounds bitstream index: ' + bitPt[0] + ',' + bitPt[1]);
-      }
-      this.state = 0;
-
-    }
-
-    draw(ctx) {
-      if (this.bitPt[0] < 0 || this.state < 0) {
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
-      } else if (this.state == 0) {
-        ctx.strokeStyle = "gray";
-        ctx.fillStyle = "white";
-      } else if (this.state == 1) {
-        ctx.strokeStyle = "red";
-        ctx.fillStyle = "red";
-      } else {
-        // Shouldn't happen
-        ctx.strokeStyle = "blue";
-        ctx.fillStyle = "blue";
-      }
-      ctx.translate(-0.5,- .5); // Prevent antialiasing
-      ctx.fillRect(this.screenPt[0] - 1, this.screenPt[1] - 1, 2, 2);
-      ctx.translate(0.5, .5); // Prevent antialiasing
-      ctx.beginPath();
-      ctx.rect(this.screenPt[0] - 1, this.screenPt[1] - 1, 2, 2);
-      ctx.stroke();
-    }
-  }
-
-
-  // ROUTE TRACING STUFF
-  var visStartPoint = '';
-  var visPathInfo = [];
-  var visDestList = [];
-  var visStartPoint2 = '';
-  var visPathInfo2 = [];
-  var visDestList2 = [];
-
-
-
-  /**
-   * Returns switch matrix point info: G coordinate and screen coordinate.
-   * Name = e.g. HB.8.1.4
-   * Returns e.g. ["28G29", 123, 234]
-   */
-  function getSwitchCoords(name) {
-    const m = name.match(/([A-I][A-I])\.8\.(\d)\.(\d)$/);
-    if (m == undefined) {
-      throw "Bad name " + name;
-    }
-    const tilename = m[1];
-    let switchNum = parseInt(m[2], 10);
-    const pinNum = parseInt(m[3], 10);
-    // The switch pair's upper left wires are local.1
-    var row = rowInfo['row.' + tilename[0] + '.local.1'];
-    var col = colInfo['col.' + tilename[1] + '.local.1'];
-    let gPt; // G coordinate of the switch
-    let screenPt // screen coordinate of the switch
-    if (tilename[0] == "K") {
-      // The bottom switches are mirror-imaged, inconveniently. So the Y values are swapped.
-      if (switchNum == 1) {
-        gPt =[col[0], row[0] - 2]
-        screenPt = [col[1] - 2, row[1] - 2 + 8];
-      } else {
-        gPt = [col[0] + 3, row[0] + 1];
-        screenPt = [col[1] - 2 + 8, row[1] - 2];
-      }
-    } else {
-      if (switchNum == 1) {
-        gPt =[col[0], row[0] + 1]
-        screenPt = [col[1] - 2, row[1] - 2];
-      } else {
-        gPt = [col[0] + 3, row[0] - 2];
-        screenPt = [col[1] - 2 + 8, row[1] - 2 + 8];
-      }
-    }
-    // Calculate pin coords from the switch coords.
-    const pinGpt = (gPt[0] + [0, 1, 2, 2, 1, 0, -1, -1][pinNum]) + "G" +
-        (gPt[1] + [0, 0, -1, -2, -3, -3, -2, -1][pinNum]);
-
-    return [pinGpt, screenPt[0] + [2, 6, 9, 9, 6, 2, 0, 0][pinNum],
-            screenPt[1] + [0, 0, 2, 6, 9, 9, 6, 2][pinNum]];
-  }
-
-  /**
-   * The RBT file is organized:
-   * HH ... AH
-   * .       .
-   * HA ... AA
-   * stored as rbtstream[line][char] of '0' and '1'.
-   *
-   * The die is organized:
-   * AA ... AH
-   * .       .
-   * HA ... HH
-   * This function flips the rbtstream to match the die, stored as bitstream[x][y].
-   * bitstream also holds ints (not chars) and is inverted with respect to the bitstream, so 1 is active.
-   * I'm using the term "bitstream" to describe the bitstream with the die's layout and "rbtstream" to describe the bitstream
-   * with the .RBT file's layout.
-   */
-  function makeDiestream(rbtstream) {
-    var bitstream = new Array(196);
-    for (var x = 0; x < 196; x++) {
-      bitstream[x] = new Array(87);
-      for (var y = 0; y < 87; y++) {
-        bitstream[x][y] = rbtstream[195 - x][86 - y] == '1' ? 0 : 1;
-        
-      }
-    }
-    return bitstream;
-  }
-
-
   function fillText(ctx, text, x, y) {
     ctx.fillText(text, x + 0.5, y + 0.5);
   }
@@ -630,21 +462,6 @@ function getSCoords(name)
     }
   }
 
-const SCALE = 2;
-
-function __calcCoord(info, coord, num)
-{
-  num = parseInt(num);
-  if (typeof coord[num] != 'undefined')
-  {
-    return info[coord[num]][1];
-  }
-
-  var n1 = num; while (typeof coord[n1] == 'undefined' && n1 > 0) n1--;
-  var n2 = num; while (typeof coord[n2] == 'undefined' && n1 < 230) n2++;
-
-  return (info[coord[n1]][1] + info[coord[n2]][1]) / 2;
-}
 
 function drawTextBox(ctx, text, x, y, w, h)
 {
@@ -741,136 +558,15 @@ function drawLayout(ctx)
     decoders.forEach(d => d.render(ctx));
 }
 
-/**
- * Renders a set of pips, specified in entries. Each entry is {"nGn": 0/1}.
- */
-function pipRender(ctx, entries) {
-  for (const [name, bit] of Object.entries(entries)) {
-    //console.log("render PIP "+name);
-    const parts = name.split('G');
-    const row = rowFromG[parts[1]];
-    const col = colFromG[parts[0]];
-    if (row == undefined) {
-      console.log('Undefined row', name, parts[1]);
-      continue;
-    }
-    if (col == undefined) {
-      console.log('Undefined col', name, parts[0]);
-      continue;
-    }
-    const x = colInfo[col][1];
-    const y = rowInfo[row][1];
-    if (bit) {
-      ctx.fillStyle = "gray";
-      continue;
-    } else {
-      ctx.fillStyle = "red";
-    }
-    ctx.fillRect(x-1, y-1, 3, 3);
-  }
-
-}
-
-function drawPips(ctx, pips, color) {
-  for (let i = 0; i < pips.length; i++) {
-    const [gCoord, col, row, pipname, selected] = pips[i];
-    if (selected) {
-      ctx.fillStyle = "red";
-    } else if (debug) {
-      ctx.fillStyle = color;
-    } else {
-      continue;
-    }
-    ctx.fillRect(col - 1, row - 1, 3, 3);
-  }
-}
-
 
 // Processes a click on the Layout image
-function layoutMouse(x, y) {
-  if (!debug) {
-    return;
-  }
-  if (bitstreamTable == null) {
-    // return;
-  }
-  x = Math.floor(x / SCALE);
-  y = Math.floor(y / SCALE);
-  const XOFF = 24;
-  const YOFF = 30;
-  const xmod = (x - XOFF) % 72;
-  const ymod = (y - YOFF) % 72;
-  let tilex = Math.floor((x - XOFF) / 72);
-  let tiley = Math.floor((y - YOFF) / 72);
-  tilex = Math.max(Math.min(tilex, 8), 0); // Clamp to range 0-8
-  tiley = Math.max(Math.min(tiley, 8), 0); // Clamp to range 0-8
-  const name = "ABCDEFGHIJK"[tiley] + "ABCDEFGHIJK"[tilex];
-  let prefix = '';
-  $("#info2").html("&nbsp;");
-  $("#info3").html(prefix + name + ' ' + x + ' ' + y + '; ' + tilex + ' ' + xmod + ', ' + tiley + ' ' + ymod);
-  let sw = switchDecoders.get(name + ".8.1");
-  if (sw && sw.isInside(x, y)) {
-    $("#info2").html(sw.info());
-    return;
-  }
-  sw = switchDecoders.get(name + ".8.2");
-  if (sw && sw.isInside(x, y)) {
-    $("#info2").html(sw.info());
-    return;
-  }
-  let iob = iobDecoders.getFromXY(x, y);
-  if (iob) {
-    $("#info2").html(iob.info());
-    return;
-  }
-  // inside clb
-  const clb = clbDecoders.get(name);
-  if (clb && clb.isInside(x, y)) {
-    $("#info2").html(clb.info());
-    return;
-  }
-  const wire = isOnWire(x, y);
-  if (wire) {
-    $("#info2").html(wire);
-    return;
-  }
-}
-
-function isOnWire(x, y) {
-  const result = [];
-  const rowName = rowFromS[y];
-  if (rowName) {
-    result.push(rowName);
-  }
-  const colName = colFromS[x];
-  if (colName) {
-    result.push(colName);
-  }
-  if (result.length > 0) {
-    return result.join(' ');
-  }
-}
-
-function updateRoute()
+function layoutMouse(x, y)
 {
-  drawLayout($("#canvas")[0].getContext("2d"));
-
-  var route1 = 'Route 1: &nbsp; ' + visStartPoint+' &nbsp; -&gt; &nbsp; ';
-  if (visDestList.length > 0)
-    route1 += visDestList.join(', ');
-  else
-    route1 += '(nothing)';
-
-  var route2 = 'Route 2: &nbsp; ' + visStartPoint2+' &nbsp; -&gt; &nbsp; ';
-  if (visDestList2.length > 0)
-    route2 += visDestList2.join(', ');
-  else
-    route2 += '(nothing)';
-
-  $('#routeinfo').html('<div style="color:#0f0;">'+route1+'</div><div style="color:#0ff;">'+route2+'</div>');
+    // TODO
 }
 
-function layoutClick(x, y, btn) {
+function layoutClick(x, y, btn)
+{
   removePopups();
   x = Math.floor(x / SCALE);
   y = Math.floor(y / SCALE);
@@ -899,64 +595,6 @@ function layoutClick(x, y, btn) {
     //console.log(iobDecoders.getFromPin(18));*/
   }
 
-  // 56,56  60,66
-  // 754,790 762,796
-  /*if (x>=56 && x<=66 && y>=56 && y<=66)
-  {
-    const clk = clbDecoders.get('CLK.AA.I');
-    if (clk && btn == 0)
-    {
-      clk.routeFromOutputs();
-      visStartPoint = clk.startPoint;
-      visPathInfo = clk.pathInfo;
-      visDestList = clk.destList;
-      visStartPoint2 = '';
-      visPathInfo2 = [];
-      visDestList2 = [];
-      updateRoute();
-    }
-  }
-  else if (x>=754 && x<=764 && y>=790 && y<=800)
-  {
-    const clk = clbDecoders.get('CLK.KK.I');
-    if (clk && btn == 0)
-    {
-      clk.routeFromOutputs();
-      visStartPoint = clk.startPoint;
-      visPathInfo = clk.pathInfo;
-      visDestList = clk.destList;
-      visStartPoint2 = '';
-      visPathInfo2 = [];
-      visDestList2 = [];
-      updateRoute();
-    }
-  }*/
-
-  /*const XOFF = 24;
-  const YOFF = 30;
-  let tilex = Math.floor((x - XOFF) / 72);
-  let tiley = Math.floor((y - YOFF) / 72);
-  tilex = Math.max(Math.min(tilex, 10), 0); // Clamp to range 0-8
-  tiley = Math.max(Math.min(tiley, 10), 0); // Clamp to range 0-8
-  const name = "ABCDEFGHIJK"[tiley] + "ABCDEFGHIJK"[tilex];
-  // inside clb
-  const clb = clbDecoders.get(name);
-  if (clb && clb.isInside(x, y)) {
-    console.log(clb);
-    if (btn != 0)
-      clbDrawPopup(clb, x, y);
-    else
-    { 
-      clb.routeFromOutputs(); 
-      visStartPoint = clb.startPoint;
-      visPathInfo = clb.pathInfo;
-      visDestList = clb.destList;
-      visStartPoint2 = clb.startPoint2;
-      visPathInfo2 = clb.pathInfo2;
-      visDestList2 = clb.destList2;
-      updateRoute(); 
-    }
-  }*/
     let clb = clbDecoders.getFromXY(x, y);
     if (clb) {
         console.log(clb);
@@ -964,14 +602,7 @@ function layoutClick(x, y, btn) {
             clbDrawPopup(clb, x, y);
         else
         {
-            /*iob.routeFromInput();
-            visStartPoint = iob.startPoint;
-            visPathInfo = iob.pathInfo;
-            visDestList = iob.destList;
-            visStartPoint2 = '';
-            visPathInfo2 = [];
-            visDestList2 = [];
-            updateRoute();*/
+            //
         }
         //console.log(clb.info());
         return;
@@ -983,15 +614,8 @@ function layoutClick(x, y, btn) {
     if (btn != 0)
       iobDrawPopup(iob, x, y);
     else
-    { 
-      iob.routeFromInput();
-      visStartPoint = iob.startPoint;
-      visPathInfo = iob.pathInfo;
-      visDestList = iob.destList;
-      visStartPoint2 = '';
-      visPathInfo2 = [];
-      visDestList2 = [];
-      updateRoute(); 
+    {
+        //
     }
     //console.log(iob.info());
     return;

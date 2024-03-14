@@ -179,20 +179,6 @@ $(document).ready(function() {
         layoutClick(x, y, 1);
       //}
     });
-
-    $("#demo").click(function() {
-      rawBitstream = makeDemoBitstream();
-      $('#modetext').css('display', 'block'); // Show the dropdown
-      decode(rawBitstream, config);
-      $("#modetext").val("layout");
-      redraw(ctx);
-    });
-
-    /*$('#traceall').click(function()
-    {
-      if (!bitstreamTable) return;
-      traceAll();
-    });*/
   }
 
 
@@ -224,7 +210,6 @@ $(document).ready(function() {
       $('#bs_sel').html(opts).val(0).trigger('change');
 
       $('#modetext').css('display', 'block'); // Show the dropdown
-      decode();
     }
 
     redraw(ctx);

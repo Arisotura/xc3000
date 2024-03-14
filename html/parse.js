@@ -263,6 +263,7 @@ function selectBitstream(bsid, pkgid)
   selectPackage(pkgid);
 
   initParser();
+  decode();
 }
 
 function selectPackage(pkgid)
@@ -273,84 +274,6 @@ function selectPackage(pkgid)
     iobDecoders.onChangePackage();
 }
 
-/*
- * The model for a decoder is:
- * startDecode() is called to initialize.
- * add() is called to add bits as they are parsed from the XC2064-def.txt file.
- * decode() is called at the end to complete the decoding.
- */
-
-let bitTypes;
-function decode() {
-  //bitTypes = new Array(196 * 87);
-  //decoders.forEach(d => d.startDecode());
-  /*for (let i = 0; i < 196 * 87; i++) {
-    let entry = config[i];
-    if (entry == undefined || entry == "----- NOT USED -----") {
-      bitTypes[i] = BITTYPE.unused;
-      continue;
-    }
-    let m = entry.match(/IOB (P\d+)(.*)/);
-    if (m) {
-      bitTypes[i] = BITTYPE.iob;
-      //console.log("IOB "+m[1]);
-      iobDecoders.getFromPin(m[1]).add(m[2], rawBitstream[i]);
-      continue;
-    }
-    m = entry.match(/PIP\s+(.*)/);
-    if (m) {
-      bitTypes[i] = BITTYPE.pip;
-      pipDecoder.add(m[1], rawBitstream[i]);
-      continue;
-    }
-    m = entry.match(/Bidi\s+(.*)/);
-    if (m) {
-      bitTypes[i] = BITTYPE.bidi;
-      bidiDecoder.add(m[1], rawBitstream[i]);
-      continue;
-    }
-    m = entry.match(/Magic @ (\S+) (\d) (\d)$/);
-    if (m) {
-      bitTypes[i] = BITTYPE.switch;
-      if (rawBitstream[i] != 1) {
-        //if (i < (87*2)) console.log("SWITCH "+m[1]+" "+switchDecoders.getFromG(m[1]).name+" - "+m[2]+"->"+m[3]);
-        //if (switchDecoders.getFromG(m[1]).name=='IK.8.2') console.log("["+i+"] SWITCH "+m[1]+" "+switchDecoders.getFromG(m[1]).name+" - "+m[2]+"->"+m[3]);
-        switchDecoders.getFromG(m[1]).add(parseInt(m[2]), parseInt(m[3]));
-      }
-      continue;
-    }
-    m = entry.match(/CLB ([A-J][A-J])\s*(.*)/);
-    if (m) {
-      if (entry.match(/Logic Table/)) {
-        bitTypes[i] = BITTYPE.lut;
-      } else {
-        bitTypes[i] = BITTYPE.clb;
-      }
-      //console.log("CLB "+m[1]);
-      clbDecoders.get(m[1]).add(m[2], rawBitstream[i]);
-      continue;
-    }
-    m = entry.match(/CLB (CLK.[AK][AK].I)\s*(.*)/);
-    if (m) {
-      bitTypes[i] = BITTYPE.clb;
-      //onsole.log("CLB "+m[1]);
-      clbDecoders.get(m[1]).add(m[2], rawBitstream[i]);
-      continue;
-    }
-    m = entry.match(/Other (.*)/);
-    if (m) {
-      bitTypes[i] = BITTYPE.other;
-      otherDecoder.add(m[1], rawBitstream[i]);
-      continue;
-    }
-    //console.log('UNKNOWN:', entry);
-  }
-  decoders.forEach(d => d.decode());
-  iobDecoders.routeFromInput();
-  clbDecoders.routeFromOutputs();
-  //switchDecoders.doConnect();
-  //console.log(clbDecoders);*/
-}
 
 var iobDecoders;
 var pipDecoder;
@@ -362,7 +285,9 @@ var pullupDecoders;
 var clockDecoders;
 var bidiDecoder;
 let decoders = [];
-function initDecoders() {
+
+function initDecoders()
+{
   pipDecoder = new PipDecoder();
   iobDecoders = new IobDecoders();
   //bidiDecoder = new BidiDecoder();
@@ -376,52 +301,18 @@ function initDecoders() {
   decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders, tribufDecoders, pullupDecoders, clockDecoders];
   pipDecoder.generateLongLines();
   switchDecoders.generateLocalLines();
+}
+
+function decode()
+{
   decoders.forEach(d => d.decode());
 
+  netColor = 120;
   clbDecoders.traceFromOutputs();
   iobDecoders.traceFromOutputs();
   clockDecoders.traceFromOutputs();
 }
 
-
-
-  /**
-   * Converts a symbolic name to G coordinates.
-   */
-  function nameToG(str) {
-    if (str.includes("PAD")) {
-      return IobDecoders.nameToG[str];
-    }
-    const m = str.match(/([A-I][A-I])\.8\.(\d)\.(\d)$/);
-    if (str.match(/([A-I][A-I])\.8\.(\d)\.(\d)$/)) {
-      return getSwitchCoords(str)[0];
-    }
-    const parts = str.split(':');
-    const col = colInfo[parts[0]];
-    const row = rowInfo[parts[1]];
-    if (col == undefined || row == undefined) {
-      console.log("Couldn't convert name", str);
-      return;
-    }
-    return col[0] + "G" + row[0];
-  }
-
-  /**
-   * Converts G coordinates to a symbolic name.
-   */
-  function gToName(str) {
-    if (IobDecoders.gToName[str]) {
-      return IobDecoders.gToName[str];
-    }
-    const parts = str.split('G');
-    const col = colFromG[parts[0]];
-    const row = rowFromG[parts[1]];
-    if (col == undefined || row == undefined) {
-      console.log("Couldn't convert name", str);
-      return;
-    }
-    return col + ":" + row;
-  }
 
 
 class OtherDecoder {
@@ -483,108 +374,3 @@ class OtherDecoder {
     return ret;
   }
 
-
-  var forwardTrace = [];
-  var backTrace = [];
-  var backError = [];
-
-  function prettyName(name)
-  {
-    var v = name.split(':');
-    switch (v[0])
-    {
-      case 'IOB':
-        return v[1]+'.'+v[2];
-      case 'CLB':
-        return v[1]+'.'+v[2];
-    }
-
-    return name;
-  }
-
-  function traceAll()
-  {
-    for (var p = 1; p <= 84; p++)
-    {
-      var iob = iobDecoders.getFromPin('P'+p);
-      if (typeof iob == 'undefined') continue;
-
-      var name = 'IOB:'+iob.pin+':I';
-      iob.routeFromInput();
-      visDestList.forEach(dest => {if (backTrace[dest]) backError.push(dest); backTrace[dest] = name;});
-    }
-
-    for (var y = 0; y < 10; y++)
-    {
-      for (var x = 0; x < 10; x++)
-      {
-        var t = "ABCDEFGHIJ"[y]+"ABCDEFGHIJ"[x];
-        var clb = clbDecoders.get(t);
-        if (typeof clb == 'undefined') continue;
-
-        var nameX = 'CLB:'+clb.tile+':X';
-        var nameY = 'CLB:'+clb.tile+':Y';
-        clb.routeFromOutputs();
-        forwardTrace[nameX] = [];
-        forwardTrace[nameY] = [];
-        visDestList.forEach(dest => {if (backTrace[dest]) backError.push(dest); backTrace[dest] = nameX; forwardTrace[nameX].push(dest);});
-        visDestList2.forEach(dest => {if (backTrace[dest]) backError.push(dest); backTrace[dest] = nameY; forwardTrace[nameY].push(dest);});
-      }
-    }
-
-    console.log('-- BACKTRACE DONE --');
-    console.log(backTrace);
-    console.log(backError);
-
-    var output = "";
-
-    for (var y = 0; y < 10; y++)
-    {
-      for (var x = 0; x < 10; x++)
-      {
-        var t = "ABCDEFGHIJ"[y]+"ABCDEFGHIJ"[x];
-        var clb = clbDecoders.get(t);
-
-        output += "<h4>---- CLB: "+t+" ----</h4><br>";
-
-        var nameX = 'CLB:'+t+':X';
-        var nameY = 'CLB:'+t+':Y';
-        if (forwardTrace[nameX].length==0 && forwardTrace[nameY].length==0)
-        {
-          output += "(unused)<br><br><br>";
-        }
-        else
-        {
-          for (var i = 0; i < 4; i++)
-          {
-            var iname = 'CLB:'+t+':'+("ABCD"[i]);
-            if (typeof backTrace[iname] == 'undefined') continue;
-
-            output += prettyName(iname);
-            output += " &lt;- ";
-            output += prettyName(backTrace[iname]);
-            output += "<br>";
-          }
-
-          for (var i = 0; i < 2; i++)
-          {
-            var iname = 'CLB:'+t+':'+("XY"[i]);
-            if (forwardTrace[iname].length == 0) continue;
-
-            output += prettyName(iname);
-            output += " -&gt; ";
-            for (var j = 0; j < forwardTrace[iname].length; j++)
-            {
-              if (j > 0) output += ", ";
-              output += prettyName(forwardTrace[iname][j]);
-            }
-            output += "<br>";
-          }
-
-          output += "<br><br>";
-        }
-      }
-    }
-
-    $('#routeinfo').html(output);
-  }
