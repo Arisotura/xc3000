@@ -620,8 +620,11 @@ class ClbDecoder {
       if (this.lutInput['F'][1] == this.lutInput['G'][1] &&
         this.lutInput['F'][2] == this.lutInput['G'][2])
       {
+        this.is5Input = true;
         if (this.lut['F'] == this.lut['G']) this.eEnable = false;
       }
+      else
+        this.is5Input = false;
     }
     else
     {
@@ -631,6 +634,8 @@ class ClbDecoder {
       this.eEnable = false;
       if (this.lutInput['F'][3] == 'E') this.eEnable ||= this.inputUsed['F'][3];
       if (this.lutInput['G'][3] == 'E') this.eEnable ||= this.inputUsed['G'][3];
+
+      this.is5Input = false;
     }
 
     this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) ||
@@ -650,8 +655,20 @@ class ClbDecoder {
     this.rdEnable &&= dataenable;
     this.kEnable = dataenable;
 
-    this.lutEquation['F'] = formula4(this.lut['F'], this.lutInput['F']);
-    this.lutEquation['G'] = formula4(this.lut['G'], this.lutInput['G']);
+    if (this.is5Input)
+    {
+      var inputs = [];
+      for (let i = 0; i < 4; i++) inputs[i] = this.lutInput['F'][i];
+      inputs[4] = 'E';
+
+      this.lutEquation['F'] = formula5((this.lut['G'] << 16) | this.lut['F'], inputs);
+      this.lutEquation['G'] = '';
+    }
+    else
+    {
+      this.lutEquation['F'] = formula4(this.lut['F'], this.lutInput['F']);
+      this.lutEquation['G'] = formula4(this.lut['G'], this.lutInput['G']);
+    }
 
     var inputs = ['a', 'ec', 'di', 'b', 'c', 'k', 'e', 'd', 'rd'];
     inputs.forEach((inp) =>
@@ -816,7 +833,7 @@ function clbDrawPopup(clb, x, y) {
 
   if (clb.fgMux)
   {
-    if (clb.lutInput['F'][1] == clb.lutInput['G'][1] && clb.lutInput['F'][2] == clb.lutInput['G'][2])
+    if (clb.is5Input)
       drawClbF(clb, context);
     else
       drawClbFGM(clb, context);
@@ -827,12 +844,13 @@ function clbDrawPopup(clb, x, y) {
   drawClbOutput(clb, context);
 }
 
-// The F base is the configuration with one 4-input CLB called "F".
+// The F base is the configuration with one 5-input CLB called "F".
 function drawClbF(info, context) {
   context.strokeStyle = "white";
   context.fillStyle = "white";
   context.font = "12px arial";
-  var eq = '~E*(' + info.lutEquation['F'] + ') + E*(' + info.lutEquation['G']+')';
+  //var eq = '~E*(' + info.lutEquation['F'] + ') + E*(' + info.lutEquation['G']+')';
+  var eq = info.lutEquation['F'];
   context.fillText("F = " + eq, 21, 325);
   context.font = "20px arial";
 

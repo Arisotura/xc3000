@@ -2,32 +2,23 @@
 /**
  * Return "nice" formula of three variables corresponding to truth table n.
  * v0 is low-order bit in n.
- * Variable names v0, v1, v2 are substituted into formula.
  */
-function formula3(n, v0, v1, v2) {
-  // Watch out for replacing the replacement. e.g. replace('V0', 'V1').replace('V1', 'V2') replaces V0 with V2.
-  // That's why the formulas use lower case.
-  //return formulaString((n << 8) | n).replaceAll('0', v0).replaceAll('1', v1).replaceAll('2', v2); // n << 8 | n makes the formula not depend on V3, i.e. 3-term formula
-  var labels = {0:v0, 1:v1, 2:v2};
-  return formulaString((n << 8) | n, labels);
+
+function formula4(n, labels)
+{
+  return formulaString(n | (n << 16), labels);
 }
 
-function _formula4(n, v0, v1, v2, v3) {
-  //return formulaString(n).replaceAll('0', v0).replaceAll('1', v1).replaceAll('2', v2).replaceAll('3', v3);
-  var labels = {0:v0, 1:v1, 2:v2, 3:v3};
+function formula5(n, labels)
+{
   return formulaString(n, labels);
 }
 
-function formula4(n, labels) {
-  return formulaString(n, labels);
-}
-
-// Generate a formula given a truth table of four variables.
-// Uses a greedy Karnaugh map algorithm. I.e. grab single-variable terms that work, then two-variable terms, three-variable terms, finally four-variable terms.
-// Data structure to hold truth table: 16-bit number where bit 1<<n indicates the output value (0, 1) for input DCBA (converted to a binary index)
-// E.g. 0000000000000001 indicates the only 1 output is for f(0, 0, 0, 0)
-// 1010101010101010 indicates 1 output if V0 is set, i.e. f(V0, V1, V2, V3) = V0.
-// Output is a string e.g. "0 + ~1 * 2", where 0 indicates variable 0, 1 indicates variable 1, 2 indicates variable 2
+// Generate a formula given a truth table of five variables.
+// Uses a greedy Karnaugh map algorithm. I.e. grab single-variable terms that work, then two-variable terms, three-variable terms, four-variable terms, finally five-variable terms.
+// Data structure to hold truth table: 16-bit number where bit 1<<n indicates the output value (0, 1) for input EDCBA (converted to a binary index)
+// E.g. 0000000000000001 indicates the only 1 output is for f(0, 0, 0, 0, 0)
+// 10101010101010101010101010101010 indicates 1 output if V0 is set, i.e. f(V0, V1, V2, V3, v4) = V0.
 
 function formulaString(table, labels) {
   // Handle special cases (constant output)
@@ -36,6 +27,16 @@ function formulaString(table, labels) {
   } else if (table == 0) {
     return "0";
   }
+
+  function chkinput(lut, inp)
+  {
+    var mask = [0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF][inp];
+    return ((lut & mask) != ((lut >> (1<<inp)) & mask));
+  }
+
+  let relevant = [];
+  for (let i = 0; i < 5; i++)
+    relevant[i] = chkinput(table, i);
 
   let ones = table; // Bits that must be 1, diminishing as terms set bits
   let zeros = ~table; // Bits that must be 0
@@ -59,48 +60,57 @@ function formulaString(table, labels) {
   }
 
   // Recursive function to try terms
-  // Inputs: query: [V0, V1, V2, V3] values 1, 0, or -1 (don't care)
+  // Inputs: query: [V0, V1, V2, V3, V4] values 1, 0, or -1 (don't care)
   //   terms: number of terms to add
   //   index: the position in query to start updating. E.e. index == 2 indicates that V0 and V1 are set but V2 and V3 can be modified
   function testQueries(query, terms, index) { 
     if (done) {
       return;
     }
-    if (terms + index > 4) {
+    if (terms + index > 5) {
       return; // Not enough space left
     }
     if (terms == 0) {
       // Query is complete, so evaluate
       apply(query);
     } else {
-      for (let i = index; i <= 4; i++) {
-        query[i] = 0; // Try a 0 in position i
-        testQueries(query, terms - 1, index + 1);
-        query[i] = 1; // Try a 1 in position i
-        testQueries(query, terms - 1, index + 1);
-        query[i] = -1; // Reset
+      for (let i = index; i < 5; i++) {
+        if (relevant[i])
+        {
+          query[i] = 0; // Try a 0 in position i
+          testQueries(query, terms - 1, index + 1);
+          query[i] = 1; // Try a 1 in position i
+          testQueries(query, terms - 1, index + 1);
+          query[i] = -1; // Reset
+        }
+        else
+        {
+          query[i] = -1;
+          testQueries(query, terms - 1, index + 1);
+        }
       }
     }
   }
 
-  for (let terms = 1; terms <= 4; terms++) {
-    testQueries([-1, -1, -1, -1], terms, 0);
+  for (let terms = 1; terms <= 5; terms++) {
+    testQueries([-1, -1, -1, -1, -1], terms, 0);
   }
 
   return result.join(" + ");
 }
 
 // Generate the truth table for a product term specified by "query".
-// V0 query is a vector [V0, V1, V2, V3] where 1 indicates the variable must be 1, 0 indicates the variable must be 0, and -1 indicates don't care.
+// V0 query is a vector [V0, V1, V2, V3, V4] where 1 indicates the variable must be 1, 0 indicates the variable must be 0, and -1 indicates don't care.
 function generatePotentialTable(query) {
-  const V0 = 0xaaaa; // Truth table for f(V0, V1, V2, V3) = V0
-  const V1 = 0xcccc; // Truth table for f(V0, V1, V2, V3) = V1
-  const V2 = 0xf0f0; // Truth table for f(V0, V1, V2, V3) = V2
-  const V3 = 0xff00; // Truth table for f(V0, V1, V2, V3) = V3
-  const terms = [V0, V1, V2, V3];
+  const V0 = 0xaaaaaaaa; // Truth table for f(V0, V1, V2, V3, V4) = V0
+  const V1 = 0xcccccccc; // Truth table for f(V0, V1, V2, V3, V4) = V1
+  const V2 = 0xf0f0f0f0; // Truth table for f(V0, V1, V2, V3, V4) = V2
+  const V3 = 0xff00ff00; // Truth table for f(V0, V1, V2, V3, V4) = V3
+  const V4 = 0xffff0000; // Truth table for f(V0, V1, V2, V3, V4) = V4
+  const terms = [V0, V1, V2, V3, V4];
 
-  let table = 0xffff;
-  for (let i = 0; i < 4; i++) {
+  let table = 0xffffffff;
+  for (let i = 0; i < 5; i++) {
     if (query[i] == 1) {
       table &= terms[i]; // Only use terms where that variable is 1
     } else if (query[i] == 0) {
@@ -114,12 +124,10 @@ function generatePotentialTable(query) {
 // E.g. [0, 1, -1, -1] -> "~V0 * V1"
 function queryToTerm(query, labels) {
   let parts = [];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     if (query[i] == 0) {
-      //parts.push("~" + "0123"[i]);
       parts.push("~" + labels[i]);
     } else if (query[i] == 1) {
-      //parts.push("0123"[i]);
       parts.push(labels[i]);
     }
   }
