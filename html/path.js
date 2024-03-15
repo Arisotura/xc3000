@@ -512,9 +512,8 @@ class Net
     {
         var src = origin.obj;
 
-        this.sourcePoint = origin.gPt;
-        this.sourceObj = src;
-        this.sourcePin = src.describePin(origin.pin);
+        this.sourceList = [];
+        this.sourceList.push({x:origin.gPt.x, y:origin.gPt.y, obj:src, pin:origin.pin});
 
         this.pathData = []; // visual path data
         this.netList = []; // net list, including interconnections
@@ -531,6 +530,11 @@ class Net
         netColor = (netColor + 42) % 360;
 
         this.appendPoint(origin.gPt);
+    }
+
+    isEmpty()
+    {
+        return this.destList.length == 0;
     }
 
     checkVisited(gPt)
@@ -631,6 +635,74 @@ class Net
 
         this.curBranch = this.branchStack.pop();
         this.curBranch.numDest += numdest;
+    }
+
+    // merge another net with this net
+    merge(other)
+    {
+        if (other.isEmpty()) return;
+
+        var sourceindex = {};
+        this.sourceList.forEach((elem) =>
+        {
+            let key = elem.obj.describePin(elem.pin);
+            sourceindex[key] = true;
+        });
+
+        var pathindex = {};
+        this.pathData.forEach((elem) =>
+        {
+            let key = elem.from.x+':'+elem.from.y+'/'+elem.to.x+':'+elem.to.y;
+            pathindex[key] = true;
+            key = elem.to.x+':'+elem.to.y+'/'+elem.from.x+':'+elem.from.y;
+            pathindex[key] = true;
+        });
+
+        var netindex = {};
+        this.netList.forEach((elem) =>
+        {
+            let key = elem.type+':'+elem.x+':'+elem.y;
+            netindex[key] = true;
+        });
+
+        var destindex = {};
+        this.destList.forEach((elem) =>
+        {
+            let key = elem.obj.describePin(elem.pin);
+            destindex[key] = true;
+        });
+
+        other.sourceList.forEach((elem) =>
+        {
+            let key = elem.obj.describePin(elem.pin);
+            if (sourceindex[key]) return;
+
+            this.sourceList.push(elem);
+        });
+
+        other.pathData.forEach((elem) =>
+        {
+            let key = elem.from.x+':'+elem.from.y+'/'+elem.to.x+':'+elem.to.y;
+            if (pathindex[key]) return;
+
+            this.pathData.push(elem);
+        });
+
+        other.netList.forEach((elem) =>
+        {
+            let key = elem.type+':'+elem.x+':'+elem.y;
+            if (netindex[key]) return;
+
+            this.netList.push(elem);
+        });
+
+        other.destList.forEach((elem) =>
+        {
+            let key = elem.obj.describePin(elem.pin);
+            if (destindex[key]) return;
+
+            this.destList.push(elem);
+        });
     }
 
     optimize()

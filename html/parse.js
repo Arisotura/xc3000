@@ -308,8 +308,10 @@ function decode()
   decoders.forEach(d => d.decode());
 
   netColor = 120;
-  clbDecoders.traceFromOutputs();
   iobDecoders.traceFromOutputs();
+  clbDecoders.traceFromOutputs();
+  tribufDecoders.traceFromOutputs();
+  pullupDecoders.traceFromOutputs();
   clockDecoders.traceFromOutputs();
 }
 

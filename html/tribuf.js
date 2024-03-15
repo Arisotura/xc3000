@@ -6,6 +6,8 @@ class TriBufDecoders
         this.tribufs = {};
         this.tribufsFromG = {};
 
+        this.lineNets = {};
+
         var fam = curBitstream.family;
         for (let i = 0; i <= fam.rows; i++)
         {
@@ -30,6 +32,25 @@ class TriBufDecoders
         Object.entries(this.tribufs).forEach(([k, s]) => s.decode());
     }
 
+    traceFromOutputs()
+    {
+        this.lineNets = {};
+        Object.entries(this.tribufs).forEach(([k, s]) => s.traceFromOutputs());
+    }
+
+    addNetToLine(net, line)
+    {
+        if (net.isEmpty()) return net;
+
+        var orignet = this.lineNets[line];
+        if (!orignet)
+            this.lineNets[line] = net;
+        else
+            this.lineNets[line].merge(net);
+
+        return this.lineNets[line];
+    }
+
     getFromG(name) {
         return this.tribufsFromG[name];
     }
@@ -46,6 +67,7 @@ class TriBufDecoders
     render(ctx)
     {
         Object.entries(this.tribufs).forEach(([name, obj]) => obj.render(ctx));
+        Object.entries(this.lineNets).forEach(([line, net]) => net.draw(ctx));
     }
 }
 
@@ -61,6 +83,8 @@ class TriBuf
         this.name = name;
         this.tile = name[5] + name[6];
         this.num = parseInt(name[8], 10);
+
+        this.line = 'row.'+this.tile[0]+'.long.'+(this.row==0 ? 3:this.num);
 
         // G coords point to the output pin of the buffer
         this.gPt = getGCoords(this.name);
@@ -85,6 +109,8 @@ class TriBuf
         this.W = 4;
         this.H = 4;
 
+        this.enabled = false;
+
         this.generateTribufPips();
     }
 
@@ -107,7 +133,7 @@ class TriBuf
         this.iPath = new Path(this, 'I', 'dest', {x: this.gPt.x, y: this.gPt.y + yoff}, 'V');
         this.tPath = new Path(this, 'T', 'dest', {x: this.gPt.x + xoff, y: this.gPt.y + yoff}, 'H');
 
-        opips.push('row.*.long.'+(this.row==0 ? 3:this.num)+':0');
+        opips.push(this.line+':0');
 
         if (curBitstream.family.extraInter)
         {
@@ -183,6 +209,8 @@ class TriBuf
     {
         // T inputs: #0 on local lines, #1 on long lines
 
+        this.enabled = false;
+
         var row, num;
         if (this.row == 0 || this.num == 2)
         {
@@ -240,7 +268,11 @@ class TriBuf
             this.oPath.setPipStatus(0, 1);
             this.iPath.setPipStatus(isel?0:1, 1);
             this.tPath.setPipStatus(tsel, 1);
+            this.enabled = true;
         }
+
+        var pins = ['o', 'i', 't'];
+        pins.forEach((pin) => self[pin+'Net'] = null);
     }
 
     describePin(pin)
@@ -248,9 +280,19 @@ class TriBuf
         return this.name + '.' + pin;
     }
 
-    signalConnection()
+    pinEnabled(pin)
     {
-        // TODO
+        return this.enabled;
+    }
+
+    signalConnection(pin)
+    {
+    }
+
+    traceFromOutputs()
+    {
+        var net = this.oPath.traceFrom();
+        this.oNet = tribufDecoders.addNetToLine(net, this.line);
     }
 
     renderBackground(ctx)

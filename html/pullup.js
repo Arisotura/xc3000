@@ -32,6 +32,11 @@ class PullUpDecoders
         Object.entries(this.pullups).forEach(([k, s]) => s.decode());
     }
 
+    traceFromOutputs()
+    {
+        Object.entries(this.pullups).forEach(([k, s]) => s.traceFromOutputs());
+    }
+
     getFromG(name) {
         return this.pullupsFromG[name];
     }
@@ -64,12 +69,16 @@ class PullUp
         this.tile = name[3] + name[4];
         this.num = parseInt(name[6], 10);
 
+        this.line = 'row.'+this.tile[0]+'.long.'+(this.row==0 ? 3:this.num);
+
         // G coords point to the output pin of the pullup
         this.gPt = getGCoords(this.name);
         this.screenPt = getSCoords(this.gPt);
         this.screenPt.y -= 4;
         this.W = 4;
         this.H = 4;
+
+        this.enabled = false;
 
         this.generatePullupPips();
     }
@@ -89,13 +98,15 @@ class PullUp
 
         this.oPath = new Path(this, 'O', 'source', {x: this.gPt.x, y: this.gPt.y}, 'V');
 
-        opips.push('row.*.long.'+(this.row==0 ? 3:this.num)+':0');
+        opips.push(this.line+':0');
 
         this.oPath.appendPipList(opips, this.genCoords.bind(this));
     }
 
     decode()
     {
+        this.enabled = false;
+
         var row, num;
         if (this.row == 0 || this.num == 2)
         {
@@ -116,7 +127,12 @@ class PullUp
             pip = curBitstream.data[offset.y + (num?4:3)][offset.x + (num?3:6)];
 
         if (!pip)
+        {
             this.oPath.setPipStatus(0, 1);
+            this.enabled = true;
+        }
+
+        this.oNet = null;
     }
 
     describePin(pin)
@@ -124,9 +140,19 @@ class PullUp
         return this.name + '.' + pin;
     }
 
-    signalConnection()
+    pinEnabled(pin)
     {
-        // TODO
+        return this.enabled;
+    }
+
+    signalConnection(pin)
+    {
+    }
+
+    traceFromOutputs()
+    {
+        var net = this.oPath.traceFrom();
+        this.oNet = tribufDecoders.addNetToLine(net, this.line);
     }
 
     renderBackground(ctx)
