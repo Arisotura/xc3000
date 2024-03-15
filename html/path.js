@@ -637,6 +637,16 @@ class Net
         this.curBranch.numDest += numdest;
     }
 
+    // connect to the destinations
+    connectToDests()
+    {
+        const self = this;
+        this.destList.forEach((elem) =>
+        {
+            elem.obj.connectNet(elem.pin, self);
+        });
+    }
+
     // merge another net with this net
     merge(other)
     {

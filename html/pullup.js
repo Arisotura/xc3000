@@ -149,6 +149,12 @@ class PullUp
     {
     }
 
+    connectNet(pin, net)
+    {
+        // should not happen
+        console.log('Pullup: ?????');
+    }
+
     traceFromOutputs()
     {
         var net = this.oPath.traceFrom();

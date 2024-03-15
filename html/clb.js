@@ -703,10 +703,23 @@ class ClbDecoder {
     }
   }
 
+  connectNet(pin, net)
+  {
+    this[pin.toLowerCase() + 'Net'] = net;
+  }
+
   traceFromOutputs()
   {
-    if (this.xEnable) this.xNet = this.xPath.traceFrom();
-    if (this.yEnable) this.yNet = this.yPath.traceFrom();
+    if (this.xEnable)
+    {
+      this.xNet = this.xPath.traceFrom();
+      this.xNet.connectToDests();
+    }
+    if (this.yEnable)
+    {
+      this.yNet = this.yPath.traceFrom();
+      this.yNet.connectToDests();
+    }
   }
 
   renderBackground(ctx)

@@ -380,8 +380,8 @@ class Iob
 
             if (this.clkin == 'TCLKIN')
             {
-                this.ciPath = new Path(this, 'CLKI', 'source', {x: this.gPt.x + 5, y: ybase - 6}, 'H');
-                this.ciPath.appendPip('+17:0');
+                this.clkiPath = new Path(this, 'CLKI', 'source', {x: this.gPt.x + 5, y: ybase - 6}, 'H');
+                this.clkiPath.appendPip('+17:0');
             }
         }
         else if (this.style == 'rightupper' || this.style == 'rightlower')
@@ -399,8 +399,8 @@ class Iob
 
             if (this.clkin == 'BCLKIN')
             {
-                this.ciPath = new Path(this, 'CLKI', 'source', {x: this.gPt.x, y: ybase - 7}, 'H');
-                this.ciPath.appendPip('-2:0');
+                this.clkiPath = new Path(this, 'CLKI', 'source', {x: this.gPt.x, y: ybase - 7}, 'H');
+                this.clkiPath.appendPip('-2:0');
             }
         }
 
@@ -705,7 +705,7 @@ class Iob
             this.qPath.draw(ctx);
             this.iPath.draw(ctx);
             this.tPath.draw(ctx);
-            if (this.ciPath) this.ciPath.draw(ctx);
+            if (this.clkiPath) this.clkiPath.draw(ctx);
         }
     }
 
@@ -713,7 +713,7 @@ class Iob
     {
         if (this.iNet) this.iNet.draw(ctx);
         if (this.qNet) this.qNet.draw(ctx);
-        if (this.ciNet) this.ciNet.draw(ctx);
+        if (this.clkiNet) this.clkiNet.draw(ctx);
     }
 
     decode()
@@ -1102,7 +1102,7 @@ class Iob
                 self[inp+'Path'].disableAllPips();
         });
 
-        var pins = ['o', 't', 'ik', 'ok', 'i', 'q', 'ci'];
+        var pins = ['o', 't', 'ik', 'ok', 'i', 'q', 'clki'];
         pins.forEach((pin) => self[pin+'Net'] = null);
     }
 
@@ -1136,11 +1136,28 @@ class Iob
         }
     }
 
+    connectNet(pin, net)
+    {
+        this[pin.toLowerCase() + 'Net'] = net;
+    }
+
     traceFromOutputs()
     {
-        if (this.iEnable) this.iNet = this.iPath.traceFrom();
-        if (this.qEnable) this.qNet = this.qPath.traceFrom();
-        if (this.clkin) this.ciNet = this.ciPath.traceFrom();
+        if (this.iEnable)
+        {
+            this.iNet = this.iPath.traceFrom();
+            this.iNet.connectToDests();
+        }
+        if (this.qEnable)
+        {
+            this.qNet = this.qPath.traceFrom();
+            this.qNet.connectToDests();
+        }
+        if (this.clkin)
+        {
+            this.clkiNet = this.clkiPath.traceFrom();
+            this.clkiNet.connectToDests();
+        }
     }
 
     isInside(x, y)

@@ -301,6 +301,8 @@ class ClockBuf
         var outputbits = [];
         var inputbits, inputmux;
 
+        this.enabled = false;
+
         if (this.name == 'GCLK')
         {
             for (var i = 0; i < curBitstream.family.cols; i++)
@@ -330,7 +332,10 @@ class ClockBuf
         {
             var bit = curBitstream.data[outputbits[i]][outputbits[i+1]];
             if (!bit)
-                this.oPath.setPipStatus(i>>1, 1);
+            {
+                this.oPath.setPipStatus(i >> 1, 1);
+                this.enabled = true;
+            }
         }
 
         var bits = 0;
@@ -350,6 +355,7 @@ class ClockBuf
         // enable the corresponding PIP
         this.iPath.setPipStatus(mux, 1);
 
+        this.iNet = null;
         this.oNet = null;
     }
 
@@ -360,18 +366,25 @@ class ClockBuf
 
     pinEnabled(pin)
     {
-        // TODO
-        return true;
+        return this.enabled;
     }
 
-    signalConnection()
+    signalConnection(pin)
     {
-        // TODO
+    }
+
+    connectNet(pin, net)
+    {
+        this[pin.toLowerCase() + 'Net'] = net;
     }
 
     traceFromOutputs()
     {
-        if (true) this.oNet = this.oPath.traceFrom();
+        if (this.enabled)
+        {
+            this.oNet = this.oPath.traceFrom();
+            this.oNet.connectToDests();
+        }
     }
 
     renderBackground(ctx)
@@ -468,6 +481,8 @@ class ClockOsc
         if (!x0) this.oPath.setPipStatus(0, 1);
         if (!x1) this.oPath.setPipStatus(1, 1);
 
+        this.enabled = (!x0) || (!x1);
+
         this.oNet = null;
     }
 
@@ -478,18 +493,25 @@ class ClockOsc
 
     pinEnabled(pin)
     {
-        // TODO
-        return true;
+        return this.enabled;
     }
 
     signalConnection()
     {
-        // TODO
+    }
+
+    connectNet(pin, net)
+    {
+        this[pin.toLowerCase() + 'Net'] = net;
     }
 
     traceFromOutputs()
     {
-        if (true) this.oNet = this.oPath.traceFrom();
+        if (this.enabled)
+        {
+            this.oNet = this.oPath.traceFrom();
+            this.oNet.connectToDests();
+        }
     }
 
     renderBackground(ctx)

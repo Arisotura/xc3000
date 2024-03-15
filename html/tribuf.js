@@ -44,7 +44,10 @@ class TriBufDecoders
 
         var orignet = this.lineNets[line];
         if (!orignet)
+        {
             this.lineNets[line] = net;
+            net.connectToDests();
+        }
         else
             this.lineNets[line].merge(net);
 
@@ -287,6 +290,11 @@ class TriBuf
 
     signalConnection(pin)
     {
+    }
+
+    connectNet(pin, net)
+    {
+        this[pin.toLowerCase() + 'Net'] = net;
     }
 
     traceFromOutputs()
