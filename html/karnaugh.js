@@ -22,7 +22,7 @@ function formula5(n, labels)
 
 function formulaString(table, labels) {
   // Handle special cases (constant output)
-  if (table == 0xffff) {
+  if (table == 0xffffffff) {
     return "1";
   } else if (table == 0) {
     return "0";
