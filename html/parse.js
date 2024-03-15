@@ -290,15 +290,14 @@ function initDecoders()
 {
   pipDecoder = new PipDecoder();
   iobDecoders = new IobDecoders();
-  //bidiDecoder = new BidiDecoder();
-  //otherDecoder = new OtherDecoder();
   clbDecoders = new ClbDecoders;
   switchDecoders = new SwitchDecoders();
   tribufDecoders = new TriBufDecoders();
   pullupDecoders = new PullUpDecoders();
   clockDecoders = new ClockDecoders;
-  //decoders = [iobDecoders, pipDecoder, bidiDecoder, otherDecoder, clbDecoders, switchDecoders];
-  decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders, tribufDecoders, pullupDecoders, clockDecoders];
+  otherDecoder = new OtherDecoder();
+
+  decoders = [pipDecoder, iobDecoders, clbDecoders, switchDecoders, tribufDecoders, pullupDecoders, clockDecoders, otherDecoder];
   pipDecoder.generateLongLines();
   switchDecoders.generateLocalLines();
 }
@@ -317,41 +316,79 @@ function decode()
 
 
 
-class OtherDecoder {
-  constructor() {
+class OtherDecoder
+{
+  constructor()
+  {
+    this.inputLevels = '';
+    this.readback = '';
+    this.xtalOsc = '';
+    this.doneTime = '';
+    this.resetTime = '';
+    this.donePullup = '';
+    this.unk1 = '';
+    this.unk2 = '';
+    this.unk3 = '';
   }
 
-  startDecode() {
-    this.input = "";
-    this.donepad = "";
-    this.read = "";
-    this.unk = "";
-    this.entries = {};
-  }
+  decode()
+  {
+    var fam = curBitstream.family;
+    var o = getTileOffset(fam.cols, fam.rows);
 
-  add(str, bit) {
-    this.entries[str] = bit;
-  }
+    // input levels -- 0=CMOS 1=TTL
+    this.inputLevels = curBitstream.data[3+2][1]==0 ? 'CMOS' : 'TTL';
 
-  decode() {
-    this.input = this.entries["TTL/CMOS level Inputs"] ? "TTL" : "CMOS";
-    if (this.entries["Single/Unlimited FPGA readback if readback enabled"]) {
-      this.read = this.entries["FPGA readback Enabled/Disable"] ? "0" : "1";
-    } else {
-      this.read = "CMD";
+    // readback -- 11=no readback 10=readback once 00=readback infinite
+    var rb0 = curBitstream.data[o.y+4][4];
+    var rb1 = curBitstream.data[o.y+4][7+1];
+    if (rb0 == 0)
+    {
+      if (rb1 == 0)
+        this.readback = 'Infinite';
+      else
+        this.readback = 'Once';
     }
-    this.donepad = this.entries["DONE pin Pullup/No Pullup"] ? "NOPULLUP" : "PULLUP";
-    const unk = "" + this.entries["UNknown 1"] + this.entries["UNknown 2"] + this.entries["UNknown 3"] + this.entries["UNknown 4"];
-    if (unk != "1011") {
-      this.unk = "Unknown: " + unk;
+    else
+      this.readback = 'No';
+
+    // crystal oscillator
+    var co0 = curBitstream.data[o.y+1][o.x+11];
+    var co1 = curBitstream.data[o.y+1][o.x+13];
+    var co2 = curBitstream.data[o.y+2][o.x+12];
+    var co3 = curBitstream.data[o.y+2][o.x+11];
+    var co4 = curBitstream.data[o.y+3][o.x+13];
+    if (co0 == 0 && co1 == 0 && co2 == 0 && co3 == 0)
+    {
+      if (co4 == 0)
+        this.xtalOsc = 'Enabled, div2';
+      else
+        this.xtalOsc = 'Enabled';
     }
+    else
+      this.xtalOsc = 'Disabled';
+
+    // DONE time -- 0=after IOBs active 1=before IOBs active
+    this.doneTime = curBitstream.data[o.y+4][o.x+9]==0 ? 'After IOBs active' : 'Before IOBs active';
+
+    // RESET time -- 0=after IOBs active 1=before IOBs active
+    this.resetTime = curBitstream.data[o.y+4][o.x+10]==0 ? 'After IOBs active' : 'Before IOBs active';
+
+    // DONE pullup
+    this.donePullup = curBitstream.data[o.y+4][o.x+13]==0 ? 'Enabled' : 'Disabled';
+
+    // unknown, seen always 0
+    this.unk1 = curBitstream.data[0][o.x+2]==0 ? '0' : '1';
+    this.unk2 = curBitstream.data[o.y+4][o.x+4]==0 ? '0' : '1';
+    this.unk3 = curBitstream.data[o.y+4][o.x+6]==0 ? '0' : '1';
   }
 
-  info() {
-    return this.input + " " + this.donepad + " " + this.read + " " + this.unk;
+  renderBackground(ctx)
+  {
   }
 
-  render(ctx) {
+  render(ctx)
+  {
   }
 }
 
