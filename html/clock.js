@@ -219,6 +219,26 @@ class ClockDecoders
     {
         Object.entries(this.clocks).forEach(([name, obj]) => obj.render(ctx));
     }
+
+
+    reset()
+    {
+        Object.entries(this.clocks).forEach(([name, obj]) => obj.reset());
+    }
+
+    update(excludeList)
+    {
+        var updates = 0;
+        Object.entries(this.clocks).forEach(([name, obj]) =>
+        {
+            if (excludeList[name]) return;
+            if (!obj.dirty) return;
+            obj.update();
+            updates++;
+            excludeList[name] = true;
+        });
+        return updates;
+    }
 }
 
 
@@ -429,6 +449,32 @@ class ClockBuf
     info() {
         return "TODO";
     }
+
+
+    reset()
+    {
+        this.input = 0;
+        this.dirty = false;
+    }
+
+    setLevel(name, val)
+    {
+        if (name == 'I')
+        {
+            if (val == this.input) return;
+            this.input = val;
+            this.dirty = true;
+        }
+    }
+
+    update()
+    {
+        if (!this.enabled) return;
+        if (!this.dirty) return;
+        this.dirty = false;
+
+        if (this.oNet) this.oNet.propagate(this.input);
+    }
 }
 
 
@@ -539,5 +585,32 @@ class ClockOsc
 
     info() {
         return "TODO";
+    }
+
+
+    reset()
+    {
+        this.input = 0;
+        this.dirty = false;
+    }
+
+    setLevel(name, val)
+    {
+    }
+
+    setInput(val)
+    {
+        if (val == this.input) return;
+        this.input = val;
+        this.dirty = true;
+    }
+
+    update()
+    {
+        if (!this.enabled) return;
+        if (!this.dirty) return;
+        this.dirty = false;
+
+        if (this.oNet) this.oNet.propagate(this.input);
     }
 }

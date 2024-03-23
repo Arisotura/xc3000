@@ -49,6 +49,9 @@ class SwitchDecoders
     {
         Object.entries(this.switches).forEach(([name, obj]) => obj.render(ctx));
     }
+
+    reset() {}
+    update(excludeList) { return 0; }
 }
 
 

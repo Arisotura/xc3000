@@ -11,10 +11,6 @@ class ClbDecoders {
     }
   }
 
-  reset() {
-    Object.entries(this.clbDecoders).forEach(([k, c]) => c.reset());
-  }
-
   get(tile) {
     return this.clbDecoders[tile];
   }
@@ -44,6 +40,27 @@ class ClbDecoders {
 
   render(ctx) {
     Object.entries(this.clbDecoders).forEach(([tile, obj]) => obj.render(ctx));
+  }
+
+  reset() {
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.reset());
+  }
+
+  update(excludeList) {
+    var updates = 0;
+    Object.entries(this.clbDecoders).forEach(([k, c]) =>
+    {
+      if (excludeList[k]) return;
+      if (!c.dirty) return;
+      c.update();
+      updates++;
+      excludeList[k] = true;
+    });
+    return updates;
+  }
+
+  propagateOutputs() {
+    Object.entries(this.clbDecoders).forEach(([k, c]) => c.propagateOutputs());
   }
 }
 
@@ -90,46 +107,9 @@ class ClbDecoder {
     this.kEnable = false;
     this.kInvert = false;
 
+    this.dataLoopback = {};
     this.dataUsed = {};
     this.lutEquation = {'F':'0', 'G':'0'};
-  }
-
-  reset()
-  {
-    this.levels = {A:0, B:0, C:0, D:0, Q:0, K:0, F:0, G:0, X:0, Y:0};
-    this.clbInternal.reset();
-  }
-
-  setLevel(name, val)
-  {
-    //console.log('CLB '+this.tile+' SET LEVEL '+name+'='+val);
-    if (val != this.levels[name])
-    {
-      //if (this.tile == 'JJ') console.log('CLB '+this.tile+' SET LEVEL '+name+'='+val);
-      this.levels[name] = val;
-      //this.dirty[name] = true;
-    }
-  }
-
-  update()
-  {
-    /*this.dirty['A'] = false;
-    this.dirty['B'] = false;
-    this.dirty['C'] = false;
-    this.dirty['D'] = false;
-    this.dirty['K'] = false;*/
-
-    this.clbInternal.compute(this.levels);
-    
-    var levels = this.levels;
-    this.destList.forEach(function(dest)
-    {
-      propagateLevel(dest, levels['X']);
-    });
-    this.destList2.forEach(function(dest)
-    {
-      propagateLevel(dest, levels['Y']);
-    });
   }
 
   genCoords(name)
@@ -638,16 +618,19 @@ class ClbDecoder {
       this.is5Input = false;
     }
 
-    this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) ||
+    this.dataLoopback['X'] =
         (this.lutInput['F'][1] == 'QX' && this.inputUsed['F'][1]) ||
         (this.lutInput['F'][2] == 'QX' && this.inputUsed['F'][2]) ||
         (this.lutInput['G'][1] == 'QX' && this.inputUsed['G'][1]) ||
         (this.lutInput['G'][2] == 'QX' && this.inputUsed['G'][2]);
-    this.dataUsed['Y'] = (this.output['Y'] == 'QY' && this.yEnable) ||
+    this.dataLoopback['Y'] =
         (this.lutInput['F'][1] == 'QY' && this.inputUsed['F'][1]) ||
         (this.lutInput['F'][2] == 'QY' && this.inputUsed['F'][2]) ||
         (this.lutInput['G'][1] == 'QY' && this.inputUsed['G'][1]) ||
         (this.lutInput['G'][2] == 'QY' && this.inputUsed['G'][2]);
+
+    this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) || this.dataLoopback['X'];
+    this.dataUsed['Y'] = (this.output['Y'] == 'QY' && this.yEnable) || this.dataLoopback['Y'];
 
     var dataenable = this.dataUsed['X'] || this.dataUsed['Y'];
     this.diEnable = dataenable && ((this.dataInput['X'] == 'DI') || (this.dataInput['Y'] == 'DI'));
@@ -701,16 +684,8 @@ class ClbDecoder {
 
     if (pin == 'X' || pin == 'Y')
     {
-      this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) ||
-          (this.lutInput['F'][1] == 'QX' && this.inputUsed['F'][1]) ||
-          (this.lutInput['F'][2] == 'QX' && this.inputUsed['F'][2]) ||
-          (this.lutInput['G'][1] == 'QX' && this.inputUsed['G'][1]) ||
-          (this.lutInput['G'][2] == 'QX' && this.inputUsed['G'][2]);
-      this.dataUsed['Y'] = (this.output['Y'] == 'QY' && this.yEnable) ||
-          (this.lutInput['F'][1] == 'QY' && this.inputUsed['F'][1]) ||
-          (this.lutInput['F'][2] == 'QY' && this.inputUsed['F'][2]) ||
-          (this.lutInput['G'][1] == 'QY' && this.inputUsed['G'][1]) ||
-          (this.lutInput['G'][2] == 'QY' && this.inputUsed['G'][2]);
+      this.dataUsed['X'] = (this.output['X'] == 'QX' && this.xEnable) || this.dataLoopback['X'];
+      this.dataUsed['Y'] = (this.output['Y'] == 'QY' && this.yEnable) || this.dataLoopback['Y'];
 
       var dataenable = this.dataUsed['X'] || this.dataUsed['Y'];
       this.diEnable = dataenable && ((this.dataInput['X'] == 'DI') || (this.dataInput['Y'] == 'DI'));
@@ -804,6 +779,133 @@ class ClbDecoder {
 
   isInside(x, y) {
     return x >= this.screenPt.x && x < this.screenPt.x + this.W && y >= this.screenPt.y && y < this.screenPt.y + this.H;
+  }
+
+
+  reset()
+  {
+    this.levels = {A:0, B:0, C:0, D:0, E:0, K:0, EC:0, DI:0, RD:0, QX:0, QY:0, F:0, G:0, X:0, Y:0};
+    this.stoClock = 0;
+    this.dirty = true;
+  }
+
+  setLevel(name, val)
+  {
+    //if (this.tile=='EH' && name=='A') console.log('BOURF [5] EH.A='+val);
+    if (val == this.levels[name]) return;
+    /*if (this.tile=='FG' && name=='C') console.log('[7] FG.C='+val);
+    if (this.tile=='FH' && name=='A') console.log('[6] FH.A='+val);
+    if (this.tile=='EH' && name=='A') console.log('[5] EH.A='+val);
+    if (this.tile=='EG' && name=='A') console.log('[4] EG.A='+val);
+    if (this.tile=='FE' && name=='E') console.log('[3] FE.E='+val);
+    if (this.tile=='FD' && name=='B') console.log('[2] FD.B='+val);
+    if (this.tile=='FC' && name=='C') console.log('[1] FC.C='+val);
+    if (this.tile=='FE' && name=='K') console.log('[3] FE.K='+val);
+    if (this.tile=='EG' && name=='K') console.log('[4] EG.K='+val);*/
+    this.levels[name] = val;
+    this.dirty = true;
+  }
+
+  update()
+  {
+    if (!this.dirty) return;
+    this.dirty = false;
+
+    function logic(lut, levels, inp)
+    {
+      var idx = levels[inp[0]] | (levels[inp[1]] << 1) | (levels[inp[2]] << 2) | (levels[inp[3]] << 3);
+      return (lut >> idx) & 1;
+    }
+
+    // 1. logic tables
+
+    var f = logic(this.lut['F'], this.levels, this.lutInput['F']);
+    var g = logic(this.lut['G'], this.levels, this.lutInput['G']);
+    if (this.fgMux)
+    {
+      this.levels['F'] = this.levels['E'] ? g : f;
+      this.levels['G'] = this.levels['F'];
+    }
+    else
+    {
+      this.levels['F'] = f;
+      this.levels['G'] = g;
+    }
+
+    /*if (this.tile=='FE' || this.tile=='EG')
+    {
+      console.log('-- '+this.tile+' --');
+      console.log(this.levels['A']+':'+this.levels['B']+':'+this.levels['C']+':'+this.levels['D']+':'+this.levels['E']);
+      console.log(this.levels['F']+':'+this.levels['G']+':'+this.levels['QX']+':'+this.levels['QY']+':'+this.levels['K']);
+      console.log(this.lut['F'].toString(2).padStart(16,'0')+':'+this.lut['G'].toString(2).padStart(16,'0'));
+    }*/
+
+    // 2. storage elements
+
+    var ec = this.ecEnable ? this.levels['EC'] : 1;
+    var rd = this.rdEnable ? this.levels['RD'] : 0;
+
+    var clk;
+    if (this.kInvert)
+      clk = (this.stoClock == 1) && (this.levels['K'] == 0);
+    else
+      clk = (this.stoClock == 0) && (this.levels['K'] == 1);
+
+    if (rd)
+    {
+      this.levels['QX'] = 0;
+      this.levels['QY'] = 0;
+    }
+    else if (ec && clk)
+    {
+      this.levels['QX'] = this.levels[this.dataInput['X']];
+      this.levels['QY'] = this.levels[this.dataInput['Y']];
+    }
+
+    /*if (this.tile=='FE' || this.tile=='EG')
+    {
+      console.log('-- '+this.tile+' --');
+      console.log(this.levels['A']+':'+this.levels['B']+':'+this.levels['C']+':'+this.levels['D']+':'+this.levels['E']);
+      console.log(this.levels['F']+':'+this.levels['G']+':'+this.levels['QX']+':'+this.levels['QY']+':'+this.stoClock+':'+this.levels['K']+':'+clk);
+      console.log(this.lut['F'].toString(2).padStart(16,'0')+':'+this.lut['G'].toString(2).padStart(16,'0'));
+    }*/
+
+    this.stoClock = this.levels['K'];
+
+    // 3. repeat logic table stage if any of the flipflops feed back into the LUTs
+
+    /*if (this.dataLoopback['X'] || this.dataLoopback['Y'])
+    {
+      f = logic(this.lut['F'], this.levels, this.lutInput['F']);
+      g = logic(this.lut['G'], this.levels, this.lutInput['G']);
+      if (this.fgMux)
+      {
+        this.levels['F'] = this.levels['E'] ? g : f;
+        this.levels['G'] = this.levels['F'];
+      }
+      else
+      {
+        this.levels['F'] = f;
+        this.levels['G'] = g;
+      }
+    }*/
+
+    // 4. output
+
+    this.levels['X'] = this.levels[this.output['X']];
+    this.levels['Y'] = this.levels[this.output['Y']];
+
+    //if (this.tile=='FE') console.log('propagate FE.Y', this.levels['Y']);
+    //if (this.tile=='EG') console.log('propagate EG.Y', this.levels['Y']);
+
+    //if (this.xNet) this.xNet.propagate(this.levels['X']);
+    //if (this.yNet) this.yNet.propagate(this.levels['Y']);
+  }
+
+  propagateOutputs()
+  {
+    if (this.xNet) this.xNet.propagate(this.levels['X']);
+    if (this.yNet) this.yNet.propagate(this.levels['Y']);
   }
 }
 

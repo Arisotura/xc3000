@@ -1,4 +1,26 @@
 
+// levels
+
+const L_LO = 0;
+const L_HI = 1;
+const L_Z = 2;
+const L_PULLUP = 0x80;
+
+function calcLevel(val)
+{
+    if ((val & 0xF) == L_Z)
+    {
+        if (val & L_PULLUP)
+            val = 1;
+        else
+            val = 0; // checkme
+    }
+    else
+        val &= 0x1;
+
+    return val;
+}
+
 // define clock/inputs/outputs for the emulator here
 
 // clock: divided in 8 periods
@@ -168,47 +190,28 @@ function propagateLevel(dest, val)
 function doUpdates()
 {
     var iter = 0, updtotal = 0;
+    //var excludeList = {};
 
     //var updIOB = iobDecoders.update();
     //updtotal += updIOB;
 
     for (var i = 0; i < 1000; i++)
     {
-        var updlist = [];
-
-        var updIOB = iobDecoders.update();
-        updtotal += updIOB;
-
-        // do the clocks first
-        if (emuDirtyList['CLK.AA.I'] && (!emuUpdateList['CLK.AA.I']))
-            updlist.push('CLK.AA.I');
-        if (emuDirtyList['CLK.KK.I'] && (!emuUpdateList['CLK.KK.I']))
-            updlist.push('CLK.KK.I');
-
-        for (var j = 0; j < 10; j++)
+        var excludeList = {};
+        var upd = 0;
+        iobDecoders.propagateOutputs();
+        clbDecoders.propagateOutputs();
+        decoders.forEach(d =>
         {
-            for (var k = 0; k < 10; k++)
-            {
-                var v = "ABCDEFGHIJ"[j]+"ABCDEFGHIJ"[k];
-                if (emuDirtyList[v] && (!emuUpdateList[v]))
-                    updlist.push(v);
-            }
-        }
-
-        if (updlist.length==0) break;
-
-        updlist.forEach(function(v)
-        {
-            clbDecoders.get(v).update();
-            emuUpdateList[v] = true;
-
-            updtotal++;
+            upd += d.update(excludeList);
         });
+        if (upd == 0) break;
 
+        updtotal += upd;
         iter++;
     }
 
-    console.log("-- Updates done: "+iter+" iterations, "+updtotal+" updates --");
+    //console.log("-- Updates done: "+iter+" iterations, "+updtotal+" updates --");
 }
 
 
@@ -278,6 +281,117 @@ function getOutputPins(info)
 
     if (info.invert) val = ~val;
     return val & info.mask;
+}
+
+function emuTest()
+{
+    decoders.forEach(d => d.reset());
+
+    iobDecoders.getFromPin('P26').setInput(1);
+    iobDecoders.getFromPin('P13').setInput(0);
+    doUpdates();
+
+    hcount = ['EB.X', 'FC.Y', 'FD.Y', 'FE.Y', 'EG.Y', 'EH.Y', 'FH.X', 'FG.X'];
+    hcount2 = ['EB.X', 'FC.Y', 'FD.X', 'FE.X', 'EG.X', 'EH.X', 'FH.Y', 'FG.X'];
+
+    var oldhs = 1, oldvs = 1, oldblk = 1;
+    /*for (var i = 0; i <= 125; i++)
+    {
+        iobDecoders.getFromPin('P13').setInput(1);
+        doUpdates();
+        //console.log('----');
+        //doUpdates();
+        iobDecoders.getFromPin('P13').setInput(0);
+        doUpdates();
+        //doUpdates();
+
+        var hs = iobDecoders.getFromPin('P7').getOutput();
+        var vs = iobDecoders.getFromPin('P4').getOutput();
+        var blk = iobDecoders.getFromPin('P5').getOutput();
+
+        var hc1 = 0, hc2 = 0;
+        for (var j = 0; j < hcount.length; j++)
+        {
+            let zazz = hcount[j].split('.');
+            let bit = clbDecoders.get(zazz[0]).levels[zazz[1]];
+            hc1 |= (bit << j);
+
+            zazz = hcount2[j].split('.');
+            bit = clbDecoders.get(zazz[0]).levels[zazz[1]];
+            hc2 |= (bit << j);
+        }
+
+        if (hs != oldhs)
+        {
+            if (hs) console.log('['+(i*8)+'] HSYNC END');
+            else console.log('['+(i*8)+'] HSYNC START');
+            oldhs = hs;
+        }
+        if (blk != oldblk)
+        {
+            if (blk) console.log('['+(i*8)+'] HBLANK END');
+            else console.log('['+(i*8)+'] HBLANK START');
+            oldblk = blk;
+        }
+
+        //console.log((i*8)+': HS='+hs+' VS='+vs+' BLK='+blk+' HC='+hc1.toString(16)+'/'+hc2.toString(16));
+    }*/
+
+
+    oldvs = 1; oldhs = 1; oldblk = 1;
+    for (var i = 0; i <= 100*600; i++)
+    {
+        iobDecoders.getFromPin('P13').setInput(1);
+        doUpdates();
+        //console.log('----');
+        //doUpdates();
+        iobDecoders.getFromPin('P13').setInput(0);
+        doUpdates();
+        //doUpdates();
+
+        var hs = iobDecoders.getFromPin('P7').getOutput();
+        var vs = iobDecoders.getFromPin('P4').getOutput();
+        var blk = iobDecoders.getFromPin('P5').getOutput();
+
+        /*var hc1 = 0, hc2 = 0;
+        for (var j = 0; j < hcount.length; j++)
+        {
+            let zazz = hcount[j].split('.');
+            let bit = clbDecoders.get(zazz[0]).levels[zazz[1]];
+            hc1 |= (bit << j);
+
+            zazz = hcount2[j].split('.');
+            bit = clbDecoders.get(zazz[0]).levels[zazz[1]];
+            hc2 |= (bit << j);
+        }*/
+
+        var line = Math.floor(i/100)%525;
+        var pixel = ((i%100)*8);
+
+        if (hs != oldhs)
+        {
+            if (hs) console.log('['+line+','+pixel+'] HSYNC END');
+            else console.log('['+line+','+pixel+'] HSYNC START');
+            oldhs = hs;
+        }
+        if (vs != oldvs)
+        {
+            if (vs) console.log('['+line+','+pixel+'] VSYNC END');
+            else console.log('['+line+','+pixel+'] VSYNC START');
+            oldvs = vs;
+        }
+        if (blk != oldblk)
+        {
+            //if (line >= 479)
+            {
+                if (blk) console.log('[' + line + ','+pixel+'] BLANK END');
+                else console.log('[' + line + ','+pixel+'] BLANK START');
+            }
+            oldblk = blk;
+        }
+
+        //console.log((i*8)+': HS='+hs+' VS='+vs+' BLK='+blk+' HC='+hc1.toString(16)+'/'+hc2.toString(16));
+    }
 }
 
 function emuReset()

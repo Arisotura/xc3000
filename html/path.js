@@ -566,7 +566,7 @@ class Net
     appendEndpoint(elem)
     {
         var obj = elem.obj;
-        var pin = obj.describePin(elem.pin);
+        var pin = elem.pin;
 
         this.elemStack.push({type:'endpoint', x:elem.gPt.x, y:elem.gPt.y, obj:obj, pin:pin, keep:true});
         if (!(elem.obj instanceof Switch))
@@ -789,6 +789,17 @@ class Net
 
             let coord = getSCoords(n);
             ctx.strokeRect(coord.x-1, coord.y-1, 2, 2);
+        });
+    }
+
+    // propagate a level through the net
+    propagate(val)
+    {
+        val = calcLevel(val);
+
+        this.destList.forEach((elem) =>
+        {
+            elem.obj.setLevel(elem.pin, val);
         });
     }
 }

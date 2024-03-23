@@ -72,6 +72,52 @@ class TriBufDecoders
         Object.entries(this.tribufs).forEach(([name, obj]) => obj.render(ctx));
         Object.entries(this.lineNets).forEach(([line, net]) => net.draw(ctx));
     }
+
+
+    reset()
+    {
+        this.lineLevels = {};
+        this.lineDirty = {};
+        Object.entries(this.tribufs).forEach(([name, obj]) => obj.reset());
+    }
+
+    setLineLevel(line, level)
+    {
+        if (typeof this.lineLevels[line] == 'undefined')
+        {
+            this.lineLevels[line] = level;
+        }
+        else if ((level & 0xF) != L_Z)
+        {
+            var old = this.lineLevels[line];
+            if ((old & 0xF) == L_Z)
+            {
+                this.lineLevels[line] = level;
+            }
+            else if (level != old)
+            {
+                console.log(line + ': contention');
+                this.lineLevels[line] = 1; // checkme
+            }
+        }
+
+        this.lineDirty[line] = true;
+    }
+
+    update(excludeList)
+    {
+        pullupDecoders.doUpdate(excludeList);
+        Object.entries(this.tribufs).forEach(([name, obj]) => obj.update());
+
+        Object.entries(this.lineLevels).forEach(([line, level]) =>
+        {
+            if (!this.lineDirty[line]) return;
+
+            if (this.lineNets[line]) this.lineNets[line].propagate(level);
+        });
+
+        return 0;
+    }
 }
 
 
@@ -354,5 +400,34 @@ class TriBuf
 
     info() {
         return "TODO";
+    }
+
+
+    reset()
+    {
+        this.levels = {I: 0, O: 0, T: 0};
+        this.dirty = false;
+    }
+
+    setLevel(name, val)
+    {
+        if (val == this.levels[name]) return;
+        this.levels[name] = val;
+        this.dirty = true;
+    }
+
+    update()
+    {
+        if (!this.enabled) return;
+        //if (!this.dirty) return;
+        this.dirty = false;
+
+        var level;
+        if (this.levels['T'] == 0)
+            level = this.levels['I'];
+        else
+            level = L_Z;
+
+        TriBufDecoders.setLineLevel(this.line, level);
     }
 }

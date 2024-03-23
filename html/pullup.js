@@ -54,6 +54,20 @@ class PullUpDecoders
     {
         Object.entries(this.pullups).forEach(([name, obj]) => obj.render(ctx));
     }
+
+
+    reset()
+    {
+        Object.entries(this.pullups).forEach(([name, obj]) => obj.reset());
+    }
+
+    update(excludeList) {return 0;}
+
+    doUpdate(excludeList)
+    {
+        Object.entries(this.pullups).forEach(([name, obj]) => obj.update());
+        return 0;
+    }
 }
 
 
@@ -185,5 +199,21 @@ class PullUp
 
     info() {
         return "TODO";
+    }
+
+
+    reset()
+    {
+    }
+
+    setLevel(name, val)
+    {
+    }
+
+    update()
+    {
+        if (!this.enabled) return;
+
+        TriBufDecoders.setLineLevel(this.line, L_Z | L_PULLUP);
     }
 }

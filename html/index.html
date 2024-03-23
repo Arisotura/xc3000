@@ -179,6 +179,11 @@ $(document).ready(function() {
         layoutClick(x, y, 1);
       //}
     });
+
+    $('#test').on('click', function()
+    {
+      emuTest();
+    });
   }
 
 
@@ -262,6 +267,7 @@ $(document).ready(function() {
 <body>
 This program decodes an XC3000 bitmap file.
 To use, drag-and-drop an .RBT file onto this page, or load a file by clicking: <input type="file" id="fileupload">
+<button id="test">Test</button>
 <div id="header">
 <div id="modetext" style="display:none">
   <div id="chip_sel">

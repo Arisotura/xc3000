@@ -45,31 +45,39 @@ class IobDecoders {
 
     onChangePackage()
     {
-        Object.entries(this.iobs).forEach(([name, obj]) => obj.setPinName(curPackage[obj.pad]));
+        this.iobsFromPin = {};
+        Object.entries(this.iobs).forEach(([name, obj]) =>
+        {
+            let pin = curPackage[obj.pad];
+            obj.setPinName(pin);
+            this.iobsFromPin[pin] = obj;
+        });
     }
 
-  reset() {
-    const self = this;
-    pads.forEach(function([pin, tile, style, pad]) {
-      self.iobs[pad].reset();
-    });
+  reset()
+  {
+      Object.entries(this.iobs).forEach(([name, obj]) => obj.reset());
   }
 
-  update()
+  update(excludeList)
   {
     const self = this;
     var updates = 0;
-    pads.forEach(function([pin, tile, style, pad]) {
-      //console.log("IOB PAD "+pad+" STARTDECODE");
-      var iob = self.iobs[pad];
-      if (iob.dirty)
+      Object.entries(this.iobs).forEach(([pad, iob]) =>
       {
-        iob.update();
-        updates++;
-      }
-    });
+          if (excludeList[pad]) return;
+          if (!iob.dirty) return;
+          iob.update();
+          updates++;
+          excludeList[pad] = true;
+      });
     return updates;
   }
+
+    propagateOutputs()
+    {
+        Object.entries(this.iobs).forEach(([name, obj]) => obj.propagateOutputs());
+    }
 
   decode()
   {
@@ -232,85 +240,11 @@ class Iob
         this.iEnable = false;
         this.qEnable = false;
         this.clkiEnable = false;
-
-        this.input = 2;
-        this.levels = {I: 1, O: 0, T: 0};
-        this.dirty = true;
     }
 
     setPinName(pin)
     {
         this.pin = pin;
-    }
-
-    reset()
-    {
-        this.input = 2;
-        this.levels = {I: 1, O: 0, T: 0};
-        this.dirty = true;
-    }
-
-    setLevel(name, val)
-    {
-        //console.log('IO '+this.pin+'.'+name+' = '+val+' (in='+this.input+')');
-
-        if (name == 'I')
-        {
-            this.input = val;
-
-            if (this.input == 2)
-            {
-                var o = this.getOutput();
-                if (o == 2)
-                    val = 1; // input pull-up
-                else
-                    val = o;
-            }
-        }
-
-        if (val != this.levels[name])
-        {
-            this.levels[name] = val;
-            if (name == 'I') this.dirty = true;
-            else
-            {
-                // loop back output into input if output is active
-                this.setLevel('I', this.input);
-            }
-        }
-    }
-
-    getOutput()
-    {
-        if (this.tmode == 'ON')
-        {
-            // simple output
-            return this.levels['O'];
-        } else if (this.tmode == 'TRI')
-        {
-            // tri-state
-            // CHECKME.
-            if (this.levels['T'])
-                return 2;
-            else
-                return this.levels['O'];
-        } else
-        {
-            //console.log('reading output of non-output IOB '+this.pin);
-            return 2;
-        }
-    }
-
-    update()
-    {
-        if (!this.dirty) return;
-        this.dirty = false;
-
-        var levels = this.levels;
-        this.destList.forEach(function (dest)
-        {
-            propagateLevel(dest, levels['I']);
-        });
     }
 
     setClockInvert(num, val)
@@ -1169,6 +1103,134 @@ class Iob
     {
         // return "IOB " + this.pin + " " + this.tile + " " + this.style + " " + this.pips + this.data.join(", ");
         return "o" + this.muxo + " t" + this.muxt + " k" + this.muxk + " " + (this.latch ? "Q" : "PAD") + " " + this.tmode;
+    }
+
+
+    reset()
+    {
+        this.input = L_Z;
+        this.output = L_Z;
+        this.levels = {I: 0, Q: 0, O: 0, T: 0};
+        this.iStorage = 0;
+        this.oStorage = 0;
+        this.iStoClock = 0;
+        this.oStoClock = 0;
+        this.dirty = true;
+    }
+
+    setLevel(name, val)
+    {
+        if (val == this.levels[name]) return;
+        this.levels[name] = val;
+        this.dirty = true;
+    }
+
+    setInput(val)
+    {
+        if (val == this.input) return;
+        this.input = val;
+        this.dirty = true;
+    }
+
+    getOutput()
+    {
+        return this.output;
+    }
+
+    update()
+    {
+        if (!this.dirty) return;
+        this.dirty = false;
+
+        // 1. output
+
+        if (this.oEnable)
+        {
+            var o = this.levels['O'];
+            if (this.oInvert) o ^= 1;
+
+            if (this.oLatch)
+            {
+                var ok;
+                if (this.okInvert)
+                    ok = (this.oStoClock == 1) && (this.levels['OK'] == 0);
+                else
+                    ok = (this.oStoClock == 0) && (this.levels['OK'] == 1);
+
+                if (ok) this.oStorage = o;
+                o = this.oStorage;
+
+                this.oStoClock = this.levels['OK'];
+            }
+
+            if (this.tEnable)
+            {
+                var t = this.levels['T'];
+                if (this.tInvert) t ^= 1;
+
+                if (t == 1) o = L_Z;
+            }
+
+            this.output = o;
+        }
+        else
+            this.output = L_Z;
+
+        // 2. input
+        // if both input and output are enabled, active output may loop back into input
+
+        var i = this.input;
+        if (i == L_Z)
+        {
+            i = this.output;
+        }
+        else
+        {
+            if (this.output != L_Z && i != this.output)
+            {
+                console.log(this.pin + ': contention');
+                i = 1; // checkme
+            }
+        }
+
+        if (this.iPullup && !this.oEnable)
+        {
+            if (i == L_Z)
+                i = L_HI;
+        }
+
+        this.levels['I'] = i;
+
+        // checkme
+        if (this.clkin)
+            this.levels['CLKI'] = i;
+
+        var ik;
+        if (this.iLatch)
+        {
+            if (this.ikInvert)
+                ik = (this.levels['IK'] == 0);
+            else
+                ik = (this.levels['IK'] == 1);
+        }
+        else
+        {
+            if (this.ikInvert)
+                ik = (this.iStoClock == 1) && (this.levels['IK'] == 0);
+            else
+                ik = (this.iStoClock == 0) && (this.levels['IK'] == 1);
+        }
+
+        if (ik) this.iStorage = i;
+        this.levels['Q'] = this.iStorage;
+
+        this.iStoClock = this.levels['IK'];
+    }
+
+    propagateOutputs()
+    {
+        if (this.iNet) this.iNet.propagate(this.levels['I']);
+        if (this.qNet) this.qNet.propagate(this.levels['Q']);
     }
 }
 

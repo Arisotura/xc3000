@@ -390,6 +390,9 @@ class OtherDecoder
   render(ctx)
   {
   }
+
+  reset() {}
+  update(excludeList) { return 0; }
 }
 
 
