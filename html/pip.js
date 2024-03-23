@@ -70,7 +70,7 @@ class PipDecoder
         var hpos = '', vpos = '';
 
         if (col == fam.cols)
-            vpos = ':7:5:7:6';
+            vpos = ':-1:5:-1:6';
         else if (col == 0)
             vpos = {0:'', 3:':-5:13:-5:12', 5:':-5:13:-5:12'}[vbidi];
         else
@@ -457,4 +457,7 @@ class PipDecoder
             ctx.strokeStyle = '#aaa';
         }
     }
+
+    reset() {}
+    update(excludeList) { return 0; }
 }
