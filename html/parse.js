@@ -381,6 +381,16 @@ class OtherDecoder
     this.unk1 = curBitstream.data[0][o.x+2]==0 ? '0' : '1';
     this.unk2 = curBitstream.data[o.y+4][o.x+4]==0 ? '0' : '1';
     this.unk3 = curBitstream.data[o.y+4][o.x+6]==0 ? '0' : '1';
+
+    var info = 'Input levels: ' + this.inputLevels;
+    info += ' | Readback: ' + this.readback;
+    info += ' | Crystal osc.: ' + this.xtalOsc;
+    info += ' | DONE time: ' + this.doneTime;
+    info += ' | RESET time: ' + this.resetTime;
+    info += ' | DONE pullup: ' + this.donePullup;
+    info += ' | Unknown: ' + this.unk1 + this.unk2 + this.unk3;
+
+    $('#info0').html(info);
   }
 
   renderBackground(ctx)

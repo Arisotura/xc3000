@@ -27,7 +27,7 @@ function calcLevel(val)
 // P13 is NuBus clock with 75% duty cycle
 // P11 is same clock but offset by 48ns (approximated to 50ns here)
 var emuClocks = {
-    'CLKIN0': {
+    /*'CLKIN0': {
         pins: 13,
         period: 8,
         offset: 0,
@@ -38,11 +38,11 @@ var emuClocks = {
         period: 8,
         offset: 4,
         duty: 6
-    }
+    }*/
 };
 
 var emuInputs = {
-    'AD0..23': {
+    /*'AD0..23': {
         pins: [29, 28, 56, 58, 60, 62, 65, 67,
                 69, 71, 76, 14, 16, 18, 20, 23,
                 78, 80, 82, 84, 3, 5, 7, 9],
@@ -63,7 +63,7 @@ var emuInputs = {
     /*'ACK': {
         pins: 40,
         dummy: 1,
-    },*/
+    },*-/
     'P2': {
         pins: 2,
     },
@@ -72,11 +72,11 @@ var emuInputs = {
     },
     'P52': {
         pins: 52,
-    },
+    },*/
 };
 
 var emuOutputs = {
-    'CLKOUT': {
+    /*'CLKOUT': {
         pins: 10,
     },
     'A0..23': {
@@ -140,14 +140,14 @@ var emuOutputs = {
     },
     'P53': {
         pins: 53,
-    },
+    },*/
 }
 
 
 var emuDirtyList = [];
 var emuUpdateList = [];
 
-function setInputPin(pin, val)
+/*function setInputPin(pin, val)
 {
     var iob = iobDecoders.getFromPin('P'+pin);
     if (typeof iob != 'undefined')
@@ -161,31 +161,7 @@ function getOutputPin(pin)
         return iob.getOutput();
 
     return 0;
-}
-
-function propagateLevel(dest, val)
-{
-    var v = dest.split(':');
-    var o = undefined;
-
-    switch (v[0])
-    {
-    case 'IOB':
-        o = iobDecoders.getFromPin(v[1]);
-        break;
-    case 'CLB':
-        o = clbDecoders.get(v[1]);
-        emuDirtyList[v[1]] = true;
-        break;
-    case 'CLK':
-        o = clbDecoders.get('CLK.'+v[1]+'.I');
-        emuDirtyList['CLK.'+v[1]+'.I'] = true;
-        break;
-    }
-
-    if (typeof o != 'undefined')
-        o.setLevel(v[2], val);
-}
+}*/
 
 function doUpdates()
 {
@@ -223,7 +199,7 @@ var emuLength = 8*8;
 
 var num = 0;
 
-function setInputPins(info)
+/*function setInputPins(info)
 {
     var val = info.val;
     
@@ -281,7 +257,7 @@ function getOutputPins(info)
 
     if (info.invert) val = ~val;
     return val & info.mask;
-}
+}*/
 
 function emuTest()
 {
@@ -394,7 +370,7 @@ function emuTest()
     }
 }
 
-function emuReset()
+/*function emuReset()
 {
     emuDirtyList = [];
     emuUpdateList = [];
@@ -798,5 +774,5 @@ function emuDraw(ctx)
 
         ypos += yline;
     });
-}
+}*/
  

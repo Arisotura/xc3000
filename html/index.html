@@ -133,7 +133,7 @@ $(document).ready(function() {
       redraw(ctx);
     });
 
-    $('#mode').on('change', function() {
+    /*$('#mode').on('change', function() {
       redraw(ctx);
     });
 
@@ -148,7 +148,7 @@ $(document).ready(function() {
         $('#colortext').css('display', 'none'); // Hide the legend
       }
       redraw(ctx);
-    });
+    });*/
 
     $("#canvas").mousemove(function(e) {
       var offset = $(this).offset();
@@ -180,10 +180,10 @@ $(document).ready(function() {
       //}
     });
 
-    $('#test').on('click', function()
+    /*$('#test').on('click', function()
     {
       emuTest();
-    });
+    });*/
   }
 
 
@@ -240,19 +240,7 @@ $(document).ready(function() {
     return $("#mode").val();
   }
 
-
-  /*loadConfig(initStuff);
-
-  function initStuff() {
-    initParser();
-    initHandlers();
-    drawLayout(ctx);
-  }*/
-
-  //initParser();
   initHandlers();
-  //drawLayout(ctx);
-
 
 });
 </script>
@@ -266,8 +254,8 @@ $(document).ready(function() {
 </head>
 <body>
 This program decodes an XC3000 bitmap file.
-To use, drag-and-drop an .RBT file onto this page, or load a file by clicking: <input type="file" id="fileupload">
-<button id="test">Test</button>
+To use, drag-and-drop an .rbt or .bin file onto this page, or load a file by clicking: <input type="file" id="fileupload">
+<!--<button id="test">Test</button>-->
 <div id="header">
 <div id="modetext" style="display:none">
   <div id="chip_sel">
@@ -279,18 +267,18 @@ To use, drag-and-drop an .RBT file onto this page, or load a file by clicking: <
     <label><input type="checkbox" id="debug"> Debug view</label>
   </div>
 <!--Select either the graphical layout display or the raw bitstream:-->
-<select id="mode" style="display:none;"><option value="layout" selected>Layout</option><option value="bitstream">Bitstream</option></select>
+<!--<select id="mode" style="display:none;"><option value="layout" selected>Layout</option><option value="bitstream">Bitstream</option></select>-->
 <br/>
-Click a CLB for more info.
+Right-click a CLB for more info.
 </div>
-<span id="bitstreamSpan" style="display:none">
+<!--<span id="bitstreamSpan" style="display:none">
 Default bit values are grayed out.
 Display: <input type="checkbox" id="labels" value="Labels" checked>Labels</input>
 <input type="checkbox" id="colors" value="Colors">Colors</input>
 </span>
 <div id="colortext" style="display:none">
 Color code: red=LUT, green=CLB, blue=PIP, purple=switch, yellow=IOB, orange=BIDI, gray=other, white=unused.
-</div>
+</div>-->
 <div id="info0"></div>
 </div>
 <div id="info"></div>
