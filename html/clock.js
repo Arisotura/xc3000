@@ -358,6 +358,17 @@ class ClockBuf
             }
         }
 
+        // HACK for XC3020
+        // for GCLK it seems that output PIPs 0..7 don't actually have bits???
+        // TODO figure out what the fuck is up with this
+        // in the meantime we'll just enable them all
+        if (curBitstream.family.base == 'XC3020' && this.name == 'GCLK')
+        {
+            for (var i = 0; i < curBitstream.family.cols; i++)
+                this.oPath.setPipStatus(i, 1);
+            this.enabled = true;
+        }
+
         var bits = 0;
         for (var i = 0; i < inputbits.length; i+=2)
         {
