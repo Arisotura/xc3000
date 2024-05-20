@@ -996,6 +996,7 @@ class Iob
             this.iPullup = curBitstream.data[offset.y+6][offset.x+1] == 0;
         }
 
+        if (this.tEnable) this.oEnable = true;
         this.okEnable = this.oEnable && this.oLatch;
 
         Object.entries(inputbits).forEach(([key, val]) =>
