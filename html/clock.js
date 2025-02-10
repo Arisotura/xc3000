@@ -82,7 +82,7 @@ class ClockDecoders
         pipDecoder.addPipsToPath('col.'+kc+'.local.6:row.A.long.3', 'col.'+kc+'.local.6:row.'+kr+'.long.2', path);
         this.clockLines['rightupper'] = path;
 
-        path = new Path(null, null, 'both', 'col.'+kc+'.local.7:row.'+kc+'.local.7', 'V');
+        path = new Path(null, null, 'both', 'col.'+kc+'.local.7:row.'+kr+'.local.7', 'V');
         path.appendPip('+0:0', 'H->V');
         path.appendPip('+4:1', 'H->V');
         pipDecoder.addPipsToPath('col.'+kc+'.local.7:row.'+kr+'.long.2', 'col.'+kc+'.local.7:row.A.local.7', path);
