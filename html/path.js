@@ -288,12 +288,6 @@ class Path
 
     traceFrom(gPt=null, net=null, level=0)
     {
-        if (level > 300)
-        {
-            console.log('too much recursion');
-            return undefined;
-        }
-
         if (level == 0)
         {
             var src = this.origin.obj;

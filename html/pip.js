@@ -291,6 +291,15 @@ class PipDecoder
                         var dx2 = parseInt(data[6]);
                         var tri = readbit(dy2, dx2);
                         if (!tri) b0 = 1;
+
+                        // on the XC3000A/XC3100A, the buffer's input select chooses
+                        // between this local line (1) and the neighboring CLB's
+                        // X or Y output (0); the local line connects only when selected
+                        if (curBitstream.family.extraInter)
+                        {
+                            var isel = {4: 3, 8: 13}[dx];
+                            if (typeof isel != 'undefined' && readbit(dy, isel) == 0) b0 = 1;
+                        }
                     }
                     pip.status = (b0 ? 0:1);
                     break;

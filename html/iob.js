@@ -251,7 +251,7 @@ class Iob
     {
         // IK: 0=normal 1=inverted
         // OK: 1=normal 0=inverted
-        this.ikInvert[num] = val==1;
+        this.ikInvert[num] = val==0;
         this.okInvert[num] = val==0;
     }
 
@@ -819,7 +819,7 @@ class Iob
         else if (this.style == 'leftupper')
         {
             if (this.row == 0) inputbits['OK'] = [offset.y+2, 2];
-            else               inputbits['OK'] = [offset.y, 0];
+            else               inputbits['OK'] = [offset.y, 1];
             inputmux['OK'] = {0x0:0, 0x1:1};
             inputbits['IK'] = [offset.y+4, 1];
             inputmux['IK'] = {0x1:0, 0x0:1};
@@ -997,6 +997,9 @@ class Iob
         }
 
         if (this.tEnable) this.oEnable = true;
+        // the pull-up exists on inputs only; with the output used, the bit is
+        // one of the T multiplexer's
+        if (this.oEnable) this.iPullup = false;
         this.okEnable = this.oEnable && this.oLatch;
 
         Object.entries(inputbits).forEach(([key, val]) =>
