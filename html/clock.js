@@ -69,9 +69,10 @@ class ClockDecoders
         this.clockLines['leftupper'] = path;
 
         path = new Path(null, null, 'both', 'col.A.local.13:4', 'V');
-        path.appendPip('+0:0', 'H->V');;
+        // on this line, the direct input (from ACLK) is at the bottom and the branch above
+        path.appendPip('+0:1', 'H->V');
         pipDecoder.addPipsToPath('col.A.local.13:row.'+kr+'.local.9', 'col.A.local.13:row.'+kr+'.long.1', path);
-        path.appendPip('+6:1', 'H->V');
+        path.appendPip('+6:0', 'H->V');
         pipDecoder.addPipsToPath('col.A.local.13:28', 'col.A.local.13:row.A.long.1', path);
         this.clockLines['leftlower'] = path;
 
@@ -188,6 +189,14 @@ class ClockDecoders
 
             this.clockLines[k].setPipStatus((bits&0x2) ? 1:0, 1);
             iobDecoders.setClockInvert(k, bits&0x1);
+        });
+
+        // a clock buffer driving only IOB clocks (through the die-edge lines)
+        // has no longline output PIPs set, but is still in use
+        Object.entries(this.clocks).forEach(([name, obj]) =>
+        {
+            if (obj.enabled || !obj.iPath) return;
+            if (!obj.oPath.traceFrom().isEmpty()) obj.enabled = true;
         });
     }
 

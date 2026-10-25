@@ -542,18 +542,11 @@ class ClbDecoder {
     mux = curBitstream.data[offset.y+5][offset.x+13] | (curBitstream.data[offset.y+6][offset.x+13] << 1);
     this.lutInput['G'][2] = ['', 'QX', 'C', 'QY'][mux];
 
-    if (this.fgMux)
-    {
-      this.lutInput['F'][3] = 'D';
-      this.lutInput['G'][3] = 'D';
-    }
-    else
-    {
-      mux = curBitstream.data[offset.y+7][offset.x+8];
-      this.lutInput['F'][3] = ['D', 'E'][mux];
-      mux = curBitstream.data[offset.y+7][offset.x+13];
-      this.lutInput['G'][3] = ['D', 'E'][mux];
-    }
+    // the fourth input is selected the same way in all modes, F and FGM included
+    mux = curBitstream.data[offset.y+7][offset.x+8];
+    this.lutInput['F'][3] = ['D', 'E'][mux];
+    mux = curBitstream.data[offset.y+7][offset.x+13];
+    this.lutInput['G'][3] = ['D', 'E'][mux];
 
     mux = curBitstream.data[offset.y+5][offset.x+9] | (curBitstream.data[offset.y+5][offset.x+10] << 1);
     this.dataInput['X'] = ['G', 'DI', '', 'F'][mux];
@@ -594,17 +587,23 @@ class ClbDecoder {
 
     if (this.fgMux)
     {
-      this.dEnable = this.inputUsed['F'][3] || this.inputUsed['G'][3];
       this.eEnable = true;
 
       if (this.lutInput['F'][1] == this.lutInput['G'][1] &&
-        this.lutInput['F'][2] == this.lutInput['G'][2])
+        this.lutInput['F'][2] == this.lutInput['G'][2] &&
+        this.lutInput['F'][3] == this.lutInput['G'][3])
       {
         this.is5Input = true;
         if (this.lut['F'] == this.lut['G']) this.eEnable = false;
       }
       else
         this.is5Input = false;
+
+      this.dEnable = false;
+      if (this.lutInput['F'][3] == 'D') this.dEnable ||= this.inputUsed['F'][3];
+      if (this.lutInput['G'][3] == 'D') this.dEnable ||= this.inputUsed['G'][3];
+      if (this.lutInput['F'][3] == 'E') this.eEnable ||= this.inputUsed['F'][3];
+      if (this.lutInput['G'][3] == 'E') this.eEnable ||= this.inputUsed['G'][3];
     }
     else
     {

@@ -386,15 +386,21 @@ class Switch
 
     routeThrough(pin, net, level, visited=null)
     {
-        if (level > 300)
-        {
-            console.log('too much recursion');
-            return;
-        }
-
         var numdest = 0;
 
-        if (!visited) visited = {};
+        // remember, per net, the pins this switch matrix has been entered or
+        // left by, so that a loop of local lines through switch matrices ends
+        if (!visited)
+        {
+            if (!net.switchVisited) net.switchVisited = new Map();
+            visited = net.switchVisited.get(this);
+            if (!visited)
+            {
+                visited = {};
+                net.switchVisited.set(this, visited);
+            }
+            if (visited[pin]) return;
+        }
         visited[pin] = true;
 
         var inpath = this.paths[pin];
